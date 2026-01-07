@@ -1,0 +1,109 @@
+<!-- Desktop -->
+<div class="masthead vh-100" *ngIf="!isMobile">
+  <div class="d-flex justify-content-center align-items-center h-100">
+    <div class="card shadow-lg" style="width: 100%; max-width: 450px;">
+      <div class="card-body p-4 p-md-5">
+        <div class="text-center mb-4">
+          <h1 class="fw-bold">Gogenius</h1>
+        </div>
+        
+        <form [formGroup]="loginForm" (ngSubmit)="login()" novalidate>
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="username"
+              formControlName="username" 
+              placeholder="Username"
+              [class.is-invalid]="loginForm.controls['username'].touched && loginForm.controls['username'].hasError('required')">
+            <div class="invalid-feedback">
+              Username is required
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input 
+              type="password" 
+              class="form-control" 
+              id="password"
+              formControlName="password" 
+              placeholder="Password"
+              [class.is-invalid]="loginForm.controls['password'].touched && loginForm.controls['password'].hasError('required')">
+            <div class="invalid-feedback">
+              Password is required
+            </div>
+          </div>
+          
+          <div *ngIf="loginFailed" class="alert alert-danger py-2 mb-3">
+            Invalid username or password.
+          </div>
+          
+          <div class="d-grid gap-3 mt-4">
+            <button type="submit" class="btn btn-primary btn-lg">LOGIN</button>
+            <p class="text-center mb-0">
+              Don't have an account? <a routerLink="/auth/register" class="text-decoration-none">Sign Up</a>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile -->
+<div class="masthead-mobile min-vh-100 d-flex justify-content-center align-items-center p-4" *ngIf="isMobile">
+  <div class="w-100" style="max-width: 400px;">
+    <div class="text-center mb-4">
+      <h1 class="app-title text-white fw-bold fs-2">Gogenius FR</h1>
+    </div>
+    
+    <form [formGroup]="loginForm" (ngSubmit)="login()" novalidate>
+      <div class="mb-3">
+        <div class="input-group">
+          <span class="input-group-text bg-transparent border-light text-white">
+            <i class="bi bi-person"></i>
+          </span>
+          <input 
+            type="text" 
+            class="form-control bg-transparent border-light text-white" 
+            formControlName="username" 
+            placeholder="Username"
+            [class.is-invalid]="loginForm.controls['username'].touched && loginForm.controls['username'].hasError('required')">
+          <div class="invalid-feedback">
+            Username is required
+          </div>
+        </div>
+      </div>
+      
+      <div class="mb-3">
+        <div class="input-group">
+          <span class="input-group-text bg-transparent border-light text-white">
+            <i class="bi bi-lock"></i>
+          </span>
+          <input 
+            type="password" 
+            class="form-control bg-transparent border-light text-white" 
+            formControlName="password" 
+            placeholder="Password"
+            [class.is-invalid]="loginForm.controls['password'].touched && loginForm.controls['password'].hasError('required')">
+          <div class="invalid-feedback">
+            Password is required
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="loginFailed" class="text-white text-center mb-3">
+        Invalid username or password.
+      </div>
+      
+      <div class="d-grid gap-3 mt-4">
+        <button type="submit" class="btn btn-primary btn-lg">LOGIN</button>
+        <p class="text-center text-white-50 mb-0">
+          Don't have an account? <a routerLink="/auth/register" class="text-white">Sign Up</a>
+        </p>
+      </div>
+    </form>
+  </div>
+</div>

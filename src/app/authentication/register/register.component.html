@@ -1,0 +1,291 @@
+<!-- Desktop -->
+<div class="masthead min-vh-100" *ngIf="!isMobile">
+  <div class="d-flex justify-content-center align-items-center h-100 py-5">
+    <div class="card shadow-lg col-11 col-md-8 col-lg-6 col-xl-5">
+      <div class="card-body p-4 p-md-5">
+        <div class="text-center mb-4">
+          <h1 class="fw-bold">Gogenius</h1>
+          <p class="text-muted">Créer un compte</p>
+        </div>
+        
+        <form [formGroup]="registerForm" (ngSubmit)="register()" novalidate>
+          <!-- Fullname -->
+          <div class="mb-3">
+            <label for="fullname" class="form-label">Nom complet <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="fullname"
+              formControlName="fullname" 
+              placeholder="Entrez votre nom complet"
+              [class.is-invalid]="registerForm.controls['fullname'].touched && registerForm.controls['fullname'].invalid">
+            <div class="invalid-feedback">
+              Le nom complet est requis
+            </div>
+          </div>
+          
+          <!-- Email -->
+          <div class="mb-3">
+            <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+            <input 
+              type="email" 
+              class="form-control" 
+              id="email"
+              formControlName="email" 
+              placeholder="exemple@email.com"
+              [class.is-invalid]="registerForm.controls['email'].touched && registerForm.controls['email'].invalid">
+            <div class="invalid-feedback">
+              <span *ngIf="registerForm.controls['email'].hasError('required')">L'email est requis</span>
+              <span *ngIf="registerForm.controls['email'].hasError('email')">Format d'email invalide</span>
+            </div>
+          </div>
+          
+          <!-- City -->
+          <div class="mb-3">
+            <label for="city" class="form-label">Ville <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="city"
+              formControlName="city" 
+              placeholder="Votre ville de résidence"
+              [class.is-invalid]="registerForm.controls['city'].touched && registerForm.controls['city'].invalid">
+            <div class="invalid-feedback">
+              La ville est requise
+            </div>
+          </div>
+          
+          <!-- Login -->
+          <div class="mb-3">
+            <label for="login" class="form-label">Nom d'utilisateur <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="login"
+              formControlName="login" 
+              placeholder="Choisissez un pseudonyme"
+              [class.is-invalid]="registerForm.controls['login'].touched && registerForm.controls['login'].invalid">
+            <div class="invalid-feedback">
+              Le nom d'utilisateur est requis
+            </div>
+          </div>
+          
+          <!-- Type -->
+          <div class="mb-3">
+            <label for="type" class="form-label">Type de compte <span class="text-danger">*</span></label>
+            <select 
+              class="form-select" 
+              id="type"
+              formControlName="type"
+              [class.is-invalid]="registerForm.controls['type'].touched && registerForm.controls['type'].invalid">
+              <option value="" disabled selected>Sélectionnez un type</option>
+              <option value="touriste">Touriste</option>
+              <option value="etablissement">Établissement</option>
+              <option value="collaborateur">Collaborateur</option>
+            </select>
+            <div class="invalid-feedback">
+              Le type de compte est requis
+            </div>
+          </div>
+          
+          <!-- Password -->
+          <div class="mb-3">
+            <label for="password" class="form-label">Mot de passe <span class="text-danger">*</span></label>
+            <input 
+              type="password" 
+              class="form-control" 
+              id="password"
+              formControlName="password" 
+              placeholder="Créez un mot de passe"
+              [class.is-invalid]="registerForm.controls['password'].touched && registerForm.controls['password'].invalid">
+            <div class="invalid-feedback">
+              <span *ngIf="registerForm.controls['password'].hasError('required')">Le mot de passe est requis</span>
+              <span *ngIf="registerForm.controls['password'].hasError('minlength')">Minimum 6 caractères</span>
+            </div>
+          </div>
+          
+          <!-- Confirm Password -->
+          <div class="mb-3">
+            <label for="confirmPassword" class="form-label">Confirmer le mot de passe <span class="text-danger">*</span></label>
+            <input 
+              type="password" 
+              class="form-control" 
+              id="confirmPassword"
+              formControlName="confirmPassword" 
+              placeholder="Confirmez votre mot de passe"
+              [class.is-invalid]="registerForm.controls['confirmPassword'].touched && registerForm.controls['confirmPassword'].invalid">
+            <div class="invalid-feedback">
+              <span *ngIf="registerForm.controls['confirmPassword'].hasError('required')">La confirmation est requise</span>
+              <span *ngIf="registerForm.controls['confirmPassword'].hasError('passwordMismatch')">Les mots de passe ne correspondent pas</span>
+            </div>
+          </div>
+          
+          <!-- Terms Accepted -->
+          <div class="mb-4">
+            <div class="form-check">
+              <input 
+                type="checkbox" 
+                class="form-check-input" 
+                id="terms_accepted"
+                formControlName="terms_accepted"
+                [class.is-invalid]="registerForm.controls['terms_accepted'].touched && registerForm.controls['terms_accepted'].invalid">
+              <label class="form-check-label" for="terms_accepted">
+                J'accepte les <a href="#" class="text-decoration-none">conditions d'utilisation</a> <span class="text-danger">*</span>
+              </label>
+              <div class="invalid-feedback">
+                Vous devez accepter les conditions d'utilisation
+              </div>
+            </div>
+          </div>
+          
+          <!-- Registration Errors -->
+          <div *ngIf="registrationErrors.length > 0" class="alert alert-danger py-2 mb-3">
+            <div *ngFor="let error of registrationErrors">
+              {{ error.message }}
+            </div>
+          </div>
+          
+          <!-- Buttons -->
+          <div class="d-grid gap-2 mt-4">
+            <button type="submit" class="btn btn-primary btn-lg" [disabled]="registerForm.invalid">
+              S'inscrire
+            </button>
+            <button type="button" routerLink="/auth/login" class="btn btn-outline-secondary btn-lg">
+              Annuler
+            </button>
+          </div>
+          
+          <p class="text-center mt-3 mb-0">
+            Déjà un compte ? <a routerLink="/auth/login" class="text-decoration-none">Se connecter</a>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile -->
+<div class="masthead-mobile min-vh-100 d-flex align-items-center p-4" *ngIf="isMobile">
+  <div class="w-100" style="max-width: 450px; margin: 0 auto;">
+    <div class="text-center mb-4">
+      <h2 class="text-white fw-bold">Créer un compte</h2>
+    </div>
+    
+    <form [formGroup]="registerForm" (ngSubmit)="register()" novalidate>
+      <!-- Fullname -->
+      <div class="mb-3">
+        <input 
+          type="text" 
+          class="form-control form-control-dark" 
+          formControlName="fullname" 
+          placeholder="Nom complet"
+          [class.is-invalid]="registerForm.controls['fullname'].touched && registerForm.controls['fullname'].invalid">
+        <div class="invalid-feedback">Le nom complet est requis</div>
+      </div>
+      
+      <!-- Email -->
+      <div class="mb-3">
+        <input 
+          type="email" 
+          class="form-control form-control-dark" 
+          formControlName="email" 
+          placeholder="Email"
+          [class.is-invalid]="registerForm.controls['email'].touched && registerForm.controls['email'].invalid">
+        <div class="invalid-feedback">Email invalide</div>
+      </div>
+      
+      <!-- City -->
+      <div class="mb-3">
+        <input 
+          type="text" 
+          class="form-control form-control-dark" 
+          formControlName="city" 
+          placeholder="Ville"
+          [class.is-invalid]="registerForm.controls['city'].touched && registerForm.controls['city'].invalid">
+        <div class="invalid-feedback">La ville est requise</div>
+      </div>
+      
+      <!-- Login -->
+      <div class="mb-3">
+        <input 
+          type="text" 
+          class="form-control form-control-dark" 
+          formControlName="login" 
+          placeholder="Nom d'utilisateur"
+          [class.is-invalid]="registerForm.controls['login'].touched && registerForm.controls['login'].invalid">
+        <div class="invalid-feedback">Le nom d'utilisateur est requis</div>
+      </div>
+      
+      <!-- Type -->
+      <div class="mb-3">
+        <select 
+          class="form-select form-control-dark" 
+          formControlName="type"
+          [class.is-invalid]="registerForm.controls['type'].touched && registerForm.controls['type'].invalid">
+          <option value="" disabled selected>Type de compte</option>
+          <option value="touriste">Touriste</option>
+          <option value="etablissement">Établissement</option>
+          <option value="collaborateur">Collaborateur</option>
+        </select>
+        <div class="invalid-feedback">Le type est requis</div>
+      </div>
+      
+      <!-- Password -->
+      <div class="mb-3">
+        <input 
+          type="password" 
+          class="form-control form-control-dark" 
+          formControlName="password" 
+          placeholder="Mot de passe"
+          [class.is-invalid]="registerForm.controls['password'].touched && registerForm.controls['password'].invalid">
+        <div class="invalid-feedback">Mot de passe requis (min. 6 caractères)</div>
+      </div>
+      
+      <!-- Confirm Password -->
+      <div class="mb-3">
+        <input 
+          type="password" 
+          class="form-control form-control-dark" 
+          formControlName="confirmPassword" 
+          placeholder="Confirmer le mot de passe"
+          [class.is-invalid]="registerForm.controls['confirmPassword'].touched && registerForm.controls['confirmPassword'].invalid">
+        <div class="invalid-feedback">Les mots de passe ne correspondent pas</div>
+      </div>
+      
+      <!-- Terms Accepted -->
+      <div class="mb-4">
+        <div class="form-check">
+          <input 
+            type="checkbox" 
+            class="form-check-input" 
+            id="terms_accepted_mobile"
+            formControlName="terms_accepted"
+            [class.is-invalid]="registerForm.controls['terms_accepted'].touched && registerForm.controls['terms_accepted'].invalid">
+          <label class="form-check-label text-white" for="terms_accepted_mobile">
+            J'accepte les <a href="#" class="text-white">conditions d'utilisation</a>
+          </label>
+          <div class="invalid-feedback">Acceptation requise</div>
+        </div>
+      </div>
+      
+      <!-- Registration Errors -->
+      <div *ngIf="registrationErrors.length > 0" class="text-white mb-3">
+        <div *ngFor="let error of registrationErrors">{{ error.message }}</div>
+      </div>
+      
+      <!-- Buttons -->
+      <div class="d-grid gap-2 mt-4">
+        <button type="submit" class="btn btn-primary btn-lg" [disabled]="registerForm.invalid">
+          S'inscrire
+        </button>
+        <button type="button" routerLink="/auth/login" class="btn btn-outline-light btn-lg">
+          Annuler
+        </button>
+      </div>
+      
+      <p class="text-center text-white-50 mt-3 mb-0">
+        Déjà un compte ? <a routerLink="/auth/login" class="text-white">Se connecter</a>
+      </p>
+    </form>
+  </div>
+</div>

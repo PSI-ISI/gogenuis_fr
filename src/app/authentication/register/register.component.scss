@@ -1,0 +1,165 @@
+.error {
+    color: #f44336
+  }
+  
+  .white {
+    color: #FFF;
+  }
+  
+  .cancel-button {
+    background-color:#ffa500;
+    color:white;
+  }
+  
+  .form-container {
+    width: 100%;
+    padding: 20px;
+  }
+
+  // _variables.scss ou styles.scss
+
+.masthead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.masthead-mobile {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+// Card styling
+.card {
+  border: none;
+  border-radius: 1rem;
+}
+
+// Style pour les inputs sur fond sombre (mobile)
+.form-control-dark {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+  }
+  
+  &:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.15);
+    color: #fff;
+  }
+  
+  &.is-invalid {
+    border-color: #f8d7da;
+    
+    &:focus {
+      box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+    }
+  }
+}
+
+// Select styling pour mobile
+.form-select.form-control-dark {
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  
+  option {
+    background-color: #764ba2;
+    color: #fff;
+  }
+  
+  &:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.15);
+  }
+}
+
+// Hide labels on mobile for cleaner look
+.masthead-mobile .form-label {
+  display: none;
+}
+
+// Responsive adjustments
+@media (max-height: 700px) {
+  .masthead-mobile {
+    padding-top: 2rem !important;
+    padding-bottom: 2rem !important;
+  }
+}
+.form-container {
+    width: 100%;
+    padding: 20px;
+  }
+  
+  .icon-prefix {
+    color: white;
+    font-size: 26px;
+    margin-right: 10px;
+  }
+  
+  .white {
+    color: #FFF;
+  }
+  
+  .app-title {
+    font-size: 20px;
+    color: white;
+    margin-bottom: 30px;
+  }
+  
+  .sign-up-message {
+    font-size:16px;
+    color:white;
+  }
+  
+  .error {
+    color: #f44336;
+  }
+
+  
+  // styles.scss ou component.scss
+
+.masthead {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  // ou une image de fond
+  // background-image: url('/assets/images/bg.jpg');
+  // background-size: cover;
+  // background-position: center;
+}
+
+.masthead-mobile {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+// Style pour les inputs transparents (mobile)
+.masthead-mobile {
+  .form-control {
+    &::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    &:focus {
+      box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.25);
+      border-color: #fff;
+    }
+  }
+  
+  .input-group-text {
+    border-right: none;
+  }
+  
+  .input-group .form-control {
+    border-left: none;
+  }
+}
+
+// Card personnalisée
+.card {
+  border: none;
+  border-radius: 1rem;
+}
