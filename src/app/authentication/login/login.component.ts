@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { LoginService } from './login.service';
 import { AuthenticationService } from '../authentication.service';
 import { Login } from './login.model';
+import { log } from 'console';
 
 @Component({
   selector: 'app-login',
@@ -16,12 +17,19 @@ export class LoginComponent implements OnInit {
   // loginFailed = false;
   // isMobile = false;
 
-  // constructor(
-  //   private formBuilder: FormBuilder,
-  //   private loginService: LoginService,
-  //   private authService: AuthenticationService,
-  //   private router: Router
-  // ) {}
+  constructor(
+    private fb: FormBuilder,
+    private loginService: LoginService,
+    private authService: AuthenticationService,
+    private router: Router
+  ) {
+    this.loginForm = this.fb.group({
+      login: ['', Validators.required],
+      password: ['', Validators.required]
+    });
+    
+    this.checkScreenSize();
+  }
 
   // ngOnInit() {
   //   this.loginForm = this.formBuilder.group({
@@ -30,34 +38,27 @@ export class LoginComponent implements OnInit {
   //   });
   // }
 
-  // login() {
-  //   if (this.loginForm.valid) {
-  //     const credentials: Login = this.loginForm.value;
-  //     this.loginService.login(credentials).subscribe({
-  //       next: (response) => {
-  //         this.authService.setToken(response.token);
-  //         this.router.navigate(['/dashboard']);
-  //       },
-  //       error: (error) => {
-  //         this.loginFailed = true;
-  //         console.error('Login failed', error);
-  //       }
-  //     });
-  //   }
-  // }
+  login() {
+    if (this.loginForm.valid) {
+      const credentials: Login = this.loginForm.value;
+      this.loginService.login(credentials).subscribe({
+        next: (response) => {
+          console.log('Login successful', response);
+          this.authService.setToken(response.token);
+          this.router.navigate(['/dashboard']);
+        },
+        error: (error) => {
+          this.loginFailed = true;
+          console.error('Login failed', error);
+        }
+      });
+    }
+  }
 
   loginForm: FormGroup;
   loginFailed = false;
   isMobile = false;
-  
-  constructor(private fb: FormBuilder) {
-    this.loginForm = this.fb.group({
-      username: ['', Validators.required],
-      password: ['', Validators.required]
-    });
-    
-    this.checkScreenSize();
-  }
+ 
   
   ngOnInit(): void {
     this.checkScreenSize();
@@ -67,13 +68,14 @@ export class LoginComponent implements OnInit {
     this.isMobile = window.innerWidth < 768; // Bootstrap md breakpoint
   }
   
-  login() {
-    if (this.loginForm.valid) {
-      // Votre logique de connexion
-    } else {
-      this.loginForm.markAllAsTouched();
-    }
-  }
+  // login() {
+  //   console.log('Login attempt');
+  //   if (this.loginForm.valid) {
+  //     // Votre logique de connexion
+  //   } else {
+  //     this.loginForm.markAllAsTouched();
+  //   }
+  // }
   
   ngOnDestroy() {
     // Nettoyage si nécessaire
