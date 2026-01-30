@@ -1,12 +1,15 @@
-import { enableProdMode } from '@angular/core';
 import { bootstrapApplication } from '@angular/platform-browser';
-
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideHttpClient } from '@angular/common/http';
+import { provideRouter } from '@angular/router';
 import { AppComponent } from './app/app';
-import { appConfig } from './app/app.config';
-import { environment } from './environments/environment';
+import { appRoutes } from './app/app.routes';
 
-if (environment.production) {
-  enableProdMode();
-}
-
-bootstrapApplication(AppComponent, appConfig);
+bootstrapApplication(AppComponent, {
+  providers: [
+    provideAnimations(),
+    provideHttpClient(),
+    provideRouter(appRoutes),
+    { provide: 'Window', useValue: window }  // ← String 'Window' pour matcher @Inject('Window')
+  ]
+}).catch(err => console.error(err));

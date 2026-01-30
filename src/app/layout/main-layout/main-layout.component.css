@@ -49,19 +49,11 @@
   text-decoration: none;
 }
 
-.logo-icon {
-  width: 42px;
-  height: 42px;
-  background: linear-gradient(135deg, #1a5f7a 0%, #2d8bba 100%);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo-icon i {
-  font-size: 1.4rem;
-  color: white;
+.logo-img {
+  width: 200px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
 }
 
 .logo-text {
@@ -311,9 +303,11 @@
   text-decoration: none;
 }
 
-.mobile-logo i {
-  font-size: 1.4rem;
-  color: #1a5f7a;
+.mobile-logo-img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
 .mobile-logo span {
@@ -363,7 +357,7 @@
 
 .main-content {
   flex: 1;
-  margin-left: 130px;
+  margin-left: 260px;
   min-height: 100vh;
 }
 

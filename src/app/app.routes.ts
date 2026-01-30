@@ -1,19 +1,65 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterModule, Routes } from '@angular/router';
+import { Routes } from '@angular/router';
+import { authGuard, noAuthGuard } from './guards/auth.guard';
 
 export const appRoutes: Routes = [
-  { path: '', redirectTo: '/auth', pathMatch: 'full' },
-  { path: 'auth', loadChildren: () => import('./authentication/authentication.module').then(m => m.AuthenticationModule) },
-  { path: '**', redirectTo: '/auth' }
+  // ============================================
+  // AUTH ROUTES - Sans sidebar
+  // ============================================
+  { 
+    path: 'auth', 
+    canActivate: [noAuthGuard],
+    loadChildren: () => import('./authentication/authentication.module').then(m => m.AuthenticationModule)
+    // ↑ IMPORTANT: Charger AuthenticationModule, PAS AuthenticationRoutingModule
+  },
+  
+  // ============================================
+  // PROTECTED ROUTES - Avec sidebar (MainLayout)
+  // ============================================
+  {
+    path: '',
+    loadComponent: () => import('./layout/main-layout/main-layout.component').then(m => m.MainLayoutComponent),
+    canActivate: [authGuard],
+    children: [
+      { 
+        path: '', 
+        redirectTo: 'dashboard', 
+        pathMatch: 'full' 
+      },
+      { 
+        path: 'dashboard', 
+        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      { 
+        path: 'events', 
+         loadComponent: () => import('./pages/events/events.component').then(m => m.EventsComponent)
+      },
+      { 
+        path: 'deals', 
+        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      { 
+        path: 'reservations', 
+        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      { 
+        path: 'planner', 
+        loadComponent: () => import('./pages/planner/planner.component').then(m => m.PlannerComponent)
+      },
+      { 
+        path: 'explore', 
+        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      { 
+        path: 'profile', 
+        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+      { 
+        path: 'settings', 
+        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
+    ]
+  },
+  
+  // Wildcard
+  { path: '**', redirectTo: '/auth/login' }
 ];
-
-@NgModule({
-  imports: [
-    CommonModule,
-    RouterModule.forRoot(appRoutes, { useHash: true })
-  ],
-  declarations: [],
-  exports: [RouterModule]
-})
-export class AppRoutingModule { }

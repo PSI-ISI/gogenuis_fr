@@ -25,9 +25,27 @@ export class AuthenticationService {
     }
     return token;
   }
+  getPrefixName(): string | null {
+    // Attempt to retrieve the fullname from session storage.
+    let prefix = sessionStorage.getItem('gogenius.prefix');
+    
+    return prefix;
+  }
+  getProfile(): string | null {
+    // Attempt to retrieve the fullname from session storage.
+    let role = sessionStorage.getItem('gogenius.role');
+    
+    return role;
+  }
+  getFullname(): string | null {
+    // Attempt to retrieve the fullname from session storage.
+    let fullname = sessionStorage.getItem('gogenius.fname');
+    
+    return fullname;
+  }
 
   setToken(token: string): void {
-    sessionStorage.setItem(this.sessionStorageTokenKey, token);
+    localStorage.setItem(this.sessionStorageTokenKey, token);
   }
 
   isAuthenticated(): boolean {
@@ -37,9 +55,9 @@ export class AuthenticationService {
   goToOauthLogin(): void {
     const RESPONSE_TYPE = 'token';
     const oauthUrl = `${environment.SERVER_URL}/oauth/authorize?client_id=${environment.OAUTH_CLIENT_ID}
-&redirect_uri=${encodeURIComponent(environment.OAUTH_REDIRECT_URL)}
-&response_type=${RESPONSE_TYPE}
-&scope=email`;
+      &redirect_uri=${encodeURIComponent(environment.OAUTH_REDIRECT_URL)}
+      &response_type=${RESPONSE_TYPE}
+      &scope=email`;
     this.window.location.href = oauthUrl;
   }
 

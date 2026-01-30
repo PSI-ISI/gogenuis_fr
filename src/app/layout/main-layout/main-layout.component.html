@@ -1,0 +1,85 @@
+<!-- Main Layout with Sidebar (Always Expanded) -->
+<div class="app-layout" [class.mobile-menu-open]="isMobileMenuOpen">
+  
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.show]="isMobileMenuOpen">
+    <!-- Header -->
+    <div class="sidebar-header">
+      <a routerLink="/dashboard" class="logo">
+        <img src="../../assets/img/logo.png" alt="Gogenius" class="logo-img">
+      </a>
+    </div>
+    
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <li class="nav-item" *ngFor="let item of menuItems">
+          <a [routerLink]="item.route" 
+             routerLinkActive="active"
+             [routerLinkActiveOptions]="{exact: item.exact}"
+             class="nav-link"
+             (click)="onNavClick()">
+            <i [class]="item.icon"></i>
+            <span class="nav-label">{{ item.label }}</span>
+            <span class="nav-badge" *ngIf="item.badge">{{ item.badge }}</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+    
+    <!-- Footer -->
+    <div class="sidebar-footer">
+      <div class="user-card" (click)="toggleUserMenu()">
+        <div class="user-avatar">
+          <span>{{ userInitials }}</span>
+        </div>
+        <div class="user-info">
+          <span class="user-name">{{ fullname }}</span>
+          <!-- <span class="user-role">{{ userRole }}</span> -->
+        </div>
+        <i class="bi bi-chevron-down user-chevron" [class.rotated]="showUserMenu"></i>
+      </div>
+      
+      <!-- User Dropdown Menu -->
+      <div class="user-menu" [class.show]="showUserMenu">
+        <a routerLink="/profile" class="menu-item" (click)="showUserMenu = false">
+          <i class="bi bi-person"></i>
+          <span>Mon Profil</span>
+        </a>
+        <a routerLink="/settings" class="menu-item" (click)="showUserMenu = false">
+          <i class="bi bi-gear"></i>
+          <span>Paramètres</span>
+        </a>
+        <div class="menu-divider"></div>
+        <button type="button" class="menu-item logout" (click)="logout()">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Déconnexion</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+  
+  <!-- Mobile Header -->
+  <header class="mobile-header">
+    <button type="button" class="btn-menu" (click)="toggleMobileMenu()">
+      <i class="bi" [class.bi-list]="!isMobileMenuOpen" [class.bi-x-lg]="isMobileMenuOpen"></i>
+    </button>
+    <a routerLink="/dashboard" class="mobile-logo">
+      <img src="assets/img/logo.png" alt="Gogenius" class="mobile-logo-img">
+      <span>Gogenius</span>
+    </a>
+    <div class="mobile-avatar">
+      <span>{{ userInitials }}</span>
+    </div>
+  </header>
+  
+  <!-- Mobile Overlay -->
+  <div class="mobile-overlay" 
+       [class.show]="isMobileMenuOpen" 
+       (click)="closeMobileMenu()"></div>
+  
+  <!-- Main Content -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

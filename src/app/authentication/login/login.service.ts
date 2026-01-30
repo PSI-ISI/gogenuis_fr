@@ -31,6 +31,10 @@ export class LoginService {
           const token = response.data?.token || response.result?.token || response.token; 
 
           if (token) {
+            sessionStorage.setItem("gogenius.fname",response.data?.fullname);
+            localStorage.setItem("gogenius.fname",response.data?.fullname);
+            localStorage.setItem("gogenius.prefix",response.data?.prefix);
+            localStorage.setItem("gogenius.role",response.data?.profile);
              this.authService.setToken(token); // Assurez-vous que 'this.authService' est accessible ici
              // Si vous êtes DANS AuthService, c'est juste : this.setToken(token);
           }

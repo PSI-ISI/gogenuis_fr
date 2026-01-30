@@ -1,0 +1,72 @@
+// Interfaces
+interface Stat {
+  icon: string;
+  value: string | number;
+  label: string;
+  trend: number;
+  bgColor: string;
+}
+
+interface Event {
+  id: number;
+  title: string;
+  description: string;
+  date: Date;
+  location: string;
+  image: string;
+  category: string;
+  categoryColor: string;
+  price: number;
+  isFavorite: boolean;
+}
+
+interface BudgetCategory {
+  id: string;
+  name: string;
+  icon: string;
+}
+
+interface BudgetResult {
+  id: number;
+  name: string;
+  location: string;
+  image: string;
+  price: number;
+  rating: number;
+  reviews: number;
+  category: string;
+}
+
+interface CalendarDay {
+  number: number;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  isSelected: boolean;
+  hasEvent: boolean;
+  date: Date;
+}
+
+interface DayEvent {
+  time: string;
+  name: string;
+  color: string;
+}
+
+interface Advertisement {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  type: string;
+  ctaText: string;
+}
+
+interface Reservation {
+  id: number;
+  name: string;
+  date: Date;
+  time: string;
+  icon: string;
+  iconBg: string;
+  status: 'confirmed' | 'pending' | 'cancelled';
+}

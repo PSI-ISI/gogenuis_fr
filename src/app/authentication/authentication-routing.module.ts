@@ -1,24 +1,18 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
 import { RegisterComponent } from './register/register.component';
 import { VerificationComponent } from './verification/verification.component';
-import { PublicGuardService } from './public-guard.service';
 
-const authRoutes: Routes = [
+const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
-  { path: 'login', component: LoginComponent, canActivate: [PublicGuardService] },
-  { path: 'register', component: RegisterComponent, canActivate: [PublicGuardService] },
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
   { path: 'verification', component: VerificationComponent }
 ];
 
 @NgModule({
-  imports: [
-    CommonModule,
-    RouterModule.forChild(authRoutes)
-  ],
-  declarations: [],
+  imports: [RouterModule.forChild(routes)],
   exports: [RouterModule]
 })
 export class AuthenticationRoutingModule { }

@@ -1,0 +1,202 @@
+<!-- Events Page - Gogenius FR -->
+<div class="events-page">
+  
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="page-title">
+          <i class="bi bi-calendar-event"></i>
+          Événements & Salons
+        </h1>
+        <p class="page-subtitle">Découvrez les événements à venir près de chez vous</p>
+      </div>
+      <div class="header-right">
+        <button class="btn-view" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Vue grille">
+          <i class="bi bi-grid-3x3-gap"></i>
+        </button>
+        <button class="btn-view" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Vue liste">
+          <i class="bi bi-list-ul"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Filters Section -->
+  <section class="filters-section">
+    <div class="filters-container">
+      
+      <!-- Search Bar -->
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input 
+          type="text" 
+          placeholder="Rechercher un événement..."
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="filterEvents()">
+        <button class="btn-clear" *ngIf="searchQuery" (click)="clearSearch()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <!-- Category Filters -->
+      <div class="category-filters">
+        <button 
+          class="filter-chip" 
+          *ngFor="let cat of categories"
+          [class.active]="selectedCategory === cat.id"
+          (click)="selectCategory(cat.id)">
+          <i [class]="cat.icon"></i>
+          <span>{{ cat.name }}</span>
+          <span class="chip-count" *ngIf="cat.count">{{ cat.count }}</span>
+        </button>
+      </div>
+
+      <!-- Additional Filters -->
+      <div class="extra-filters">
+        <div class="filter-group">
+          <label>Date</label>
+          <select [(ngModel)]="selectedDate" (ngModelChange)="filterEvents()">
+            <option value="all">Toutes les dates</option>
+            <option value="today">Aujourd'hui</option>
+            <option value="week">Cette semaine</option>
+            <option value="month">Ce mois</option>
+            <option value="upcoming">À venir</option>
+          </select>
+        </div>
+        
+        <div class="filter-group">
+          <label>Ville</label>
+          <select [(ngModel)]="selectedCity" (ngModelChange)="filterEvents()">
+            <option value="all">Toutes les villes</option>
+            <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Prix</label>
+          <select [(ngModel)]="selectedPrice" (ngModelChange)="filterEvents()">
+            <option value="all">Tous les prix</option>
+            <option value="free">Gratuit</option>
+            <option value="paid">Payant</option>
+          </select>
+        </div>
+
+        <button class="btn-reset" (click)="resetFilters()">
+          <i class="bi bi-arrow-counterclockwise"></i>
+          Réinitialiser
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results Info -->
+  <div class="results-info">
+    <span class="results-count">{{ filteredEvents.length }} événement(s) trouvé(s)</span>
+    <div class="sort-options">
+      <label>Trier par :</label>
+      <select [(ngModel)]="sortBy" (ngModelChange)="sortEvents()">
+        <option value="date">Date</option>
+        <option value="name">Nom</option>
+        <option value="price">Prix</option>
+        <option value="popularity">Popularité</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Events Grid -->
+  <section class="events-container" [class.list-view]="viewMode === 'list'">
+    
+    <!-- Event Card -->
+    <article class="event-card" *ngFor="let event of filteredEvents">
+      <div class="event-image">
+        <img [src]="event.image" [alt]="event.title">
+        <span class="event-badge" [style.background]="event.categoryColor">
+          {{ event.category }}
+        </span>
+        <button class="btn-favorite" [class.active]="event.isFavorite" (click)="toggleFavorite(event)">
+          <i class="bi" [class.bi-heart]="!event.isFavorite" [class.bi-heart-fill]="event.isFavorite"></i>
+        </button>
+        <div class="event-date-badge">
+          <span class="day">{{ event.date | date:'dd' }}</span>
+          <span class="month">{{ event.date | date:'MMM' }}</span>
+        </div>
+      </div>
+      
+      <div class="event-content">
+        <div class="event-meta">
+          <span class="meta-item">
+            <i class="bi bi-calendar3"></i>
+            {{ event.date | date:'EEEE dd MMMM yyyy':'':'fr' }}
+          </span>
+          <span class="meta-item">
+            <i class="bi bi-clock"></i>
+            {{ event.time }}
+          </span>
+        </div>
+        
+        <h3 class="event-title">{{ event.title }}</h3>
+        
+        <p class="event-description">{{ event.description }}</p>
+        
+        <div class="event-location">
+          <i class="bi bi-geo-alt"></i>
+          <span>{{ event.location }}, {{ event.city }}</span>
+        </div>
+
+        <div class="event-footer">
+          <div class="event-price" [class.free]="event.price === 0">
+            <span *ngIf="event.price === 0">Gratuit</span>
+            <span *ngIf="event.price > 0">{{ event.price }} €</span>
+          </div>
+          
+          <div class="event-stats">
+            <span class="stat">
+              <i class="bi bi-people"></i>
+              {{ event.attendees }}
+            </span>
+            <span class="stat">
+              <i class="bi bi-eye"></i>
+              {{ event.views }}
+            </span>
+          </div>
+          
+          <button class="btn-details" (click)="viewEventDetails(event)">
+            Voir détails
+            <i class="bi bi-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </article>
+
+    <!-- No Results -->
+    <div class="no-results" *ngIf="filteredEvents.length === 0">
+      <i class="bi bi-calendar-x"></i>
+      <h3>Aucun événement trouvé</h3>
+      <p>Essayez de modifier vos critères de recherche</p>
+      <button class="btn-reset-large" (click)="resetFilters()">
+        Réinitialiser les filtres
+      </button>
+    </div>
+  </section>
+
+  <!-- Pagination -->
+  <nav class="pagination" *ngIf="filteredEvents.length > 0 && totalPages > 1">
+    <button class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+    
+    <button 
+      class="page-btn" 
+      *ngFor="let page of pages"
+      [class.active]="currentPage === page"
+      (click)="goToPage(page)">
+      {{ page }}
+    </button>
+    
+    <button class="page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+      <i class="bi bi-chevron-right"></i>
+    </button>
+  </nav>
+
+</div>

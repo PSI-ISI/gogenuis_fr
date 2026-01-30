@@ -1,0 +1,286 @@
+<!-- Dashboard Component - Gogenius FR -->
+<div class="dashboard">
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-left">
+      <h1 class="greeting">Bonjour, <span class="user-name">{{ userName }}</span> 👋</h1>
+      <p class="subtitle">Découvrez les meilleures offres du jour</p>
+    </div>
+    <div class="header-right">
+      <div class="search-global">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Rechercher..." [(ngModel)]="searchQuery">
+      </div>
+      <button class="btn-notification" (click)="toggleNotifications()">
+        <i class="bi bi-bell"></i>
+        <span class="badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
+      </button>
+      <div class="user-avatar">
+        <span>{{ userInitials }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats Cards -->
+  <section class="stats-section">
+    <div class="stat-card" *ngFor="let stat of stats">
+      <div class="stat-icon" [style.background]="stat.bgColor">
+        <i [class]="stat.icon"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stat.value }}</span>
+        <span class="stat-label">{{ stat.label }}</span>
+      </div>
+      <div class="stat-trend" [class.positive]="stat.trend > 0" [class.negative]="stat.trend < 0">
+        <i class="bi" [class.bi-arrow-up]="stat.trend > 0" [class.bi-arrow-down]="stat.trend < 0"></i>
+        {{ stat.trend > 0 ? '+' : '' }}{{ stat.trend }}%
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Grid -->
+  <div class="dashboard-grid">
+    <!-- Left Column -->
+    <div class="col-left">
+      
+      <!-- Zone 1: Événements & Salons -->
+      <section class="card-section events-section">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="bi bi-calendar-event"></i>
+            <h2>Événements & Salons</h2>
+          </div>
+          <a routerLink="/events" class="link-see-all">
+            Voir tout <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+        
+        <div class="events-feed">
+          <article class="event-card" *ngFor="let event of events">
+            <div class="event-image">
+              <img [src]="event.image" [alt]="event.title">
+              <span class="event-badge" [style.background]="event.categoryColor">
+                {{ event.category }}
+              </span>
+              <button class="btn-favorite" [class.active]="event.isFavorite" (click)="toggleFavorite(event)">
+                <i class="bi" [class.bi-heart]="!event.isFavorite" [class.bi-heart-fill]="event.isFavorite"></i>
+              </button>
+            </div>
+            <div class="event-content">
+              <div class="event-meta">
+                <span class="event-date">
+                  <i class="bi bi-calendar3"></i>
+                  {{ event.date | date:'dd MMM yyyy' }}
+                </span>
+                <span class="event-location">
+                  <i class="bi bi-geo-alt"></i>
+                  {{ event.location }}
+                </span>
+              </div>
+              <h3 class="event-title">{{ event.title }}</h3>
+              <p class="event-description">{{ event.description }}</p>
+              <div class="event-footer">
+                <span class="event-price" [class.free]="event.price === 0">
+                  {{ event.price === 0 ? 'Gratuit' : event.price + ' €' }}
+                </span>
+                <button class="btn-details">Détails</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Zone 2: Recherche par Budget -->
+      <section class="card-section budget-section">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="bi bi-wallet2"></i>
+            <h2>Bons Plans selon votre Budget</h2>
+          </div>
+        </div>
+        
+        <div class="budget-search">
+          <div class="budget-slider-container">
+            <label class="budget-label">
+              Mon budget maximum: <strong>{{ budgetValue }} €</strong>
+            </label>
+            <input 
+              type="range" 
+              class="budget-slider"
+              [min]="budgetMin" 
+              [max]="budgetMax" 
+              [(ngModel)]="budgetValue"
+              (ngModelChange)="onBudgetChange()">
+            <div class="budget-range-labels">
+              <span>{{ budgetMin }} €</span>
+              <span>{{ budgetMax }} €</span>
+            </div>
+          </div>
+          
+          <div class="category-filters">
+            <button 
+              class="filter-chip" 
+              *ngFor="let cat of budgetCategories"
+              [class.active]="selectedCategory === cat.id"
+              (click)="selectCategory(cat.id)">
+              <i [class]="cat.icon"></i>
+              {{ cat.name }}
+            </button>
+          </div>
+          
+          <div class="budget-results" *ngIf="budgetResults.length > 0">
+            <div class="result-item" *ngFor="let item of budgetResults">
+              <img [src]="item.image" [alt]="item.name">
+              <div class="result-info">
+                <h4>{{ item.name }}</h4>
+                <span class="result-location">
+                  <i class="bi bi-geo-alt"></i> {{ item.location }}
+                </span>
+                <div class="result-rating">
+                  <i class="bi bi-star-fill" *ngFor="let star of [1,2,3,4,5]; let i = index" 
+                     [class.active]="i < item.rating"></i>
+                  <span>({{ item.reviews }})</span>
+                </div>
+              </div>
+              <div class="result-price">
+                <span class="price">{{ item.price }} €</span>
+                <span class="price-label">/ nuit</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="no-results" *ngIf="budgetResults.length === 0 && budgetSearched">
+            <i class="bi bi-search"></i>
+            <p>Aucun résultat trouvé pour ce budget</p>
+          </div>
+          
+          <button class="btn-search-more" routerLink="/deals">
+            <i class="bi bi-compass"></i>
+            Explorer plus de bons plans
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-right">
+      
+      <!-- Zone 3: Calendrier -->
+      <section class="card-section calendar-section">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="bi bi-calendar3"></i>
+            <h2>Mon Calendrier</h2>
+          </div>
+          <div class="calendar-nav">
+            <button (click)="prevMonth()"><i class="bi bi-chevron-left"></i></button>
+            <span class="current-month">{{ currentMonthYear }}</span>
+            <button (click)="nextMonth()"><i class="bi bi-chevron-right"></i></button>
+          </div>
+        </div>
+        
+        <div class="mini-calendar">
+          <div class="calendar-header">
+            <span *ngFor="let day of weekDays">{{ day }}</span>
+          </div>
+          <div class="calendar-body">
+            <button 
+              class="calendar-day" 
+              *ngFor="let day of calendarDays"
+              [class.other-month]="!day.isCurrentMonth"
+              [class.today]="day.isToday"
+              [class.selected]="day.isSelected"
+              [class.has-event]="day.hasEvent"
+              (click)="selectDay(day)">
+              {{ day.number }}
+              <span class="event-dot" *ngIf="day.hasEvent"></span>
+            </button>
+          </div>
+        </div>
+        
+        <div class="selected-day-events" *ngIf="selectedDayEvents.length > 0">
+          <h4>Événements du {{ selectedDate | date:'dd MMMM' }}</h4>
+          <div class="day-event" *ngFor="let event of selectedDayEvents">
+            <span class="event-time">{{ event.time }}</span>
+            <span class="event-name">{{ event.name }}</span>
+            <span class="event-type-dot" [style.background]="event.color"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Zone 4: Publicités / Suggestions -->
+      <section class="card-section ads-section">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="bi bi-stars"></i>
+            <h2>Suggestions pour vous</h2>
+          </div>
+        </div>
+        
+        <div class="ads-carousel">
+          <div class="carousel-container">
+            <div class="ad-slide" *ngFor="let ad of advertisements; let i = index" 
+                 [class.active]="i === currentAdIndex">
+              <img [src]="ad.image" [alt]="ad.title">
+              <div class="ad-overlay">
+                <span class="ad-type">{{ ad.type }}</span>
+                <h3>{{ ad.title }}</h3>
+                <p>{{ ad.description }}</p>
+                <button class="btn-ad-cta">
+                  {{ ad.ctaText }}
+                  <i class="bi bi-arrow-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="carousel-dots">
+            <button *ngFor="let ad of advertisements; let i = index"
+                    [class.active]="i === currentAdIndex"
+                    (click)="goToAd(i)">
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Zone 5: Dernières Réservations -->
+      <section class="card-section reservations-section">
+        <div class="section-header">
+          <div class="section-title">
+            <i class="bi bi-bookmark-check"></i>
+            <h2>Mes Réservations</h2>
+          </div>
+          <a routerLink="/reservations" class="link-see-all">
+            Historique <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+        
+        <div class="reservations-list" *ngIf="recentReservations.length > 0">
+          <div class="reservation-item" *ngFor="let res of recentReservations">
+            <div class="reservation-icon" [style.background]="res.iconBg">
+              <i [class]="res.icon"></i>
+            </div>
+            <div class="reservation-info">
+              <h4>{{ res.name }}</h4>
+              <p>
+                <i class="bi bi-calendar3"></i> {{ res.date | date:'dd/MM/yyyy' }}
+                <span class="separator">•</span>
+                <i class="bi bi-clock"></i> {{ res.time }}
+              </p>
+            </div>
+            <span class="reservation-status" [class]="res.status">
+              {{ getStatusLabel(res.status) }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="empty-reservations" *ngIf="recentReservations.length === 0">
+          <i class="bi bi-calendar-x"></i>
+          <p>Aucune réservation récente</p>
+          <button class="btn-new-reservation" routerLink="/explore">
+            Faire une réservation
+          </button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
