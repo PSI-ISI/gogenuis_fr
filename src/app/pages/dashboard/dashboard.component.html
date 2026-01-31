@@ -1,442 +1,742 @@
-<!-- Dashboard Component - Gogenius FR -->
+<!-- Dashboard Tourist - Gogenius FR -->
 <div class="dashboard">
-  <!-- Header -->
+  <!-- ============ HEADER ============ -->
   <header class="dashboard-header">
     <div class="header-left">
-      <h1 class="greeting">Bonjour, <span class="user-name">{{ userName }}</span> 👋</h1>
-      <p class="subtitle">Découvrez les meilleures offres du jour</p>
+      <h1 class="greeting">Bonjour, <span class="user-name">{{ userProfile.fullName.split(' ')[0] }}</span> 👋</h1>
+      <p class="subtitle">Découvrez les meilleures expériences</p>
     </div>
     <div class="header-right">
-      <div class="search-global">
+      <div class="search-box">
         <i class="bi bi-search"></i>
         <input type="text" placeholder="Rechercher..." [(ngModel)]="searchQuery">
       </div>
-      
-      <!-- Place Recognition Button -->
-      <button class="btn-place-recognition" (click)="openPlaceModal()" title="Identifier un lieu">
+      <button class="btn-icon btn-place" (click)="openPlaceModal()" title="Identifier un lieu">
         <i class="bi bi-camera"></i>
-        <span class="btn-label">Où suis-je ?</span>
       </button>
-      
-      <button class="btn-notification" (click)="toggleNotifications()">
+      <button class="btn-icon btn-notif" title="Alertes">
         <i class="bi bi-bell"></i>
         <span class="badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
       </button>
-      <div class="user-avatar">
+      <div class="user-avatar" (click)="openProfileModal()">
         <span>{{ userInitials }}</span>
       </div>
     </div>
   </header>
 
-  <!-- Stats Cards -->
-  <section class="stats-section">
-    <div class="stat-card" *ngFor="let stat of stats">
-      <div class="stat-icon" [style.background]="stat.bgColor">
-        <i [class]="stat.icon"></i>
-      </div>
-      <div class="stat-info">
-        <span class="stat-value">{{ stat.value }}</span>
-        <span class="stat-label">{{ stat.label }}</span>
-      </div>
-      <div class="stat-trend" [class.positive]="stat.trend > 0" [class.negative]="stat.trend < 0">
-        <i class="bi" [class.bi-arrow-up]="stat.trend > 0" [class.bi-arrow-down]="stat.trend < 0"></i>
-        {{ stat.trend > 0 ? '+' : '' }}{{ stat.trend }}%
-      </div>
-    </div>
-  </section>
+  <!-- ============ TABS NAVIGATION ============ -->
+  <nav class="tabs-nav">
+    <button [class.active]="activeTab === 'recommendations'" (click)="setActiveTab('recommendations')">
+      <i class="bi bi-stars"></i> Recommandations
+    </button>
+    <button [class.active]="activeTab === 'budget'" (click)="setActiveTab('budget')">
+      <i class="bi bi-wallet2"></i> Budget
+    </button>
+    <button [class.active]="activeTab === 'reservations'" (click)="setActiveTab('reservations')">
+      <i class="bi bi-calendar-check"></i> Réservations
+    </button>
+    <button [class.active]="activeTab === 'nearby'" (click)="setActiveTab('nearby')">
+      <i class="bi bi-geo-alt"></i> À proximité
+    </button>
+  </nav>
 
-  <!-- Main Content Grid -->
-  <div class="dashboard-grid">
-    <!-- Left Column -->
-    <div class="col-left">
-      
-      <!-- Zone 1: Événements & Salons -->
-      <section class="card-section events-section">
+  <!-- ============ TAB: RECOMMENDATIONS (Module 2) ============ -->
+  <div class="tab-content" *ngIf="activeTab === 'recommendations'">
+    <div class="content-grid">
+      <!-- Main Recommendations -->
+      <section class="main-section">
         <div class="section-header">
-          <div class="section-title">
-            <i class="bi bi-calendar-event"></i>
-            <h2>Événements & Salons</h2>
-          </div>
-          <a routerLink="/events" class="link-see-all">
-            Voir tout <i class="bi bi-arrow-right"></i>
-          </a>
+          <h2><i class="bi bi-stars"></i> Pour vous</h2>
+          <span class="subtitle">Basé sur vos préférences</span>
         </div>
-        
-        <div class="events-feed">
-          <article class="event-card" *ngFor="let event of events">
-            <div class="event-image">
-              <img [src]="event.image" [alt]="event.title">
-              <span class="event-badge" [style.background]="event.categoryColor">
-                {{ event.category }}
-              </span>
-              <button class="btn-favorite" [class.active]="event.isFavorite" (click)="toggleFavorite(event)">
-                <i class="bi" [class.bi-heart]="!event.isFavorite" [class.bi-heart-fill]="event.isFavorite"></i>
-              </button>
+        <div class="recommendations-grid">
+          <article class="rec-card" *ngFor="let rec of recommendations" (click)="viewRecommendation(rec)">
+            <div class="rec-image">
+              <img [src]="rec.image" [alt]="rec.name">
+              <span class="sponsor-badge" *ngIf="rec.isSponsor">Sponsorisé</span>
+              <span class="match-badge">{{ rec.matchScore }}% match</span>
             </div>
-            <div class="event-content">
-              <div class="event-meta">
-                <span class="event-date">
-                  <i class="bi bi-calendar3"></i>
-                  {{ event.date | date:'dd MMM yyyy' }}
-                </span>
-                <span class="event-location">
-                  <i class="bi bi-geo-alt"></i>
-                  {{ event.location }}
-                </span>
+            <div class="rec-content">
+              <span class="rec-type">{{ rec.type }}</span>
+              <h3>{{ rec.name }}</h3>
+              <div class="rec-meta">
+                <span><i class="bi bi-geo-alt"></i> {{ rec.location }}</span>
+                <span><i class="bi bi-star-fill"></i> {{ rec.rating }}</span>
               </div>
-              <h3 class="event-title">{{ event.title }}</h3>
-              <p class="event-description">{{ event.description }}</p>
-              <div class="event-footer">
-                <span class="event-price" [class.free]="event.price === 0">
-                  {{ event.price === 0 ? 'Gratuit' : event.price + ' €' }}
-                </span>
-                <button class="btn-details">Détails</button>
+              <div class="rec-footer">
+                <span class="rec-price">{{ rec.price }} MAD</span>
+                <span class="rec-distance">{{ rec.distance }}</span>
               </div>
             </div>
           </article>
         </div>
       </section>
 
-      <!-- Zone 2: Recherche par Budget -->
-      <section class="card-section budget-section">
-        <div class="section-header">
-          <div class="section-title">
-            <i class="bi bi-wallet2"></i>
-            <h2>Bons Plans selon votre Budget</h2>
+      <!-- Sidebar -->
+      <aside class="sidebar-section">
+        <!-- Favorites -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="bi bi-heart"></i> Mes Favoris</h3>
+            <a routerLink="/favorites">Voir tout</a>
+          </div>
+          <div class="favorites-list">
+            <div class="favorite-item" *ngFor="let fav of favorites">
+              <img [src]="fav.image" [alt]="fav.name">
+              <div class="fav-info">
+                <h4>{{ fav.name }}</h4>
+                <span>{{ fav.type }} • <i class="bi bi-star-fill"></i> {{ fav.rating }}</span>
+              </div>
+              <button class="btn-remove" (click)="removeFavorite(fav.id)">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+            <p class="empty-state" *ngIf="favorites.length === 0">Aucun favori</p>
           </div>
         </div>
-        
-        <div class="budget-search">
-          <div class="budget-slider-container">
-            <label class="budget-label">
-              Mon budget maximum: <strong>{{ budgetValue }} €</strong>
-            </label>
-            <input 
-              type="range" 
-              class="budget-slider"
-              [min]="budgetMin" 
-              [max]="budgetMax" 
-              [(ngModel)]="budgetValue"
-              (ngModelChange)="onBudgetChange()">
-            <div class="budget-range-labels">
-              <span>{{ budgetMin }} €</span>
-              <span>{{ budgetMax }} €</span>
+
+        <!-- Deals -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="bi bi-tag"></i> Bons Plans</h3>
+            <a routerLink="/deals">Voir tout</a>
+          </div>
+          <div class="deals-list">
+            <div class="deal-item" *ngFor="let deal of deals">
+              <img [src]="deal.image" [alt]="deal.name">
+              <div class="deal-info">
+                <h4>{{ deal.name }}</h4>
+                <div class="deal-prices">
+                  <span class="old-price">{{ deal.originalPrice }} MAD</span>
+                  <span class="new-price">{{ deal.originalPrice - (deal.originalPrice * deal.discount / 100) | number:'1.0-0' }} MAD</span>
+                </div>
+                <span class="deal-valid">Jusqu'au {{ deal.validUntil }}</span>
+              </div>
+              <span class="discount-badge">-{{ deal.discount }}%</span>
             </div>
           </div>
-          
-          <div class="category-filters">
-            <button 
-              class="filter-chip" 
-              *ngFor="let cat of budgetCategories"
-              [class.active]="selectedCategory === cat.id"
-              (click)="selectCategory(cat.id)">
-              <i [class]="cat.icon"></i>
-              {{ cat.name }}
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ============ TAB: BUDGET (Module 3) ============ -->
+  <div class="tab-content" *ngIf="activeTab === 'budget'">
+    <div class="content-grid">
+      <section class="main-section">
+        <!-- Budget Overview -->
+        <div class="budget-overview card">
+          <div class="budget-header">
+            <div>
+              <h2>Budget Voyage</h2>
+              <p class="budget-period">Janvier - Février 2026</p>
+            </div>
+            <button class="btn-edit" (click)="openProfileModal()">
+              <i class="bi bi-pencil"></i> Modifier
             </button>
           </div>
-          
-          <div class="budget-results" *ngIf="budgetResults.length > 0">
-            <div class="result-item" *ngFor="let item of budgetResults">
-              <img [src]="item.image" [alt]="item.name">
-              <div class="result-info">
-                <h4>{{ item.name }}</h4>
-                <span class="result-location">
-                  <i class="bi bi-geo-alt"></i> {{ item.location }}
-                </span>
-                <div class="result-rating">
-                  <i class="bi bi-star-fill" *ngFor="let star of [1,2,3,4,5]; let i = index" 
-                     [class.active]="i < item.rating"></i>
-                  <span>({{ item.reviews }})</span>
+          <div class="budget-progress">
+            <div class="progress-info">
+              <span class="spent">{{ budgetSpent | number }} MAD</span>
+              <span class="total">/ {{ budgetTotal | number }} MAD</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" [class]="getBudgetStatus()" [style.width.%]="getBudgetPercentage()"></div>
+            </div>
+            <div class="progress-labels">
+              <span>{{ getBudgetPercentage() }}% utilisé</span>
+              <span class="remaining">Reste: {{ budgetTotal - budgetSpent | number }} MAD</span>
+            </div>
+          </div>
+
+          <!-- Categories Breakdown -->
+          <div class="categories-breakdown">
+            <h4>Répartition par catégorie</h4>
+            <div class="category-bars">
+              <div class="category-bar" *ngFor="let cat of getExpensesByCategory()">
+                <div class="cat-info">
+                  <i [class]="cat.icon" [style.color]="cat.color"></i>
+                  <span>{{ cat.category }}</span>
                 </div>
-              </div>
-              <div class="result-price">
-                <span class="price">{{ item.price }} €</span>
-                <span class="price-label">/ nuit</span>
+                <div class="cat-bar-container">
+                  <div class="cat-bar" [style.width.%]="cat.percentage" [style.background]="cat.color"></div>
+                </div>
+                <span class="cat-amount">{{ cat.total | number }} MAD</span>
               </div>
             </div>
           </div>
-          
-          <div class="no-results" *ngIf="budgetResults.length === 0 && budgetSearched">
-            <i class="bi bi-search"></i>
-            <p>Aucun résultat trouvé pour ce budget</p>
+        </div>
+
+        <!-- Expenses List -->
+        <div class="expenses-section card">
+          <div class="card-header">
+            <h3><i class="bi bi-list-ul"></i> Dernières dépenses</h3>
+            <button class="btn-primary" (click)="openAddExpenseModal()">
+              <i class="bi bi-plus"></i> Ajouter
+            </button>
           </div>
-          
-          <button class="btn-search-more" routerLink="/deals">
-            <i class="bi bi-compass"></i>
-            Explorer plus de bons plans
+          <div class="expenses-list">
+            <div class="expense-item" *ngFor="let exp of expenses">
+              <div class="expense-icon" [style.background]="exp.color">
+                <i [class]="exp.icon"></i>
+              </div>
+              <div class="expense-info">
+                <h4>{{ exp.name }}</h4>
+                <span>{{ exp.category }} • {{ exp.date | date:'dd/MM/yyyy' }}</span>
+              </div>
+              <div class="expense-amount">-{{ exp.amount | number }} MAD</div>
+              <button class="btn-delete" (click)="deleteExpense(exp.id)">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sidebar Alerts & Deals -->
+      <aside class="sidebar-section">
+        <!-- Alerts -->
+        <div class="card alerts-card">
+          <div class="card-header">
+            <h3><i class="bi bi-bell"></i> Alertes</h3>
+          </div>
+          <div class="alerts-list">
+            <div class="alert-item" *ngFor="let alert of alerts" [class.read]="alert.isRead" (click)="markAlertRead(alert.id)">
+              <i [class]="alert.icon" [style.color]="alert.color"></i>
+              <span>{{ alert.message }}</span>
+              <button class="btn-dismiss" (click)="dismissAlert(alert.id); $event.stopPropagation()">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+            <p class="empty-state" *ngIf="alerts.length === 0">Aucune alerte</p>
+          </div>
+        </div>
+
+        <!-- Deals -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="bi bi-percent"></i> Économisez</h3>
+          </div>
+          <div class="deals-compact">
+            <div class="deal-compact" *ngFor="let deal of deals">
+              <span class="deal-discount">-{{ deal.discount }}%</span>
+              <span class="deal-name">{{ deal.name }}</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ============ TAB: RESERVATIONS (Module 4) ============ -->
+  <div class="tab-content" *ngIf="activeTab === 'reservations'">
+    <div class="content-grid">
+      <section class="main-section">
+        <div class="section-header">
+          <h2><i class="bi bi-calendar-check"></i> Mes Réservations</h2>
+          <button class="btn-primary" (click)="openNewReservationModal()">
+            <i class="bi bi-plus"></i> Nouvelle réservation
           </button>
         </div>
-      </section>
-    </div>
 
-    <!-- Right Column -->
-    <div class="col-right">
-      
-      <!-- Zone 3: Calendrier -->
-      <section class="card-section calendar-section">
-        <div class="section-header">
-          <div class="section-title">
-            <i class="bi bi-calendar3"></i>
-            <h2>Mon Calendrier</h2>
+        <div class="reservations-list">
+          <div class="reservation-card" *ngFor="let res of reservations" (click)="viewReservation(res)">
+            <img [src]="res.image" [alt]="res.name" class="res-image">
+            <div class="res-content">
+              <div class="res-header">
+                <span class="res-type">{{ res.type }}</span>
+                <span class="res-status" [class]="getStatusClass(res.status)">{{ getStatusLabel(res.status) }}</span>
+              </div>
+              <h3>{{ res.name }}</h3>
+              <div class="res-details">
+                <span><i class="bi bi-calendar3"></i> {{ res.date | date:'dd MMM yyyy' }}</span>
+                <span><i class="bi bi-clock"></i> {{ res.time }}</span>
+                <span><i class="bi bi-people"></i> {{ res.guests }} pers.</span>
+              </div>
+              <div class="res-footer">
+                <span class="res-location"><i class="bi bi-geo-alt"></i> {{ res.location }}</span>
+                <span class="res-price">{{ res.price | number }} MAD</span>
+              </div>
+            </div>
           </div>
-          <div class="calendar-nav">
-            <button (click)="prevMonth()"><i class="bi bi-chevron-left"></i></button>
-            <span class="current-month">{{ currentMonthYear }}</span>
-            <button (click)="nextMonth()"><i class="bi bi-chevron-right"></i></button>
+
+          <div class="empty-state-large" *ngIf="reservations.length === 0">
+            <i class="bi bi-calendar-x"></i>
+            <p>Aucune réservation</p>
+            <button class="btn-primary" (click)="openNewReservationModal()">Faire une réservation</button>
           </div>
         </div>
-        
-        <div class="mini-calendar">
-          <div class="calendar-header">
-            <span *ngFor="let day of weekDays">{{ day }}</span>
+      </section>
+
+      <aside class="sidebar-section">
+        <!-- Quick Book -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="bi bi-lightning"></i> Réservation rapide</h3>
           </div>
-          <div class="calendar-body">
-            <button 
-              class="calendar-day" 
-              *ngFor="let day of calendarDays"
-              [class.other-month]="!day.isCurrentMonth"
-              [class.today]="day.isToday"
-              [class.selected]="day.isSelected"
-              [class.has-event]="day.hasEvent"
-              (click)="selectDay(day)">
-              {{ day.number }}
-              <span class="event-dot" *ngIf="day.hasEvent"></span>
+          <div class="quick-book-options">
+            <button class="quick-option" (click)="newReservation.type = 'Hôtel'; openNewReservationModal()">
+              <i class="bi bi-building"></i>
+              <span>Hôtel</span>
+            </button>
+            <button class="quick-option" (click)="newReservation.type = 'Restaurant'; openNewReservationModal()">
+              <i class="bi bi-cup-hot"></i>
+              <span>Restaurant</span>
+            </button>
+            <button class="quick-option" (click)="newReservation.type = 'Spa'; openNewReservationModal()">
+              <i class="bi bi-heart-pulse"></i>
+              <span>Spa</span>
+            </button>
+            <button class="quick-option" (click)="newReservation.type = 'Activité'; openNewReservationModal()">
+              <i class="bi bi-bicycle"></i>
+              <span>Activité</span>
             </button>
           </div>
         </div>
-        
-        <div class="selected-day-events" *ngIf="selectedDayEvents.length > 0">
-          <h4>Événements du {{ selectedDate | date:'dd MMMM' }}</h4>
-          <div class="day-event" *ngFor="let event of selectedDayEvents">
-            <span class="event-time">{{ event.time }}</span>
-            <span class="event-name">{{ event.name }}</span>
-            <span class="event-type-dot" [style.background]="event.color"></span>
-          </div>
-        </div>
-      </section>
 
-      <!-- Zone 4: Publicités / Suggestions -->
-      <section class="card-section ads-section">
-        <div class="section-header">
-          <div class="section-title">
-            <i class="bi bi-stars"></i>
-            <h2>Suggestions pour vous</h2>
+        <!-- Upcoming -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="bi bi-clock-history"></i> À venir</h3>
+          </div>
+          <div class="upcoming-list">
+            <div class="upcoming-item" *ngFor="let res of reservations.slice(0, 3)">
+              <div class="upcoming-date">
+                <span class="day">{{ res.date | date:'dd' }}</span>
+                <span class="month">{{ res.date | date:'MMM' }}</span>
+              </div>
+              <div class="upcoming-info">
+                <h4>{{ res.name }}</h4>
+                <span>{{ res.time }} • {{ res.guests }} pers.</span>
+              </div>
+            </div>
           </div>
         </div>
-        
-        <div class="ads-carousel">
-          <div class="carousel-container">
-            <div class="ad-slide" *ngFor="let ad of advertisements; let i = index" 
-                 [class.active]="i === currentAdIndex">
-              <img [src]="ad.image" [alt]="ad.title">
-              <div class="ad-overlay">
-                <span class="ad-type">{{ ad.type }}</span>
-                <h3>{{ ad.title }}</h3>
-                <p>{{ ad.description }}</p>
-                <button class="btn-ad-cta">
-                  {{ ad.ctaText }}
-                  <i class="bi bi-arrow-right"></i>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ============ TAB: NEARBY (Module 5) ============ -->
+  <div class="tab-content" *ngIf="activeTab === 'nearby'">
+    <div class="content-grid">
+      <section class="main-section">
+        <div class="section-header">
+          <h2><i class="bi bi-geo-alt"></i> À proximité</h2>
+          <div class="location-status">
+            <span *ngIf="isLocating"><i class="bi bi-arrow-repeat spin"></i> Localisation...</span>
+            <span *ngIf="userLocation && !isLocating" class="location-active">
+              <i class="bi bi-check-circle"></i> Localisé
+            </span>
+            <button class="btn-icon" (click)="getUserLocation()" *ngIf="!isLocating">
+              <i class="bi bi-arrow-clockwise"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="nearby-grid">
+          <div class="nearby-card" *ngFor="let place of nearbyPlaces">
+            <img [src]="place.image" [alt]="place.name">
+            <div class="nearby-content">
+              <div class="nearby-header">
+                <span class="nearby-type">{{ place.type }}</span>
+                <span class="sponsor-tag" *ngIf="place.isSponsor">★ Sponsor</span>
+              </div>
+              <h3>{{ place.name }}</h3>
+              <div class="nearby-meta">
+                <span><i class="bi bi-geo"></i> {{ place.distance }}m</span>
+                <span><i class="bi bi-star-fill"></i> {{ place.rating }}</span>
+                <span class="status-open" *ngIf="place.isOpen">Ouvert</span>
+              </div>
+              <div class="nearby-actions">
+                <button class="btn-secondary" (click)="openNavigation(place)">
+                  <i class="bi bi-signpost"></i> Y aller
+                </button>
+                <button class="btn-primary" (click)="newReservation.name = place.name; newReservation.type = place.type; openNewReservationModal()">
+                  <i class="bi bi-bookmark-plus"></i> Réserver
                 </button>
               </div>
             </div>
           </div>
-          <div class="carousel-dots">
-            <button *ngFor="let ad of advertisements; let i = index"
-                    [class.active]="i === currentAdIndex"
-                    (click)="goToAd(i)">
-            </button>
-          </div>
         </div>
       </section>
 
-      <!-- Zone 5: Dernières Réservations -->
-      <section class="card-section reservations-section">
-        <div class="section-header">
-          <div class="section-title">
-            <i class="bi bi-bookmark-check"></i>
-            <h2>Mes Réservations</h2>
+      <aside class="sidebar-section">
+        <!-- Recognize Place -->
+        <div class="card recognize-card">
+          <div class="recognize-icon">
+            <i class="bi bi-camera"></i>
           </div>
-          <a routerLink="/reservations" class="link-see-all">
-            Historique <i class="bi bi-arrow-right"></i>
-          </a>
-        </div>
-        
-        <div class="reservations-list" *ngIf="recentReservations.length > 0">
-          <div class="reservation-item" *ngFor="let res of recentReservations">
-            <div class="reservation-icon" [style.background]="res.iconBg">
-              <i [class]="res.icon"></i>
-            </div>
-            <div class="reservation-info">
-              <h4>{{ res.name }}</h4>
-              <p>
-                <i class="bi bi-calendar3"></i> {{ res.date | date:'dd/MM/yyyy' }}
-                <span class="separator">•</span>
-                <i class="bi bi-clock"></i> {{ res.time }}
-              </p>
-            </div>
-            <span class="reservation-status" [class]="res.status">
-              {{ getStatusLabel(res.status) }}
-            </span>
-          </div>
-        </div>
-        
-        <div class="empty-reservations" *ngIf="recentReservations.length === 0">
-          <i class="bi bi-calendar-x"></i>
-          <p>Aucune réservation récente</p>
-          <button class="btn-new-reservation" routerLink="/explore">
-            Faire une réservation
+          <h3>Où suis-je ?</h3>
+          <p>Prenez une photo pour identifier ce lieu</p>
+          <button class="btn-primary" (click)="openPlaceModal()">
+            <i class="bi bi-camera-fill"></i> Identifier
           </button>
         </div>
-      </section>
+
+        <!-- Suggested Circuits -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="bi bi-map"></i> Circuits suggérés</h3>
+          </div>
+          <div class="circuits-list">
+            <div class="circuit-item">
+              <i class="bi bi-lightning circuit-icon eco"></i>
+              <div class="circuit-info">
+                <h4>Circuit Économique</h4>
+                <span>3 lieux • 2.5 km • ~180 MAD</span>
+              </div>
+            </div>
+            <div class="circuit-item">
+              <i class="bi bi-star circuit-icon popular"></i>
+              <div class="circuit-info">
+                <h4>Incontournables</h4>
+                <span>5 lieux • 4 km • ~350 MAD</span>
+              </div>
+            </div>
+            <div class="circuit-item">
+              <i class="bi bi-cup-hot circuit-icon gastro"></i>
+              <div class="circuit-info">
+                <h4>Circuit Gastronomique</h4>
+                <span>4 lieux • 3 km • ~500 MAD</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
   </div>
 </div>
 
-<!-- ==================== MODAL RECONNAISSANCE DE LIEU ==================== -->
-<div class="place-modal-overlay" *ngIf="showPlaceModal" (click)="closePlaceModal()">
-  <div class="place-modal" (click)="$event.stopPropagation()">
-    
-    <!-- Modal Header -->
-    <div class="place-modal-header">
-      <div class="modal-title-group">
-        <div class="modal-icon">
-          <i class="bi bi-geo-alt"></i>
-        </div>
-        <div>
-          <h2>Identifier un lieu</h2>
-          <p>Prenez une photo ou importez une image</p>
+<!-- ============ MODALS ============ -->
+
+<!-- Profile Modal -->
+<div class="modal-overlay" *ngIf="showProfileModal" (click)="closeProfileModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2><i class="bi bi-person-circle"></i> Mon Profil</h2>
+      <button class="btn-close" (click)="closeProfileModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body" *ngIf="editingProfile">
+      <div class="form-group">
+        <label>Nom complet</label>
+        <input type="text" [(ngModel)]="editingProfile.fullName">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" [(ngModel)]="editingProfile.email">
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="tel" [(ngModel)]="editingProfile.phone">
+      </div>
+      <div class="form-group">
+        <label>Budget maximum (MAD)</label>
+        <input type="number" [(ngModel)]="editingProfile.preferences.budgetMax">
+      </div>
+      <div class="form-group">
+        <label>Catégories préférées</label>
+        <div class="categories-grid">
+          <button *ngFor="let cat of availableCategories" 
+                  class="category-chip" 
+                  [class.selected]="isCategorySelected(cat.name)"
+                  (click)="toggleCategory(cat.name)">
+            <i [class]="cat.icon"></i> {{ cat.name }}
+          </button>
         </div>
       </div>
-      <button class="btn-close-modal" (click)="closePlaceModal()">
-        <i class="bi bi-x-lg"></i>
+      <div class="form-group toggle-group">
+        <label>Notifications</label>
+        <label class="toggle">
+          <input type="checkbox" [(ngModel)]="editingProfile.preferences.notifications">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeProfileModal()">Annuler</button>
+      <button class="btn-primary" (click)="saveProfile()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Recommendation Detail Modal -->
+<div class="modal-overlay" *ngIf="showRecommendationModal" (click)="closeRecommendationModal()">
+  <div class="modal modal-lg" (click)="$event.stopPropagation()">
+    <button class="btn-close-float" (click)="closeRecommendationModal()"><i class="bi bi-x-lg"></i></button>
+    <div class="rec-modal-image" *ngIf="selectedRecommendation">
+      <img [src]="selectedRecommendation.image" [alt]="selectedRecommendation.name">
+    </div>
+    <div class="modal-body" *ngIf="selectedRecommendation">
+      <span class="rec-modal-type">{{ selectedRecommendation.type }}</span>
+      <h2>{{ selectedRecommendation.name }}</h2>
+      <div class="rec-modal-meta">
+        <span><i class="bi bi-geo-alt"></i> {{ selectedRecommendation.location }}</span>
+        <span><i class="bi bi-star-fill"></i> {{ selectedRecommendation.rating }}</span>
+        <span><i class="bi bi-geo"></i> {{ selectedRecommendation.distance }}</span>
+      </div>
+      <div class="rec-modal-price">
+        <span class="price">{{ selectedRecommendation.price }} MAD</span>
+        <span class="match">{{ selectedRecommendation.matchScore }}% correspondance</span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="addToFavorites(selectedRecommendation!)">
+        <i class="bi bi-heart"></i> Favoris
+      </button>
+      <button class="btn-primary" (click)="bookRecommendation(selectedRecommendation!)">
+        <i class="bi bi-calendar-plus"></i> Réserver
       </button>
     </div>
+  </div>
+</div>
 
-    <!-- Modal Body -->
-    <div class="place-modal-body">
-      
-      <!-- Initial State - Choose Method -->
+<!-- Add Expense Modal -->
+<div class="modal-overlay" *ngIf="showAddExpenseModal" (click)="closeAddExpenseModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2><i class="bi bi-plus-circle"></i> Ajouter une dépense</h2>
+      <button class="btn-close" (click)="closeAddExpenseModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nom</label>
+        <input type="text" [(ngModel)]="newExpense.name" placeholder="Ex: Dîner au restaurant">
+      </div>
+      <div class="form-group">
+        <label>Catégorie</label>
+        <select [(ngModel)]="newExpense.category">
+          <option value="">Sélectionner...</option>
+          <option *ngFor="let cat of expenseCategories" [value]="cat.id">{{ cat.name }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Montant (MAD)</label>
+        <input type="number" [(ngModel)]="newExpense.amount" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" [ngModel]="newExpense.date | date:'yyyy-MM-dd'" (ngModelChange)="newExpense.date = $event">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeAddExpenseModal()">Annuler</button>
+      <button class="btn-primary" (click)="addExpense()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Reservation Detail Modal -->
+<div class="modal-overlay" *ngIf="showReservationModal" (click)="closeReservationModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2><i class="bi bi-bookmark-check"></i> Détails réservation</h2>
+      <button class="btn-close" (click)="closeReservationModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body" *ngIf="selectedReservation">
+      <div class="res-detail-header">
+        <img [src]="selectedReservation.image" [alt]="selectedReservation.name">
+        <div>
+          <h3>{{ selectedReservation.name }}</h3>
+          <span class="res-status" [class]="getStatusClass(selectedReservation.status)">
+            {{ getStatusLabel(selectedReservation.status) }}
+          </span>
+        </div>
+      </div>
+      <div class="res-detail-info">
+        <div class="info-row">
+          <i class="bi bi-calendar3"></i>
+          <span>{{ selectedReservation.date | date:'EEEE dd MMMM yyyy' }}</span>
+        </div>
+        <div class="info-row">
+          <i class="bi bi-clock"></i>
+          <span>{{ selectedReservation.time }}</span>
+        </div>
+        <div class="info-row">
+          <i class="bi bi-people"></i>
+          <span>{{ selectedReservation.guests }} personnes</span>
+        </div>
+        <div class="info-row">
+          <i class="bi bi-geo-alt"></i>
+          <span>{{ selectedReservation.location }}</span>
+        </div>
+        <div class="info-row">
+          <i class="bi bi-currency-dollar"></i>
+          <span>{{ selectedReservation.price | number }} MAD</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer" *ngIf="selectedReservation?.status !== 'cancelled'">
+      <button class="btn-danger" (click)="cancelReservation(selectedReservation!.id)">
+        <i class="bi bi-x-circle"></i> Annuler
+      </button>
+      <button class="btn-primary" (click)="modifyReservation()">
+        <i class="bi bi-pencil"></i> Modifier
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- New Reservation Modal -->
+<div class="modal-overlay" *ngIf="showNewReservationModal" (click)="closeNewReservationModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2><i class="bi bi-calendar-plus"></i> Nouvelle réservation</h2>
+      <button class="btn-close" (click)="closeNewReservationModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Établissement</label>
+        <input type="text" [(ngModel)]="newReservation.name" placeholder="Nom de l'établissement">
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select [(ngModel)]="newReservation.type">
+          <option value="">Sélectionner...</option>
+          <option value="Hôtel">Hôtel</option>
+          <option value="Restaurant">Restaurant</option>
+          <option value="Spa">Spa</option>
+          <option value="Activité">Activité</option>
+          <option value="Transport">Transport</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" [ngModel]="newReservation.date | date:'yyyy-MM-dd'" (ngModelChange)="newReservation.date = $event">
+        </div>
+        <div class="form-group">
+          <label>Heure</label>
+          <input type="time" [(ngModel)]="newReservation.time">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Personnes</label>
+          <input type="number" [(ngModel)]="newReservation.guests" min="1">
+        </div>
+        <div class="form-group">
+          <label>Prix (MAD)</label>
+          <input type="number" [(ngModel)]="newReservation.price">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Lieu</label>
+        <input type="text" [(ngModel)]="newReservation.location" placeholder="Ville">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeNewReservationModal()">Annuler</button>
+      <button class="btn-primary" (click)="createReservation()">
+        <i class="bi bi-check"></i> Réserver
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Navigation Modal -->
+<div class="modal-overlay" *ngIf="showNavigationModal" (click)="closeNavigationModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2><i class="bi bi-signpost"></i> Navigation</h2>
+      <button class="btn-close" (click)="closeNavigationModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="nav-destination">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span>{{ navigationDestination }}</span>
+      </div>
+      <div class="nav-modes">
+        <button [class.active]="navigationMode === 'walking'" (click)="navigationMode = 'walking'">
+          <i class="bi bi-person-walking"></i> À pied
+        </button>
+        <button [class.active]="navigationMode === 'driving'" (click)="navigationMode = 'driving'">
+          <i class="bi bi-car-front"></i> Voiture
+        </button>
+        <button [class.active]="navigationMode === 'transit'" (click)="navigationMode = 'transit'">
+          <i class="bi bi-bus-front"></i> Transport
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="closeNavigationModal()">Annuler</button>
+      <button class="btn-primary" (click)="startNavigation()">
+        <i class="bi bi-navigation"></i> Démarrer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Place Recognition Modal -->
+<div class="modal-overlay" *ngIf="showPlaceModal" (click)="closePlaceModal()">
+  <div class="modal modal-lg" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2><i class="bi bi-camera"></i> Identifier un lieu</h2>
+      <button class="btn-close" (click)="closePlaceModal()"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="modal-body">
+      <!-- Choose Method -->
       <div class="choose-method" *ngIf="!capturedImage && !isUsingCamera">
         <div class="method-card" (click)="startCamera()">
-          <div class="method-icon camera">
-            <i class="bi bi-camera-fill"></i>
-          </div>
+          <i class="bi bi-camera-fill"></i>
           <h3>Prendre une photo</h3>
-          <p>Utilisez votre caméra pour capturer le lieu</p>
         </div>
-        
-        <div class="method-divider">
-          <span>ou</span>
-        </div>
-        
         <div class="method-card" (click)="triggerFileInput()">
-          <div class="method-icon upload">
-            <i class="bi bi-image"></i>
-          </div>
+          <i class="bi bi-image"></i>
           <h3>Importer une image</h3>
-          <p>Sélectionnez une photo depuis votre appareil</p>
         </div>
-        
-        <input type="file" #fileInput accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+        <input type="file" #fileInput accept="image/*" (change)="onFileSelected($event)" style="display:none">
       </div>
 
       <!-- Camera View -->
       <div class="camera-view" *ngIf="isUsingCamera && !capturedImage">
-        <div class="video-container">
-          <video #videoElement autoplay playsinline></video>
-          <div class="camera-overlay">
-            <div class="focus-frame"></div>
-          </div>
-        </div>
+        <video #videoElement autoplay playsinline></video>
         <div class="camera-controls">
-          <button class="btn-cancel" (click)="stopCamera()">
-            <i class="bi bi-x-lg"></i>
-          </button>
-          <button class="btn-capture" (click)="capturePhoto()" [disabled]="!isCameraActive">
-            <span class="capture-ring"></span>
-          </button>
-          <button class="btn-switch" disabled>
-            <i class="bi bi-arrow-repeat"></i>
-          </button>
+          <button class="btn-cancel" (click)="stopCamera()"><i class="bi bi-x"></i></button>
+          <button class="btn-capture" (click)="capturePhoto()"></button>
+          <div style="width:50px"></div>
         </div>
       </div>
 
-      <!-- Captured Image Preview -->
+      <!-- Preview -->
       <div class="image-preview" *ngIf="capturedImage && !recognitionResult">
-        <div class="preview-container">
-          <img [src]="capturedImage" alt="Captured image">
-          <div class="analyzing-overlay" *ngIf="isAnalyzing">
-            <div class="analyzing-spinner"></div>
-            <p>Analyse en cours...</p>
-          </div>
+        <img [src]="capturedImage" alt="Captured">
+        <div class="analyzing-overlay" *ngIf="isAnalyzing">
+          <div class="spinner"></div>
+          <p>Analyse en cours...</p>
         </div>
-        
         <div class="preview-actions" *ngIf="!isAnalyzing">
-          <button class="btn-retake" (click)="retakePhoto()">
-            <i class="bi bi-arrow-counterclockwise"></i>
-            Reprendre
-          </button>
-          <button class="btn-analyze" (click)="analyzeImage()">
-            <i class="bi bi-search"></i>
-            Identifier le lieu
-          </button>
+          <button class="btn-secondary" (click)="retakePhoto()">Reprendre</button>
+          <button class="btn-primary" (click)="analyzeImage()">Identifier</button>
         </div>
-        
-        <div class="error-message" *ngIf="recognitionError && !isAnalyzing">
+        <div class="error-message" *ngIf="recognitionError">
           <i class="bi bi-exclamation-circle"></i>
           <p>{{ recognitionError }}</p>
-          <button (click)="retakePhoto()">Réessayer</button>
         </div>
       </div>
 
-      <!-- Recognition Result -->
+      <!-- Result -->
       <div class="recognition-result" *ngIf="recognitionResult">
-        <div class="result-image">
-          <img [src]="capturedImage" alt="Analyzed image">
-          <div class="confidence-badge">
-            <i class="bi bi-check-circle-fill"></i>
-            {{ recognitionResult.confidence }}%
-          </div>
+        <img [src]="capturedImage" alt="Recognized">
+        <div class="result-info">
+          <span class="confidence">{{ recognitionResult.confidence }}% confiance</span>
+          <h3>{{ recognitionResult.name }}</h3>
+          <p>{{ recognitionResult.description }}</p>
+          <span class="location"><i class="bi bi-geo-alt"></i> {{ recognitionResult.location }}</span>
         </div>
-        
-        <div class="result-content">
-          <div class="result-header">
-            <h3>{{ recognitionResult.name }}</h3>
-            <span class="location-tag">
-              <i class="bi bi-geo-alt-fill"></i>
-              {{ recognitionResult.location }}
-            </span>
-          </div>
-          
-          <p class="result-description">{{ recognitionResult.description }}</p>
-          
-          <div class="result-actions">
-            <button class="btn-maps" (click)="openInMaps()" *ngIf="recognitionResult.mapsUrl">
-              <i class="bi bi-map"></i>
-              Voir sur Maps
-            </button>
-            <button class="btn-wiki" (click)="openWikipedia()" *ngIf="recognitionResult.wikipediaUrl">
-              <i class="bi bi-wikipedia"></i>
-              En savoir plus
-            </button>
-          </div>
-          
-          <button class="btn-new-search" (click)="resetPlaceRecognition()">
-            <i class="bi bi-camera"></i>
-            Nouvelle recherche
+        <div class="result-actions">
+          <button class="btn-maps" (click)="openInMaps()" *ngIf="recognitionResult.mapsUrl">
+            <i class="bi bi-map"></i> Maps
+          </button>
+          <button class="btn-wiki" (click)="openWikipedia()" *ngIf="recognitionResult.wikipediaUrl">
+            <i class="bi bi-wikipedia"></i> Wikipedia
           </button>
         </div>
+        <button class="btn-new-search" (click)="resetPlaceRecognition()">
+          <i class="bi bi-arrow-repeat"></i> Nouvelle recherche
+        </button>
       </div>
-
     </div>
 
-    <!-- Hidden canvas for photo capture -->
-    <canvas #canvasElement style="display: none;"></canvas>
-    
-    <!-- API Configuration Notice -->
-    <div class="api-notice" *ngIf="!recognitionResult && !isAnalyzing && !capturedImage">
-      <i class="bi bi-cloud-check"></i>
-      <span>Reconnaissance réelle via Google Cloud Vision API</span>
-    </div>
+    <canvas #canvasElement style="display:none"></canvas>
   </div>
 </div>

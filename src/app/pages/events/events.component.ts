@@ -1,43 +1,37 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { 
+  Event, 
+  Category, 
+  City,
+  EVENTS_DATA, 
+  CATEGORIES, 
+  CITIES,
+  getEventsByCategory,
+  getEventsByCity,
+  getFeaturedEvents,
+  getUpcomingEvents,
+  searchEvents,
+  getEventById,
+  getCategoryCount
+} from '../../dataset/events-morocco-2026_data';
 import { Router } from '@angular/router';
 
-interface Event {
-  id: number;
-  title: string;
-  description: string;
-  image: string;
-  date: Date;
-  time: string;
-  location: string;
-  city: string;
-  price: number;
-  category: string;
-  categoryColor: string;
-  attendees: number;
-  views: number;
-  isFavorite: boolean;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  count?: number;
-}
 
 @Component({
   selector: 'app-events',
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './events.component.html',
-  styleUrls: ['./events.component.css']
+  styleUrls: ['./events.component.css'],
+  // IMPORTANT: Default change detection pour éviter les problèmes de lazy loading
+  changeDetection: ChangeDetectionStrategy.Default
 })
-export class EventsComponent implements OnInit {
+export class EventsComponent implements OnInit, AfterViewInit {
 
   // View mode
-  viewMode: 'grid' | 'list' = 'grid';
+  viewMode: 'grid' | 'list' | 'calendar' = 'grid';
 
   // Search & Filters
   searchQuery = '';
@@ -53,259 +47,109 @@ export class EventsComponent implements OnInit {
   totalPages = 1;
   pages: number[] = [];
 
-  // Data
+  // Data from external file
   events: Event[] = [];
   filteredEvents: Event[] = [];
-  cities: string[] = ['Paris', 'Lyon', 'Marseille', 'Nice', 'Bordeaux', 'Toulouse', 'Nantes'];
+  paginatedEvents: Event[] = [];
+  
+  // Categories et Cities depuis le fichier externe
+  categories: Category[] = [];
+  cities: City[] = [];
 
-  categories: Category[] = [
-    { id: 'all', name: 'Tous', icon: 'bi bi-grid' },
-    { id: 'salon', name: 'Salons', icon: 'bi bi-building', count: 8 },
-    { id: 'festival', name: 'Festivals', icon: 'bi bi-music-note-beamed', count: 12 },
-    { id: 'sport', name: 'Sport', icon: 'bi bi-trophy', count: 6 },
-    { id: 'culture', name: 'Culture', icon: 'bi bi-palette', count: 15 },
-    { id: 'gastronomie', name: 'Gastronomie', icon: 'bi bi-cup-hot', count: 9 },
-    { id: 'business', name: 'Business', icon: 'bi bi-briefcase', count: 4 }
-  ];
+  // Stats
+  totalEvents = 0;
+  freeEvents = 0;
+  featuredEvents = 0;
+  
+  // Loading state
+  isLoading = true;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router, 
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.loadEvents();
+    this.loadData();
+    this.loadFavorites();
+    this.calculateStats();
     this.filterEvents();
+    this.isLoading = false;
   }
 
-  loadEvents(): void {
-    // Mock data - À remplacer par un appel API
-    this.events = [
-      {
-        id: 1,
-        title: 'Salon International du Tourisme',
-        description: 'Découvrez les dernières tendances du tourisme mondial avec plus de 200 exposants venus des quatre coins du globe.',
-        image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
-        date: new Date('2026-02-15'),
-        time: '09:00 - 18:00',
-        location: 'Paris Expo',
-        city: 'Paris',
-        price: 25,
-        category: 'SALON',
-        categoryColor: '#1a5f7a',
-        attendees: 1250,
-        views: 4500,
-        isFavorite: false
-      },
-      {
-        id: 2,
-        title: 'Festival Gastronomique de Lyon',
-        description: 'Une célébration des saveurs locales avec les meilleurs chefs de la région lyonnaise.',
-        image: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800',
-        date: new Date('2026-02-22'),
-        time: '11:00 - 23:00',
-        location: 'Place Bellecour',
-        city: 'Lyon',
-        price: 0,
-        category: 'FESTIVAL',
-        categoryColor: '#e63946',
-        attendees: 3200,
-        views: 8900,
-        isFavorite: true
-      },
-      {
-        id: 3,
-        title: 'Marathon de Nice',
-        description: 'Parcourez la magnifique Côte d\'Azur lors de ce marathon international.',
-        image: 'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?w=800',
-        date: new Date('2026-03-08'),
-        time: '07:00 - 14:00',
-        location: 'Promenade des Anglais',
-        city: 'Nice',
-        price: 45,
-        category: 'SPORT',
-        categoryColor: '#2a9d8f',
-        attendees: 8500,
-        views: 12000,
-        isFavorite: false
-      },
-      {
-        id: 4,
-        title: 'Exposition Art Moderne',
-        description: 'Une rétrospective exceptionnelle des œuvres majeures du XXe siècle.',
-        image: 'https://images.unsplash.com/photo-1531243269054-5ebf6f34081e?w=800',
-        date: new Date('2026-02-01'),
-        time: '10:00 - 19:00',
-        location: 'Musée d\'Art Contemporain',
-        city: 'Marseille',
-        price: 15,
-        category: 'CULTURE',
-        categoryColor: '#9b5de5',
-        attendees: 890,
-        views: 3400,
-        isFavorite: false
-      },
-      {
-        id: 5,
-        title: 'Salon du Vin de Bordeaux',
-        description: 'Dégustez les meilleurs crus de la région bordelaise avec plus de 150 vignerons.',
-        image: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?w=800',
-        date: new Date('2026-03-20'),
-        time: '10:00 - 20:00',
-        location: 'Palais des Congrès',
-        city: 'Bordeaux',
-        price: 35,
-        category: 'GASTRONOMIE',
-        categoryColor: '#f4a261',
-        attendees: 2100,
-        views: 6700,
-        isFavorite: true
-      },
-      {
-        id: 6,
-        title: 'Forum Tech Innovation',
-        description: 'Rencontrez les startups qui façonnent le monde de demain lors de ce forum dédié à l\'innovation.',
-        image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
-        date: new Date('2026-04-05'),
-        time: '09:00 - 18:00',
-        location: 'Centre de Conférences',
-        city: 'Toulouse',
-        price: 50,
-        category: 'BUSINESS',
-        categoryColor: '#457b9d',
-        attendees: 1800,
-        views: 5200,
-        isFavorite: false
-      },
-      {
-        id: 7,
-        title: 'Concert Symphonique en Plein Air',
-        description: 'L\'Orchestre National de France joue les plus grands classiques sous les étoiles.',
-        image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800',
-        date: new Date('2026-06-15'),
-        time: '20:00 - 23:00',
-        location: 'Parc de la Tête d\'Or',
-        city: 'Lyon',
-        price: 30,
-        category: 'CULTURE',
-        categoryColor: '#9b5de5',
-        attendees: 5000,
-        views: 15000,
-        isFavorite: false
-      },
-      {
-        id: 8,
-        title: 'Foire aux Vins de Nantes',
-        description: 'Plus de 200 producteurs vous font découvrir leurs meilleurs millésimes.',
-        image: 'https://images.unsplash.com/photo-1474722883778-792e7990302f?w=800',
-        date: new Date('2026-04-12'),
-        time: '10:00 - 19:00',
-        location: 'Parc des Expositions',
-        city: 'Nantes',
-        price: 12,
-        category: 'GASTRONOMIE',
-        categoryColor: '#f4a261',
-        attendees: 3500,
-        views: 8200,
-        isFavorite: false
-      },
-      {
-        id: 9,
-        title: 'Tournoi de Tennis Open',
-        description: 'Assistez aux matchs des meilleurs joueurs mondiaux dans ce tournoi ATP.',
-        image: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=800',
-        date: new Date('2026-05-20'),
-        time: '10:00 - 21:00',
-        location: 'Stade Roland Garros',
-        city: 'Paris',
-        price: 75,
-        category: 'SPORT',
-        categoryColor: '#2a9d8f',
-        attendees: 12000,
-        views: 45000,
-        isFavorite: true
-      },
-      {
-        id: 10,
-        title: 'Festival de Jazz de Nice',
-        description: 'Une semaine de concerts avec les plus grands noms du jazz international.',
-        image: 'https://images.unsplash.com/photo-1415201364774-f6f0bb35f28f?w=800',
-        date: new Date('2026-07-10'),
-        time: '18:00 - 02:00',
-        location: 'Place Masséna',
-        city: 'Nice',
-        price: 40,
-        category: 'FESTIVAL',
-        categoryColor: '#e63946',
-        attendees: 8000,
-        views: 22000,
-        isFavorite: false
-      },
-      {
-        id: 11,
-        title: 'Salon de l\'Automobile',
-        description: 'Découvrez les dernières innovations automobiles et les véhicules du futur.',
-        image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=800',
-        date: new Date('2026-10-01'),
-        time: '10:00 - 20:00',
-        location: 'Paris Expo Porte de Versailles',
-        city: 'Paris',
-        price: 20,
-        category: 'SALON',
-        categoryColor: '#1a5f7a',
-        attendees: 25000,
-        views: 80000,
-        isFavorite: false
-      },
-      {
-        id: 12,
-        title: 'Course Cycliste du Sud',
-        description: 'Une course de 150 km à travers les paysages pittoresques de la Provence.',
-        image: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800',
-        date: new Date('2026-05-05'),
-        time: '08:00 - 16:00',
-        location: 'Départ: Vieux Port',
-        city: 'Marseille',
-        price: 0,
-        category: 'SPORT',
-        categoryColor: '#2a9d8f',
-        attendees: 2000,
-        views: 5500,
-        isFavorite: false
-      }
-    ];
+  ngAfterViewInit(): void {
+    // Force la détection des changements après le rendu initial
+    setTimeout(() => {
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
+    }, 0);
   }
 
+  // ============ CHARGEMENT DES DONNÉES ============
+  loadData(): void {
+    // Charger les événements depuis le fichier externe
+    this.events = EVENTS_DATA.map(e => ({...e})); // Deep copy
+    
+    // Charger les catégories avec le comptage
+    this.categories = CATEGORIES.map(cat => ({
+      ...cat,
+      count: getCategoryCount(cat.id)
+    }));
+    
+    // Charger les villes
+    this.cities = [...CITIES];
+    
+    // Force update
+    this.cdr.detectChanges();
+  }
+
+  calculateStats(): void {
+    this.totalEvents = this.events.length;
+    this.freeEvents = this.events.filter(e => e.price === 0).length;
+    this.featuredEvents = this.events.filter(e => e.isFeatured).length;
+  }
+
+  // ============ FILTRAGE ============
   filterEvents(): void {
     let filtered = [...this.events];
 
-    // Search filter
+    // Filtre de recherche
     if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase();
-      filtered = filtered.filter(e => 
+      filtered = filtered.filter(e =>
         e.title.toLowerCase().includes(query) ||
         e.description.toLowerCase().includes(query) ||
-        e.city.toLowerCase().includes(query)
+        e.city.toLowerCase().includes(query) ||
+        e.tags.some(tag => tag.toLowerCase().includes(query))
       );
     }
 
-    // Category filter
+    // Filtre par catégorie
     if (this.selectedCategory !== 'all') {
       filtered = filtered.filter(e => 
         e.category.toLowerCase() === this.selectedCategory.toLowerCase()
       );
     }
 
-    // City filter
+    // Filtre par ville
     if (this.selectedCity !== 'all') {
       filtered = filtered.filter(e => e.city === this.selectedCity);
     }
 
-    // Price filter
+    // Filtre par prix
     if (this.selectedPrice === 'free') {
       filtered = filtered.filter(e => e.price === 0);
     } else if (this.selectedPrice === 'paid') {
       filtered = filtered.filter(e => e.price > 0);
+    } else if (this.selectedPrice === 'under100') {
+      filtered = filtered.filter(e => e.price > 0 && e.price <= 100);
+    } else if (this.selectedPrice === 'under500') {
+      filtered = filtered.filter(e => e.price > 0 && e.price <= 500);
+    } else if (this.selectedPrice === 'premium') {
+      filtered = filtered.filter(e => e.price > 500);
     }
 
-    // Date filter
+    // Filtre par date
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -318,24 +162,33 @@ export class EventsComponent implements OnInit {
     } else if (this.selectedDate === 'week') {
       const weekEnd = new Date(today);
       weekEnd.setDate(weekEnd.getDate() + 7);
-      filtered = filtered.filter(e => e.date >= today && e.date <= weekEnd);
+      filtered = filtered.filter(e => new Date(e.date) >= today && new Date(e.date) <= weekEnd);
     } else if (this.selectedDate === 'month') {
       const monthEnd = new Date(today);
       monthEnd.setMonth(monthEnd.getMonth() + 1);
-      filtered = filtered.filter(e => e.date >= today && e.date <= monthEnd);
+      filtered = filtered.filter(e => new Date(e.date) >= today && new Date(e.date) <= monthEnd);
     } else if (this.selectedDate === 'upcoming') {
-      filtered = filtered.filter(e => e.date >= today);
+      filtered = filtered.filter(e => new Date(e.date) >= today);
+    } else if (this.selectedDate === 'past') {
+      filtered = filtered.filter(e => new Date(e.date) < today);
     }
 
     this.filteredEvents = filtered;
     this.sortEvents();
     this.updatePagination();
+    
+    // Force la mise à jour de la vue
+    this.cdr.detectChanges();
   }
 
+  // ============ TRI ============
   sortEvents(): void {
     switch (this.sortBy) {
       case 'date':
-        this.filteredEvents.sort((a, b) => a.date.getTime() - b.date.getTime());
+        this.filteredEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        break;
+      case 'date-desc':
+        this.filteredEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         break;
       case 'name':
         this.filteredEvents.sort((a, b) => a.title.localeCompare(b.title));
@@ -343,14 +196,22 @@ export class EventsComponent implements OnInit {
       case 'price':
         this.filteredEvents.sort((a, b) => a.price - b.price);
         break;
+      case 'price-desc':
+        this.filteredEvents.sort((a, b) => b.price - a.price);
+        break;
       case 'popularity':
         this.filteredEvents.sort((a, b) => b.attendees - a.attendees);
+        break;
+      case 'views':
+        this.filteredEvents.sort((a, b) => b.views - a.views);
         break;
     }
   }
 
+  // ============ ACTIONS ============
   selectCategory(categoryId: string): void {
     this.selectedCategory = categoryId;
+    this.currentPage = 1;
     this.filterEvents();
   }
 
@@ -366,20 +227,58 @@ export class EventsComponent implements OnInit {
     this.selectedCity = 'all';
     this.selectedPrice = 'all';
     this.sortBy = 'date';
+    this.currentPage = 1;
     this.filterEvents();
   }
 
   toggleFavorite(event: Event): void {
     event.isFavorite = !event.isFavorite;
-    // TODO: Appeler l'API pour sauvegarder
+    this.saveFavorites();
+    this.cdr.detectChanges();
+  }
+
+  saveFavorites(): void {
+    const favorites = this.events.filter(e => e.isFavorite).map(e => e.id);
+    localStorage.setItem('event_favorites', JSON.stringify(favorites));
+  }
+
+  loadFavorites(): void {
+    const saved = localStorage.getItem('event_favorites');
+    if (saved) {
+      const favoriteIds = JSON.parse(saved) as number[];
+      this.events.forEach(e => {
+        e.isFavorite = favoriteIds.includes(e.id);
+      });
+    }
   }
 
   viewEventDetails(event: Event): void {
-    // TODO: Navigation vers la page détail
     console.log('View event:', event.id);
     // this.router.navigate(['/events', event.id]);
   }
 
+  shareEvent(event: Event, e: MouseEvent): void {
+    e.stopPropagation();
+    if (navigator.share) {
+      navigator.share({
+        title: event.title,
+        text: event.description,
+        url: window.location.href + '/' + event.id
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.href + '/' + event.id);
+      alert('Lien copié !');
+    }
+  }
+
+  buyTicket(event: Event, e: MouseEvent): void {
+    e.stopPropagation();
+    if (event.ticketUrl) {
+      window.open(event.ticketUrl, '_blank');
+    }
+  }
+
+  // ============ PAGINATION ============
   updatePagination(): void {
     this.totalPages = Math.ceil(this.filteredEvents.length / this.itemsPerPage);
     this.pages = Array.from({ length: this.totalPages }, (_, i) => i + 1);
@@ -387,12 +286,117 @@ export class EventsComponent implements OnInit {
     if (this.currentPage > this.totalPages) {
       this.currentPage = 1;
     }
+    
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+    this.paginatedEvents = this.filteredEvents.slice(start, end);
   }
 
   goToPage(page: number): void {
     if (page >= 1 && page <= this.totalPages) {
       this.currentPage = page;
+      this.updatePagination();
+      this.cdr.detectChanges();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.goToPage(this.currentPage - 1);
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.goToPage(this.currentPage + 1);
+    }
+  }
+
+  // ============ HELPERS ============
+  formatDate(date: Date): string {
+    return new Date(date).toLocaleDateString('fr-FR', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  }
+
+  formatPrice(price: number, priceType: string): string {
+    if (price === 0 || priceType === 'free') {
+      return 'Gratuit';
+    }
+    const formatted = price.toLocaleString('fr-FR') + ' MAD';
+    if (priceType === 'starting_from') {
+      return 'À partir de ' + formatted;
+    }
+    return formatted;
+  }
+
+  formatAttendees(count: number): string {
+    if (count >= 1000000) {
+      return (count / 1000000).toFixed(1) + 'M';
+    }
+    if (count >= 1000) {
+      return (count / 1000).toFixed(0) + 'K';
+    }
+    return count.toString();
+  }
+
+  getDaysUntil(date: Date): number {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const eventDate = new Date(date);
+    eventDate.setHours(0, 0, 0, 0);
+    const diff = eventDate.getTime() - today.getTime();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }
+
+  getDateBadge(date: Date): { text: string; class: string } | null {
+    const days = this.getDaysUntil(date);
+    if (days < 0) {
+      return { text: 'Passé', class: 'badge-past' };
+    }
+    if (days === 0) {
+      return { text: 'Aujourd\'hui', class: 'badge-today' };
+    }
+    if (days === 1) {
+      return { text: 'Demain', class: 'badge-tomorrow' };
+    }
+    if (days <= 7) {
+      return { text: `Dans ${days} jours`, class: 'badge-soon' };
+    }
+    return null;
+  }
+
+  getCityNames(): string[] {
+    return this.cities.map(c => c.name);
+  }
+
+  // TrackBy pour optimiser le rendu - IMPORTANT pour éviter le lazy loading bug
+  trackByEventId(index: number, event: Event): number {
+    return event.id;
+  }
+
+  // Gestion des erreurs d'images
+  onImageError(event: any): void {
+    event.target.src = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800';
+  }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

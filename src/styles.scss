@@ -1,0 +1,410 @@
+/* ================================================================
+   STYLES GLOBAUX POUR MODALS - À AJOUTER À styles.scss
+   ================================================================ */
+
+/* 
+  IMPORTANT: Copiez ce contenu dans votre fichier src/styles.scss
+  pour que les modals s'affichent correctement par-dessus le sidebar
+*/
+
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important;
+  box-sizing: border-box !important;
+}
+
+.modal-overlay .modal {
+  background: white !important;
+  border-radius: 16px !important;
+  width: calc(100% - 40px) !important;
+  max-width: 500px !important;
+  max-height: calc(100vh - 40px) !important;
+  margin: 20px !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.4) !important;
+  animation: modalSlideIn 0.3s ease !important;
+}
+
+.modal-overlay .modal.modal-lg {
+  max-width: 600px !important;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-overlay .modal-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 20px 24px !important;
+  border-bottom: 1px solid #e9ecef !important;
+  background: white !important;
+  flex-shrink: 0 !important;
+}
+
+.modal-overlay .modal-header h2 {
+  font-size: 1.2rem !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  color: #1d1d2c !important;
+}
+
+.modal-overlay .modal-header h2 i {
+  color: #1a5f7a !important;
+}
+
+.modal-overlay .btn-close {
+  width: 36px !important;
+  height: 36px !important;
+  border: none !important;
+  background: #f4f6f8 !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.3s ease !important;
+  flex-shrink: 0 !important;
+  color: #6c757d !important;
+}
+
+.modal-overlay .btn-close:hover {
+  background: #ef476f !important;
+  color: white !important;
+}
+
+.modal-overlay .modal-body {
+  padding: 24px !important;
+  overflow-y: auto !important;
+  flex: 1 !important;
+  background: white !important;
+}
+
+.modal-overlay .modal-footer {
+  padding: 16px 24px !important;
+  border-top: 1px solid #e9ecef !important;
+  display: flex !important;
+  justify-content: flex-end !important;
+  gap: 12px !important;
+  background: white !important;
+  flex-shrink: 0 !important;
+}
+
+/* Form Elements */
+.modal-overlay .form-group {
+  margin-bottom: 20px !important;
+}
+
+.modal-overlay .form-group label {
+  display: block !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: #1d1d2c !important;
+  margin-bottom: 8px !important;
+}
+
+.modal-overlay .form-group input,
+.modal-overlay .form-group select,
+.modal-overlay .form-group textarea {
+  width: 100% !important;
+  padding: 12px 16px !important;
+  border: 2px solid #e9ecef !important;
+  border-radius: 10px !important;
+  font-size: 0.95rem !important;
+  transition: all 0.3s ease !important;
+  box-sizing: border-box !important;
+  background: white !important;
+  color: #1d1d2c !important;
+}
+
+.modal-overlay .form-group input:focus,
+.modal-overlay .form-group select:focus,
+.modal-overlay .form-group textarea:focus {
+  outline: none !important;
+  border-color: #1a5f7a !important;
+}
+
+.modal-overlay .form-row {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px !important;
+}
+
+/* Buttons */
+.modal-overlay .btn-primary {
+  padding: 12px 20px !important;
+  background: linear-gradient(135deg, #1a5f7a, #2d8bba) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+.modal-overlay .btn-secondary {
+  padding: 12px 20px !important;
+  background: #e9ecef !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: #6c757d !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  cursor: pointer !important;
+}
+
+.modal-overlay .btn-danger {
+  padding: 12px 20px !important;
+  background: #ef476f !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: white !important;
+  font-weight: 600 !important;
+  font-size: 0.9rem !important;
+  cursor: pointer !important;
+}
+
+/* Place Recognition Specific */
+.modal-overlay .choose-method {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px !important;
+}
+
+.modal-overlay .method-card {
+  padding: 40px 20px !important;
+  border: 2px solid #e9ecef !important;
+  border-radius: 16px !important;
+  text-align: center !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  background: white !important;
+}
+
+.modal-overlay .method-card:hover {
+  border-color: #1a5f7a !important;
+  background: rgba(26, 95, 122, 0.05) !important;
+}
+
+.modal-overlay .method-card i {
+  font-size: 3rem !important;
+  color: #1a5f7a !important;
+  margin-bottom: 12px !important;
+  display: block !important;
+}
+
+.modal-overlay .method-card h3 {
+  font-size: 1rem !important;
+  margin: 0 !important;
+  color: #1d1d2c !important;
+}
+
+.modal-overlay .image-preview {
+  position: relative !important;
+}
+
+.modal-overlay .image-preview img {
+  width: 100% !important;
+  border-radius: 10px !important;
+}
+
+.modal-overlay .preview-actions {
+  display: flex !important;
+  gap: 12px !important;
+  margin-top: 20px !important;
+}
+
+.modal-overlay .preview-actions button {
+  flex: 1 !important;
+}
+
+.modal-overlay .error-message {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 20px !important;
+  background: rgba(231, 111, 81, 0.1) !important;
+  border-radius: 10px !important;
+  margin-top: 16px !important;
+  text-align: center !important;
+}
+
+.modal-overlay .error-message i {
+  font-size: 2rem !important;
+  color: #e76f51 !important;
+}
+
+.modal-overlay .error-message p {
+  margin: 0 !important;
+  color: #6c757d !important;
+}
+
+.modal-overlay .recognition-result img {
+  width: 100% !important;
+  border-radius: 10px !important;
+  margin-bottom: 16px !important;
+}
+
+.modal-overlay .result-info {
+  text-align: center !important;
+  margin-bottom: 20px !important;
+}
+
+.modal-overlay .result-info .confidence {
+  display: inline-block !important;
+  padding: 6px 14px !important;
+  background: #2a9d8f !important;
+  color: white !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  border-radius: 20px !important;
+  margin-bottom: 12px !important;
+}
+
+.modal-overlay .result-info h3 {
+  font-size: 1.4rem !important;
+  margin: 0 0 8px !important;
+  color: #1d1d2c !important;
+}
+
+.modal-overlay .result-info p {
+  font-size: 0.9rem !important;
+  color: #6c757d !important;
+  margin: 0 0 12px !important;
+}
+
+.modal-overlay .result-actions {
+  display: flex !important;
+  gap: 12px !important;
+  justify-content: center !important;
+  margin-bottom: 16px !important;
+}
+
+.modal-overlay .btn-maps {
+  padding: 12px 20px !important;
+  background: #4285f4 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: white !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.modal-overlay .btn-wiki {
+  padding: 12px 20px !important;
+  background: #e9ecef !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: #1d1d2c !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.modal-overlay .btn-new-search {
+  width: 100% !important;
+  padding: 14px !important;
+  background: transparent !important;
+  border: 2px dashed #dee2e6 !important;
+  border-radius: 10px !important;
+  color: #6c757d !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+.modal-overlay .btn-new-search:hover {
+  border-color: #1a5f7a !important;
+  color: #1a5f7a !important;
+}
+
+/* Analyzing Overlay */
+.modal-overlay .analyzing-overlay {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.7) !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 16px !important;
+}
+
+.modal-overlay .spinner {
+  width: 50px !important;
+  height: 50px !important;
+  border: 4px solid rgba(255,255,255,0.2) !important;
+  border-top-color: white !important;
+  border-radius: 50% !important;
+  animation: modalSpin 1s linear infinite !important;
+}
+
+@keyframes modalSpin {
+  to { transform: rotate(360deg); }
+}
+
+.modal-overlay .analyzing-overlay p {
+  color: white !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .modal-overlay .form-row {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .modal-overlay .choose-method {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .modal-overlay .modal {
+    width: calc(100% - 20px) !important;
+    max-height: calc(100vh - 20px) !important;
+    margin: 10px !important;
+  }
+}

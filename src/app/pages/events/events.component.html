@@ -1,4 +1,4 @@
-<!-- Events Page - Gogenius FR -->
+<!-- Events Page - Gogenius FR - FIXED VERSION -->
 <div class="events-page">
   
   <!-- Page Header -->
@@ -7,9 +7,9 @@
       <div class="header-left">
         <h1 class="page-title">
           <i class="bi bi-calendar-event"></i>
-          Événements & Salons
+          Événements au Maroc 2026
         </h1>
-        <p class="page-subtitle">Découvrez les événements à venir près de chez vous</p>
+        <p class="page-subtitle">Découvrez les festivals, concerts et événements culturels</p>
       </div>
       <div class="header-right">
         <button class="btn-view" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Vue grille">
@@ -69,7 +69,7 @@
           <label>Ville</label>
           <select [(ngModel)]="selectedCity" (ngModelChange)="filterEvents()">
             <option value="all">Toutes les villes</option>
-            <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+            <option *ngFor="let city of cities" [value]="city.name">{{ city.name }}</option>
           </select>
         </div>
 
@@ -95,7 +95,7 @@
     <span class="results-count">{{ filteredEvents.length }} événement(s) trouvé(s)</span>
     <div class="sort-options">
       <label>Trier par :</label>
-      <select [(ngModel)]="sortBy" (ngModelChange)="sortEvents()">
+      <select [(ngModel)]="sortBy" (ngModelChange)="filterEvents()">
         <option value="date">Date</option>
         <option value="name">Nom</option>
         <option value="price">Prix</option>
@@ -104,17 +104,31 @@
     </div>
   </div>
 
-  <!-- Events Grid -->
+  <!-- Events Grid - FIXED: trackBy + eager loading -->
   <section class="events-container" [class.list-view]="viewMode === 'list'">
     
-    <!-- Event Card -->
-    <article class="event-card" *ngFor="let event of filteredEvents">
+    <!-- Event Card - FIXED VERSION -->
+    <article 
+      class="event-card" 
+      *ngFor="let event of filteredEvents; trackBy: trackByEventId"
+      (click)="viewEventDetails(event)">
+      
+      <!-- Image Section -->
       <div class="event-image">
-        <img [src]="event.image" [alt]="event.title">
+        <img 
+          [src]="event.image" 
+          [alt]="event.title"
+          loading="eager"
+          fetchpriority="high"
+          decoding="sync"
+          (error)="onImageError($event)">
         <span class="event-badge" [style.background]="event.categoryColor">
           {{ event.category }}
         </span>
-        <button class="btn-favorite" [class.active]="event.isFavorite" (click)="toggleFavorite(event)">
+        <button 
+          class="btn-favorite" 
+          [class.active]="event.isFavorite" 
+          (click)="toggleFavorite(event); $event.stopPropagation()">
           <i class="bi" [class.bi-heart]="!event.isFavorite" [class.bi-heart-fill]="event.isFavorite"></i>
         </button>
         <div class="event-date-badge">
@@ -123,11 +137,12 @@
         </div>
       </div>
       
+      <!-- Content Section - Toujours visible -->
       <div class="event-content">
         <div class="event-meta">
           <span class="meta-item">
             <i class="bi bi-calendar3"></i>
-            {{ event.date | date:'EEEE dd MMMM yyyy':'':'fr' }}
+            {{ event.date | date:'EEE dd MMM yyyy' }}
           </span>
           <span class="meta-item">
             <i class="bi bi-clock"></i>
@@ -141,27 +156,27 @@
         
         <div class="event-location">
           <i class="bi bi-geo-alt"></i>
-          <span>{{ event.location }}, {{ event.city }}</span>
+          <span>{{ event.venue }}, {{ event.city }}</span>
         </div>
 
         <div class="event-footer">
           <div class="event-price" [class.free]="event.price === 0">
             <span *ngIf="event.price === 0">Gratuit</span>
-            <span *ngIf="event.price > 0">{{ event.price }} €</span>
+            <span *ngIf="event.price > 0">{{ event.price }} MAD</span>
           </div>
           
           <div class="event-stats">
             <span class="stat">
               <i class="bi bi-people"></i>
-              {{ event.attendees }}
+              {{ formatAttendees(event.attendees) }}
             </span>
             <span class="stat">
               <i class="bi bi-eye"></i>
-              {{ event.views }}
+              {{ formatAttendees(event.views) }}
             </span>
           </div>
           
-          <button class="btn-details" (click)="viewEventDetails(event)">
+          <button class="btn-details" (click)="viewEventDetails(event); $event.stopPropagation()">
             Voir détails
             <i class="bi bi-arrow-right"></i>
           </button>
