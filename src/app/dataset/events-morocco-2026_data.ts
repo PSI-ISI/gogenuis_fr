@@ -23,6 +23,7 @@ export interface Event {
   isFavorite: boolean;
   isFeatured: boolean;
   isSponsored: boolean;
+  isPast: boolean;  // Flag pour marquer les événements passés
   tags: string[];
   ticketUrl?: string;
   coordinates: { lat: number; lng: number };
@@ -116,6 +117,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: true,  // Événement terminé le 18/01/2026
     tags: ['football', 'CAN2025', 'sport', 'international'],
     ticketUrl: 'https://www.caf.com',
     coordinates: { lat: 33.5731, lng: -7.5898 },
@@ -141,6 +143,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: false,
+    isPast: true,  // Événement passé - 14/01/2026
     tags: ['amazigh', 'tradition', 'culture', 'fête nationale', 'yennayer'],
     coordinates: { lat: 31.7917, lng: -7.0926 },
     organizer: 'Ministère de la Culture'
@@ -166,6 +169,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['littérature', 'livres', 'afrique', 'culture'],
     ticketUrl: 'https://festivaldulivreafricain.com',
     coordinates: { lat: 31.6295, lng: -7.9811 },
@@ -192,6 +196,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['amandiers', 'printemps', 'tradition', 'amazigh', 'Anti-Atlas'],
     coordinates: { lat: 29.7215, lng: -8.9755 },
     organizer: 'Province de Tiznit'
@@ -216,6 +221,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['marathon', 'running', 'sport', 'international'],
     ticketUrl: 'https://marathonmarrakech.com',
     coordinates: { lat: 31.6258, lng: -7.9891 },
@@ -242,6 +248,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: false,
+    isPast: false,
     tags: ['ramadan', 'religion', 'tradition', 'famille', 'fête'],
     coordinates: { lat: 31.7917, lng: -7.0926 },
     organizer: 'Fête religieuse nationale'
@@ -267,6 +274,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['désert', 'nomades', 'musique', 'sahara', 'bivouac'],
     ticketUrl: 'https://festivalnomades.org',
     coordinates: { lat: 29.8307, lng: -5.7257 },
@@ -293,6 +301,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['jazz', 'musique', 'international', 'concert'],
     ticketUrl: 'https://jazzablanca.com',
     coordinates: { lat: 33.5950, lng: -7.6187 },
@@ -319,6 +328,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['rap', 'hip-hop', 'jeunes', 'urbain', 'tremplin'],
     ticketUrl: 'https://boulevard.ma',
     coordinates: { lat: 33.5883, lng: -7.6114 },
@@ -345,6 +355,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: false,
+    isPast: false,
     tags: ['roses', 'printemps', 'tradition', 'artisanat', 'parfum'],
     coordinates: { lat: 31.2427, lng: -6.1302 },
     organizer: 'Province de Tinghir'
@@ -370,6 +381,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: false,
+    isPast: false,
     tags: ['religion', 'tradition', 'famille', 'fête', 'sacrifice'],
     coordinates: { lat: 31.7917, lng: -7.0926 },
     organizer: 'Fête religieuse nationale'
@@ -395,6 +407,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['spirituel', 'soufi', 'musique sacrée', 'patrimoine', 'médina'],
     ticketUrl: 'https://fesfestival.com',
     coordinates: { lat: 34.0181, lng: -5.0078 },
@@ -421,6 +434,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: true,
+    isPast: false,
     tags: ['finance', 'trading', 'business', 'expo', 'investissement'],
     ticketUrl: 'https://itradingexpo.com',
     coordinates: { lat: 33.5950, lng: -7.6187 },
@@ -447,6 +461,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['humour', 'comédie', 'jamel', 'spectacle', 'gala'],
     ticketUrl: 'https://marrakechdurire.com',
     coordinates: { lat: 31.6295, lng: -7.9811 },
@@ -473,6 +488,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['sahara', 'unesco', 'nomades', 'tradition', 'dromadaires'],
     coordinates: { lat: 28.4380, lng: -11.1030 },
     organizer: 'Province de Tan-Tan'
@@ -498,6 +514,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['musique', 'international', 'gratuit', 'stars', 'pop', 'rai'],
     ticketUrl: 'https://mawazine.ma',
     coordinates: { lat: 34.0209, lng: -6.8416 },
@@ -524,6 +541,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['gnaoua', 'musique du monde', 'essaouira', 'tradition', 'transe'],
     ticketUrl: 'https://gnaoua-festival.net',
     coordinates: { lat: 31.5085, lng: -9.7595 },
@@ -550,6 +568,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['folklore', 'danse', 'tradition', 'patrimoine', 'costumes'],
     coordinates: { lat: 31.6167, lng: -7.9833 },
     organizer: 'Ministère de la Culture'
@@ -575,6 +594,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['amazigh', 'berbère', 'musique', 'gratuit', 'international'],
     ticketUrl: 'https://timitar.ma',
     coordinates: { lat: 30.4278, lng: -9.5981 },
@@ -601,6 +621,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: false,
+    isPast: false,
     tags: ['art', 'peinture', 'culture', 'médina', 'street art'],
     ticketUrl: 'https://assilah.com',
     coordinates: { lat: 35.4653, lng: -6.0347 },
@@ -627,6 +648,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: true,
+    isPast: false,
     tags: ['musique', 'été', 'concert', 'plage', 'corniche'],
     coordinates: { lat: 33.5950, lng: -7.6700 },
     organizer: 'Casa Events'
@@ -651,6 +673,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: false,
+    isPast: false,
     tags: ['fête nationale', 'roi', 'célébration', 'défilé'],
     coordinates: { lat: 34.0209, lng: -6.8416 },
     organizer: 'Gouvernement du Maroc'
@@ -676,6 +699,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: false,
+    isPast: false,
     tags: ['soufi', 'spirituel', 'méditation', 'ville bleue', 'mystique'],
     coordinates: { lat: 35.1688, lng: -5.2636 },
     organizer: 'Province de Chefchaouen'
@@ -701,6 +725,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: false,
+    isPast: false,
     tags: ['mariage', 'tradition', 'berbère', 'unique', 'romantique'],
     coordinates: { lat: 32.1500, lng: -5.6333 },
     organizer: 'Province d\'Errachidia'
@@ -726,6 +751,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['jazz', 'tanger', 'musique', 'international', 'intimiste'],
     ticketUrl: 'https://tanjazz.org',
     coordinates: { lat: 35.7595, lng: -5.8340 },
@@ -752,6 +778,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['cheval', 'fantasia', 'tbourida', 'tradition', 'équitation'],
     coordinates: { lat: 34.2833, lng: -4.6667 },
     organizer: 'Province de Taounate'
@@ -777,6 +804,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['électro', 'dj', 'festival', 'moderne', 'techno'],
     ticketUrl: 'https://mogafestival.com',
     coordinates: { lat: 31.5085, lng: -9.7595 },
@@ -803,6 +831,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['désert', 'bivouac', 'musique', 'étoiles', 'sahara'],
     ticketUrl: 'https://taragalte.org',
     coordinates: { lat: 29.4833, lng: -5.7167 },
@@ -829,6 +858,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['dattes', 'oasis', 'tradition', 'gastronomie', 'désert'],
     coordinates: { lat: 31.4314, lng: -4.2289 },
     organizer: 'Province d\'Errachidia'
@@ -854,6 +884,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['safran', 'épices', 'gastronomie', 'artisanat', 'terroir'],
     coordinates: { lat: 30.5300, lng: -7.9200 },
     organizer: 'Province de Taroudant'
@@ -879,6 +910,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: true,
+    isPast: false,
     tags: ['industrie musicale', 'afrique', 'professionnel', 'networking', 'showcase'],
     ticketUrl: 'https://visaformusic.com',
     coordinates: { lat: 34.0132, lng: -6.8326 },
@@ -905,6 +937,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['cinéma', 'film', 'stars', 'international', 'tapis rouge'],
     ticketUrl: 'https://festivalmarrakech.info',
     coordinates: { lat: 31.6340, lng: -8.0103 },
@@ -937,6 +970,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['revêtement', 'peinture', 'bâtiment', 'construction', 'décoration'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-salon-international-du-revetement-33771-0.html',
     coordinates: { lat: 33.5731, lng: -7.5898 },
@@ -965,6 +999,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['cuir', 'chaussure', 'mode', 'accessoires', 'maroquinerie'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-morocco-leather-shoes-28568-0.html',
     coordinates: { lat: 33.5731, lng: -7.5898 },
@@ -991,6 +1026,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'études', 'formation', 'université', 'orientation'],
     coordinates: { lat: 31.6295, lng: -7.9811 },
     organizer: 'L\'Étudiant Marocain'
@@ -1016,6 +1052,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'études', 'formation', 'université', 'orientation'],
     coordinates: { lat: 35.7595, lng: -5.8340 },
     organizer: 'L\'Étudiant Marocain'
@@ -1041,6 +1078,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['solaire', 'énergie', 'renouvelable', 'photovoltaïque', 'environnement'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-solaire-expo-maroc-17875-0.html',
     coordinates: { lat: 33.5731, lng: -7.5898 },
@@ -1067,6 +1105,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'études', 'formation', 'université', 'orientation'],
     coordinates: { lat: 34.0209, lng: -6.8416 },
     organizer: 'L\'Étudiant Marocain'
@@ -1094,6 +1133,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['sécurité', 'impression', 'documents', 'technologie', 'identité'],
     coordinates: { lat: 34.0209, lng: -6.8416 },
     organizer: 'Reconnaissance International'
@@ -1119,6 +1159,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'études', 'formation', 'université', 'orientation'],
     coordinates: { lat: 30.4278, lng: -9.5981 },
     organizer: 'L\'Étudiant Marocain'
@@ -1144,6 +1185,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'études', 'formation', 'université', 'orientation'],
     coordinates: { lat: 33.8935, lng: -5.5473 },
     organizer: 'L\'Étudiant Marocain'
@@ -1169,6 +1211,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'études', 'formation', 'université', 'orientation'],
     coordinates: { lat: 27.1536, lng: -13.2033 },
     organizer: 'L\'Étudiant Marocain'
@@ -1196,6 +1239,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['hôtellerie', 'restauration', 'équipement', 'tourisme', 'CHR'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-marocotel-1770-0.html',
     coordinates: { lat: 33.2316, lng: -8.5007 },
@@ -1222,6 +1266,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: false,
+    isPast: false,
     tags: ['mode', 'textile', 'habillement', 'fashion', 'accessoires'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'Morocco Fashion'
@@ -1247,6 +1292,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['textile', 'mode', 'industrie', 'tissu', 'confection'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'Morocco Textile'
@@ -1272,6 +1318,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'études', 'formation', 'université', 'orientation'],
     coordinates: { lat: 32.3373, lng: -6.3498 },
     organizer: 'L\'Étudiant Marocain'
@@ -1296,6 +1343,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'études', 'formation', 'université', 'orientation'],
     coordinates: { lat: 34.0181, lng: -5.0078 },
     organizer: 'L\'Étudiant Marocain'
@@ -1321,6 +1369,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['textile maison', 'décoration', 'linge', 'ameublement', 'intérieur'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'Morocco Hometex'
@@ -1346,6 +1395,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['médical', 'santé', 'équipement', 'pharmaceutique', 'hôpital'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-morocco-medical-expo-33327-0.html',
     coordinates: { lat: 33.5731, lng: -7.5898 },
@@ -1372,6 +1422,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'études', 'formation', 'université', 'orientation'],
     coordinates: { lat: 34.2610, lng: -6.5802 },
     organizer: 'L\'Étudiant Marocain'
@@ -1396,6 +1447,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: true,
+    isPast: false,
     tags: ['MBA', 'master', 'études', 'business school', 'formation'],
     ticketUrl: 'https://www.accessmasterstour.com',
     coordinates: { lat: 33.5950, lng: -7.6187 },
@@ -1422,6 +1474,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['éducation', 'études', 'formation', 'université', 'orientation'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'L\'Étudiant Marocain'
@@ -1447,6 +1500,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['agriculture', 'élevage', 'agroalimentaire', 'rural', 'machines agricoles'],
     ticketUrl: 'https://www.salon-agriculture.ma',
     coordinates: { lat: 33.8935, lng: -5.5473 },
@@ -1473,6 +1527,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'études', 'formation', 'université', 'orientation'],
     coordinates: { lat: 34.6867, lng: -1.9114 },
     organizer: 'L\'Étudiant Marocain'
@@ -1498,6 +1553,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: true,
+    isPast: false,
     tags: ['dentaire', 'santé', 'médical', 'équipement dentaire', 'orthodontie'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-morocco-dental-expo-33326-0.html',
     coordinates: { lat: 33.5731, lng: -7.5898 },
@@ -1525,6 +1581,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'international', 'études', 'université', 'étranger'],
     coordinates: { lat: 34.0209, lng: -6.8416 },
     organizer: 'A2 Fairs'
@@ -1549,6 +1606,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'international', 'études', 'université', 'étranger'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'A2 Fairs'
@@ -1573,6 +1631,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['éducation', 'international', 'études', 'université', 'étranger'],
     coordinates: { lat: 31.6295, lng: -7.9811 },
     organizer: 'A2 Fairs'
@@ -1598,6 +1657,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['logistique', 'transport', 'supply chain', 'fret', 'distribution'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-logismed-23217-0.html',
     coordinates: { lat: 33.5731, lng: -7.5898 },
@@ -1624,6 +1684,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['cosmétique', 'beauté', 'bien-être', 'spa', 'parfum'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-cosmetista-expo-north-west-africa-26974-0.html',
     coordinates: { lat: 33.5731, lng: -7.5898 },
@@ -1652,6 +1713,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['textile', 'machines', 'confection', 'industrie', 'couture'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'Morocco Stitch & Tex'
@@ -1679,6 +1741,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['décoration', 'ameublement', 'tapis', 'design', 'intérieur'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'Madesign Expo'
@@ -1704,6 +1767,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['céramique', 'salle de bain', 'cuisine', 'carrelage', 'sanitaire'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'Mega Ceramica'
@@ -1729,6 +1793,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['agroalimentaire', 'boissons', 'food', 'industrie alimentaire', 'export'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'SIAB Expo'
@@ -1754,6 +1819,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: false,
+    isPast: false,
     tags: ['plastique', 'emballage', 'recyclage', 'environnement', 'packaging'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'Global Green Plast'
@@ -1781,6 +1847,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['industrie', 'métallurgie', 'mécanique', 'sous-traitance', 'sécurité'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'SISTEP'
@@ -1806,6 +1873,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['agroalimentaire', 'emballage', 'transformation', 'food processing', 'export'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'SIEMA'
@@ -1833,6 +1901,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['master', 'MBA', 'études', 'étranger', 'grandes écoles'],
     coordinates: { lat: 30.4278, lng: -9.5981 },
     organizer: 'Salon des Masters'
@@ -1858,6 +1927,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['environnement', 'écologie', 'développement durable', 'recyclage', 'green tech'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-global-green-event-by-pollutec-14322-0.html',
     coordinates: { lat: 33.5731, lng: -7.5898 },
@@ -1884,6 +1954,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['transport', 'mobilité', 'logistique', 'afrique', 'infrastructure'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'LOGITERRE'
@@ -1911,6 +1982,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['textile', 'teinture', 'chimie', 'mode', 'habillement'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'Dye+Chem Morocco'
@@ -1936,6 +2008,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: false,
     isSponsored: false,
+    isPast: false,
     tags: ['sécurité', 'prévention', 'travail', 'HSE', 'risques professionnels'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'Préventica'
@@ -1961,6 +2034,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['alimentaire', 'export', 'chine', 'B2B', 'commerce international'],
     coordinates: { lat: 33.5731, lng: -7.5898 },
     organizer: 'Africa Food Show'
@@ -1986,6 +2060,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['électricité', 'énergie', 'électronique', 'automatisation', 'éclairage'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-elec-expo-7428-0.html',
     coordinates: { lat: 33.5731, lng: -7.5898 },
@@ -2012,6 +2087,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['bâtiment', 'construction', 'immobilier', 'architecture', 'urbanisme'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-sib-salon-international-du-batiment-11160-0.html',
     coordinates: { lat: 33.2316, lng: -8.5007 },
@@ -2040,6 +2116,7 @@ export const EVENTS_DATA: Event[] = [
     isFavorite: false,
     isFeatured: true,
     isSponsored: true,
+    isPast: false,
     tags: ['véhicules électriques', 'mobilité', 'automobile', 'green', 'innovation'],
     ticketUrl: 'https://www.eventseye.com/fairs/f-africa-evs-mobility-expo-32373-0.html',
     coordinates: { lat: 33.5950, lng: -7.6187 },
@@ -2099,4 +2176,72 @@ export function getEventsByMonth(month: number, year: number = 2026): Event[] {
     const eventYear = e.date.getFullYear();
     return eventMonth === month && eventYear === year;
   });
+}
+
+// ============ FONCTIONS POUR ÉVÉNEMENTS PASSÉS ============
+
+/**
+ * Retourne tous les événements passés
+ */
+export function getPastEvents(): Event[] {
+  return EVENTS_DATA.filter(e => e.isPast);
+}
+
+/**
+ * Retourne tous les événements à venir (non passés)
+ */
+export function getFutureEvents(): Event[] {
+  return EVENTS_DATA.filter(e => !e.isPast);
+}
+
+/**
+ * Met à jour dynamiquement le flag isPast en fonction de la date actuelle
+ * Utile pour maintenir le dataset à jour automatiquement
+ */
+export function updatePastEventsFlag(): void {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  EVENTS_DATA.forEach(event => {
+    const eventEndDate = event.endDate ? new Date(event.endDate) : new Date(event.date);
+    eventEndDate.setHours(23, 59, 59, 999);
+    event.isPast = eventEndDate < today;
+  });
+}
+
+/**
+ * Vérifie si un événement est passé en fonction de sa date
+ */
+export function isEventPast(event: Event): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const eventEndDate = event.endDate ? new Date(event.endDate) : new Date(event.date);
+  eventEndDate.setHours(23, 59, 59, 999);
+  return eventEndDate < today;
+}
+
+/**
+ * Retourne les événements en cours (qui ont commencé mais pas encore terminé)
+ */
+export function getOngoingEvents(): Event[] {
+  const today = new Date();
+  return EVENTS_DATA.filter(event => {
+    const startDate = new Date(event.date);
+    const endDate = event.endDate ? new Date(event.endDate) : new Date(event.date);
+    return startDate <= today && endDate >= today;
+  });
+}
+
+/**
+ * Compte le nombre d'événements passés
+ */
+export function getPastEventsCount(): number {
+  return EVENTS_DATA.filter(e => e.isPast).length;
+}
+
+/**
+ * Compte le nombre d'événements à venir
+ */
+export function getFutureEventsCount(): number {
+  return EVENTS_DATA.filter(e => !e.isPast).length;
 }

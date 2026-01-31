@@ -37,11 +37,11 @@ export class MainLayoutComponent implements OnInit {
   // Menu configurations per profile
   private touristMenu: MenuItem[] = [
     { label: 'Dashboard', icon: 'bi bi-grid-1x2-fill', route: '/dashboard', exact: true },
-    { label: 'Événements', icon: 'bi bi-calendar-event', route: '/events', exact: false, badge: 5 },
-    { label: 'Bons Plans', icon: 'bi bi-percent', route: '/deals', exact: false },
+    { label: 'Événements', icon: 'bi bi-calendar-event', route: '/events', exact: false },
+    // { label: 'Bons Plans', icon: 'bi bi-percent', route: '/deals', exact: false },
     { label: 'Réservations', icon: 'bi bi-bookmark-check', route: '/reservations', exact: false },
     { label: 'Planificateur', icon: 'bi bi-calendar-range', route: '/planner', exact: false },
-    { label: 'Explorer', icon: 'bi bi-compass', route: '/explore', exact: false }
+    // { label: 'Explorer', icon: 'bi bi-compass', route: '/explore', exact: false }
   ];
 
   private companyMenu: MenuItem[] = [

@@ -94,28 +94,6 @@
             <p class="empty-state" *ngIf="favorites.length === 0">Aucun favori</p>
           </div>
         </div>
-
-        <!-- Deals -->
-        <div class="card">
-          <div class="card-header">
-            <h3><i class="bi bi-tag"></i> Bons Plans</h3>
-            <a routerLink="/deals">Voir tout</a>
-          </div>
-          <div class="deals-list">
-            <div class="deal-item" *ngFor="let deal of deals">
-              <img [src]="deal.image" [alt]="deal.name">
-              <div class="deal-info">
-                <h4>{{ deal.name }}</h4>
-                <div class="deal-prices">
-                  <span class="old-price">{{ deal.originalPrice }} MAD</span>
-                  <span class="new-price">{{ deal.originalPrice - (deal.originalPrice * deal.discount / 100) | number:'1.0-0' }} MAD</span>
-                </div>
-                <span class="deal-valid">Jusqu'au {{ deal.validUntil }}</span>
-              </div>
-              <span class="discount-badge">-{{ deal.discount }}%</span>
-            </div>
-          </div>
-        </div>
       </aside>
     </div>
   </div>
@@ -195,7 +173,6 @@
 
       <!-- Sidebar Alerts & Deals -->
       <aside class="sidebar-section">
-        <!-- Alerts -->
         <div class="card alerts-card">
           <div class="card-header">
             <h3><i class="bi bi-bell"></i> Alertes</h3>
@@ -212,7 +189,6 @@
           </div>
         </div>
 
-        <!-- Deals -->
         <div class="card">
           <div class="card-header">
             <h3><i class="bi bi-percent"></i> Économisez</h3>
@@ -228,7 +204,7 @@
     </div>
   </div>
 
-  <!-- ============ TAB: RESERVATIONS (Module 4) ============ -->
+  <!-- ============ TAB: RESERVATIONS (Module 4) - API BRANCHÉE ============ -->
   <div class="tab-content" *ngIf="activeTab === 'reservations'">
     <div class="content-grid">
       <section class="main-section">
@@ -239,23 +215,40 @@
           </button>
         </div>
 
-        <div class="reservations-list">
+        <!-- Loading State -->
+        <div class="loading-state" *ngIf="isLoadingReservations">
+          <div class="spinner"></div>
+          <p>Chargement des réservations...</p>
+        </div>
+
+        <!-- Error State -->
+        <div class="error-state" *ngIf="reservationError && !isLoadingReservations">
+          <i class="bi bi-exclamation-circle"></i>
+          <p>{{ reservationError }}</p>
+          <button class="btn-secondary" (click)="loadReservations()">Réessayer</button>
+        </div>
+
+        <!-- Reservations List -->
+        <div class="reservations-list" *ngIf="!isLoadingReservations && !reservationError">
           <div class="reservation-card" *ngFor="let res of reservations" (click)="viewReservation(res)">
-            <img [src]="res.image" [alt]="res.name" class="res-image">
+            <img [src]="getReservationImage(res.type)" [alt]="res.establishmentName" class="res-image">
             <div class="res-content">
               <div class="res-header">
-                <span class="res-type">{{ res.type }}</span>
+                <span class="res-type" [style.background]="getTypeOption(res.type).color">
+                  <i [class]="'bi ' + getTypeOption(res.type).icon"></i>
+                  {{ res.typeDisplayName }}
+                </span>
                 <span class="res-status" [class]="getStatusClass(res.status)">{{ getStatusLabel(res.status) }}</span>
               </div>
-              <h3>{{ res.name }}</h3>
+              <h3>{{ res.establishmentName }}</h3>
               <div class="res-details">
-                <span><i class="bi bi-calendar3"></i> {{ res.date | date:'dd MMM yyyy' }}</span>
-                <span><i class="bi bi-clock"></i> {{ res.time }}</span>
-                <span><i class="bi bi-people"></i> {{ res.guests }} pers.</span>
+                <span><i class="bi bi-calendar3"></i> {{ formatShortDate(res.reservationDate) }}</span>
+                <span><i class="bi bi-clock"></i> {{ formatTime(res.reservationTime) }}</span>
+                <span><i class="bi bi-people"></i> {{ res.numberOfPersons }} pers.</span>
               </div>
               <div class="res-footer">
                 <span class="res-location"><i class="bi bi-geo-alt"></i> {{ res.location }}</span>
-                <span class="res-price">{{ res.price | number }} MAD</span>
+                <span class="res-price" *ngIf="res.price">{{ res.price | number }} MAD</span>
               </div>
             </div>
           </div>
@@ -266,6 +259,11 @@
             <button class="btn-primary" (click)="openNewReservationModal()">Faire une réservation</button>
           </div>
         </div>
+
+        <!-- Voir tout link -->
+        <div class="view-all-link" *ngIf="reservations.length > 0">
+          <a routerLink="/reservations">Voir toutes mes réservations <i class="bi bi-arrow-right"></i></a>
+        </div>
       </section>
 
       <aside class="sidebar-section">
@@ -275,21 +273,25 @@
             <h3><i class="bi bi-lightning"></i> Réservation rapide</h3>
           </div>
           <div class="quick-book-options">
-            <button class="quick-option" (click)="newReservation.type = 'Hôtel'; openNewReservationModal()">
+            <button class="quick-option" (click)="openNewReservationWithType('HOTEL')">
               <i class="bi bi-building"></i>
               <span>Hôtel</span>
             </button>
-            <button class="quick-option" (click)="newReservation.type = 'Restaurant'; openNewReservationModal()">
+            <button class="quick-option" (click)="openNewReservationWithType('RESTAURANT')">
               <i class="bi bi-cup-hot"></i>
               <span>Restaurant</span>
             </button>
-            <button class="quick-option" (click)="newReservation.type = 'Spa'; openNewReservationModal()">
-              <i class="bi bi-heart-pulse"></i>
+            <button class="quick-option" (click)="openNewReservationWithType('SPA')">
+              <i class="bi bi-droplet"></i>
               <span>Spa</span>
             </button>
-            <button class="quick-option" (click)="newReservation.type = 'Activité'; openNewReservationModal()">
+            <button class="quick-option" (click)="openNewReservationWithType('ACTIVITY')">
               <i class="bi bi-bicycle"></i>
               <span>Activité</span>
+            </button>
+            <button class="quick-option" (click)="openNewReservationWithType('TRANSPORT')">
+              <i class="bi bi-car-front"></i>
+              <span>Transport</span>
             </button>
           </div>
         </div>
@@ -302,14 +304,15 @@
           <div class="upcoming-list">
             <div class="upcoming-item" *ngFor="let res of reservations.slice(0, 3)">
               <div class="upcoming-date">
-                <span class="day">{{ res.date | date:'dd' }}</span>
-                <span class="month">{{ res.date | date:'MMM' }}</span>
+                <span class="day">{{ res.reservationDate | date:'dd' }}</span>
+                <span class="month">{{ res.reservationDate | date:'MMM' }}</span>
               </div>
               <div class="upcoming-info">
-                <h4>{{ res.name }}</h4>
-                <span>{{ res.time }} • {{ res.guests }} pers.</span>
+                <h4>{{ res.establishmentName }}</h4>
+                <span>{{ formatTime(res.reservationTime) }} • {{ res.numberOfPersons }} pers.</span>
               </div>
             </div>
+            <p class="empty-state" *ngIf="reservations.length === 0">Aucune réservation à venir</p>
           </div>
         </div>
       </aside>
@@ -351,7 +354,7 @@
                 <button class="btn-secondary" (click)="openNavigation(place)">
                   <i class="bi bi-signpost"></i> Y aller
                 </button>
-                <button class="btn-primary" (click)="newReservation.name = place.name; newReservation.type = place.type; openNewReservationModal()">
+                <button class="btn-primary" (click)="newReservation.establishmentName = place.name; newReservation.type = 'ACTIVITY'; openNewReservationModal()">
                   <i class="bi bi-bookmark-plus"></i> Réserver
                 </button>
               </div>
@@ -361,7 +364,6 @@
       </section>
 
       <aside class="sidebar-section">
-        <!-- Recognize Place -->
         <div class="card recognize-card">
           <div class="recognize-icon">
             <i class="bi bi-camera"></i>
@@ -373,7 +375,6 @@
           </button>
         </div>
 
-        <!-- Suggested Circuits -->
         <div class="card">
           <div class="card-header">
             <h3><i class="bi bi-map"></i> Circuits suggérés</h3>
@@ -525,7 +526,7 @@
   </div>
 </div>
 
-<!-- Reservation Detail Modal -->
+<!-- Reservation Detail Modal - API -->
 <div class="modal-overlay" *ngIf="showReservationModal" (click)="closeReservationModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -534,9 +535,9 @@
     </div>
     <div class="modal-body" *ngIf="selectedReservation">
       <div class="res-detail-header">
-        <img [src]="selectedReservation.image" [alt]="selectedReservation.name">
+        <img [src]="getReservationImage(selectedReservation.type)" [alt]="selectedReservation.establishmentName">
         <div>
-          <h3>{{ selectedReservation.name }}</h3>
+          <h3>{{ selectedReservation.establishmentName }}</h3>
           <span class="res-status" [class]="getStatusClass(selectedReservation.status)">
             {{ getStatusLabel(selectedReservation.status) }}
           </span>
@@ -544,39 +545,56 @@
       </div>
       <div class="res-detail-info">
         <div class="info-row">
+          <i class="bi bi-tag"></i>
+          <span class="type-badge" [style.background]="getTypeOption(selectedReservation.type).color">
+            {{ selectedReservation.typeDisplayName }}
+          </span>
+        </div>
+        <div class="info-row">
           <i class="bi bi-calendar3"></i>
-          <span>{{ selectedReservation.date | date:'EEEE dd MMMM yyyy' }}</span>
+          <span>{{ formatReservationDate(selectedReservation.reservationDate) }}</span>
         </div>
         <div class="info-row">
           <i class="bi bi-clock"></i>
-          <span>{{ selectedReservation.time }}</span>
+          <span>{{ formatTime(selectedReservation.reservationTime) }}</span>
         </div>
         <div class="info-row">
           <i class="bi bi-people"></i>
-          <span>{{ selectedReservation.guests }} personnes</span>
+          <span>{{ selectedReservation.numberOfPersons }} personne(s)</span>
         </div>
         <div class="info-row">
           <i class="bi bi-geo-alt"></i>
           <span>{{ selectedReservation.location }}</span>
         </div>
-        <div class="info-row">
+        <div class="info-row" *ngIf="selectedReservation.price">
           <i class="bi bi-currency-dollar"></i>
           <span>{{ selectedReservation.price | number }} MAD</span>
         </div>
+        <div class="info-row" *ngIf="selectedReservation.confirmationCode">
+          <i class="bi bi-upc-scan"></i>
+          <span class="confirmation-code">{{ selectedReservation.confirmationCode }}</span>
+        </div>
+        <div class="info-row notes" *ngIf="selectedReservation.notes">
+          <i class="bi bi-sticky"></i>
+          <span>{{ selectedReservation.notes }}</span>
+        </div>
       </div>
     </div>
-    <div class="modal-footer" *ngIf="selectedReservation?.status !== 'cancelled'">
-      <button class="btn-danger" (click)="cancelReservation(selectedReservation!.id)">
+    <div class="modal-footer" *ngIf="selectedReservation && canModifyReservation(selectedReservation)">
+      <button class="btn-danger" (click)="cancelReservation(selectedReservation.id)">
         <i class="bi bi-x-circle"></i> Annuler
       </button>
       <button class="btn-primary" (click)="modifyReservation()">
         <i class="bi bi-pencil"></i> Modifier
       </button>
     </div>
+    <div class="modal-footer" *ngIf="selectedReservation && !canModifyReservation(selectedReservation)">
+      <button class="btn-secondary" (click)="closeReservationModal()">Fermer</button>
+    </div>
   </div>
 </div>
 
-<!-- New Reservation Modal -->
+<!-- New Reservation Modal - API -->
 <div class="modal-overlay" *ngIf="showNewReservationModal" (click)="closeNewReservationModal()">
   <div class="modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
@@ -584,50 +602,60 @@
       <button class="btn-close" (click)="closeNewReservationModal()"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="modal-body">
+      <!-- Error Message -->
+      <div class="form-error" *ngIf="reservationError">
+        <i class="bi bi-exclamation-circle"></i>
+        {{ reservationError }}
+      </div>
+
       <div class="form-group">
-        <label>Établissement</label>
-        <input type="text" [(ngModel)]="newReservation.name" placeholder="Nom de l'établissement">
+        <label>Établissement *</label>
+        <input type="text" [(ngModel)]="newReservation.establishmentName" placeholder="Nom de l'établissement">
       </div>
       <div class="form-group">
-        <label>Type</label>
+        <label>Type *</label>
         <select [(ngModel)]="newReservation.type">
-          <option value="">Sélectionner...</option>
-          <option value="Hôtel">Hôtel</option>
-          <option value="Restaurant">Restaurant</option>
-          <option value="Spa">Spa</option>
-          <option value="Activité">Activité</option>
-          <option value="Transport">Transport</option>
+          <option value="" disabled>Sélectionner...</option>
+          <option *ngFor="let type of reservationTypes" [value]="type.value">{{ type.label }}</option>
         </select>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Date</label>
-          <input type="date" [ngModel]="newReservation.date | date:'yyyy-MM-dd'" (ngModelChange)="newReservation.date = $event">
+          <label>Date *</label>
+          <input type="date" [(ngModel)]="newReservation.reservationDate" [min]="getTodayDate()">
         </div>
         <div class="form-group">
-          <label>Heure</label>
-          <input type="time" [(ngModel)]="newReservation.time">
+          <label>Heure *</label>
+          <input type="time" [(ngModel)]="newReservation.reservationTime">
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>Personnes</label>
-          <input type="number" [(ngModel)]="newReservation.guests" min="1">
+          <label>Personnes *</label>
+          <input type="number" [(ngModel)]="newReservation.numberOfPersons" min="1" max="50">
         </div>
         <div class="form-group">
           <label>Prix (MAD)</label>
-          <input type="number" [(ngModel)]="newReservation.price">
+          <input type="number" [(ngModel)]="newReservation.price" placeholder="Optionnel">
         </div>
       </div>
       <div class="form-group">
-        <label>Lieu</label>
-        <input type="text" [(ngModel)]="newReservation.location" placeholder="Ville">
+        <label>Ville *</label>
+        <select [(ngModel)]="newReservation.location">
+          <option value="" disabled>Sélectionner...</option>
+          <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea [(ngModel)]="newReservation.notes" placeholder="Instructions spéciales, demandes..." rows="2"></textarea>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn-secondary" (click)="closeNewReservationModal()">Annuler</button>
-      <button class="btn-primary" (click)="createReservation()">
-        <i class="bi bi-check"></i> Réserver
+      <button class="btn-primary" (click)="createReservation()" [disabled]="isSubmittingReservation">
+        <span *ngIf="!isSubmittingReservation"><i class="bi bi-check"></i> Réserver</span>
+        <span *ngIf="isSubmittingReservation"><i class="bi bi-arrow-repeat spin"></i> En cours...</span>
       </button>
     </div>
   </div>
@@ -674,7 +702,6 @@
       <button class="btn-close" (click)="closePlaceModal()"><i class="bi bi-x-lg"></i></button>
     </div>
     <div class="modal-body">
-      <!-- Choose Method -->
       <div class="choose-method" *ngIf="!capturedImage && !isUsingCamera">
         <div class="method-card" (click)="startCamera()">
           <i class="bi bi-camera-fill"></i>
@@ -687,7 +714,6 @@
         <input type="file" #fileInput accept="image/*" (change)="onFileSelected($event)" style="display:none">
       </div>
 
-      <!-- Camera View -->
       <div class="camera-view" *ngIf="isUsingCamera && !capturedImage">
         <video #videoElement autoplay playsinline></video>
         <div class="camera-controls">
@@ -697,7 +723,6 @@
         </div>
       </div>
 
-      <!-- Preview -->
       <div class="image-preview" *ngIf="capturedImage && !recognitionResult">
         <img [src]="capturedImage" alt="Captured">
         <div class="analyzing-overlay" *ngIf="isAnalyzing">
@@ -714,7 +739,6 @@
         </div>
       </div>
 
-      <!-- Result -->
       <div class="recognition-result" *ngIf="recognitionResult">
         <img [src]="capturedImage" alt="Recognized">
         <div class="result-info">

@@ -47,7 +47,7 @@ export const appRoutes: Routes = [
       },
       { 
         path: 'reservations', 
-        loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
+        loadComponent: () => import('./pages/reservations/reservations.component').then(m => m.ReservationsComponent)
       },
       { 
         path: 'planner', 

@@ -4,6 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 
+// Import du service de réservation
+import { 
+  Reservation as ApiReservation, 
+  CreateReservationRequest,
+  ReservationType,
+  RESERVATION_TYPES,
+  getTypeOption,
+  getStatusOption
+} from '../../models/reservation.model';
+import { ReservationsService } from 'src/app/sevices/reservations.service';
+
 // ============ INTERFACES ============
 interface UserProfile {
   fullName: string;
@@ -37,19 +48,6 @@ interface BudgetItem {
   date: Date;
   icon: string;
   color: string;
-}
-
-interface Reservation {
-  id: number;
-  name: string;
-  type: string;
-  date: Date;
-  time: string;
-  guests: number;
-  status: 'confirmed' | 'pending' | 'cancelled';
-  image: string;
-  price: number;
-  location: string;
 }
 
 interface NearbyPlace {
@@ -97,7 +95,6 @@ interface Alert {
   styleUrls: ['./dashboard.component.css'],
   encapsulation: ViewEncapsulation.None,
   styles: [`
-    /* Global Modal Styles - Override any parent positioning */
     .modal-overlay {
       position: fixed !important;
       top: 0 !important;
@@ -214,17 +211,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: 3, name: 'Circuit Guidé', discount: 15, originalPrice: 500, image: 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?w=200', validUntil: '20 Fév' }
   ];
 
-  // ============ RESERVATIONS (Module 4) ============
-  reservations: Reservation[] = [
-    { id: 1, name: 'Hôtel Sofitel Casablanca', type: 'Hôtel', date: new Date(2026, 1, 15), time: '14:00', guests: 2, status: 'confirmed', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200', price: 1500, location: 'Casablanca' },
-    { id: 2, name: 'Restaurant La Sqala', type: 'Restaurant', date: new Date(2026, 1, 16), time: '20:00', guests: 4, status: 'pending', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200', price: 600, location: 'Casablanca' },
-    { id: 3, name: 'Hammam Ziani', type: 'Spa', date: new Date(2026, 1, 17), time: '10:30', guests: 2, status: 'confirmed', image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=200', price: 400, location: 'Marrakech' }
-  ];
+  // ============ RESERVATIONS (Module 4) - BRANCHEMENT API ============
+  reservations: ApiReservation[] = [];
+  isLoadingReservations = false;
+  reservationError: string | null = null;
+  reservationTypes = RESERVATION_TYPES;
 
   showReservationModal = false;
   showNewReservationModal = false;
-  selectedReservation: Reservation | null = null;
-  newReservation: Partial<Reservation> = {};
+  selectedReservation: ApiReservation | null = null;
+  
+  // Formulaire nouvelle réservation
+  newReservation: CreateReservationRequest = {
+    establishmentName: '',
+    type: 'HOTEL',
+    reservationDate: this.getTodayDate(),
+    reservationTime: '12:00',
+    numberOfPersons: 2,
+    price: undefined,
+    location: '',
+    notes: ''
+  };
+  isSubmittingReservation = false;
+
+  // Villes disponibles
+  cities = ['Casablanca', 'Rabat', 'Marrakech', 'Fès', 'Tanger', 'Agadir', 'Essaouira', 'Chefchaouen'];
 
   // ============ GEOLOCATION (Module 5) ============
   userLocation: { lat: number; lng: number } | null = null;
@@ -247,16 +258,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   recognitionError: string | null = null;
   private mediaStream: MediaStream | null = null;
 
-  // ============ GOOGLE VISION API CONFIG ============
-  // ⚠️ COLLEZ VOTRE CLÉ API ICI ⚠️
-  // 1. Allez sur https://console.cloud.google.com/apis/credentials
-  // 2. Créez une clé API et activez "Cloud Vision API"
-  // 3. Collez la clé ci-dessous entre les guillemets
-  private readonly VISION_API_KEY:any = 'AIzaSyBUNarJUKhAO0036x_Ni7O5frU6PRhXgMs'; // <-- REMPLACEZ CETTE LIGNE
-  private readonly VISION_API_URL:any = 'https://vision.googleapis.com/v1/images:annotate';
-  
-  // Mode démo (true = simulation sans API, false = utilise l'API réelle)
-  private readonly DEMO_MODE = false; // Mettez false quand vous avez une clé API valide
+  private readonly VISION_API_KEY: any = 'AIzaSyBUNarJUKhAO0036x_Ni7O5frU6PRhXgMs';
+  private readonly VISION_API_URL: any = 'https://vision.googleapis.com/v1/images:annotate';
+  private readonly DEMO_MODE = false;
 
   // Navigation
   showNavigationModal = false;
@@ -268,12 +272,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
   searchQuery = '';
   notificationCount = 2;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private reservationService: ReservationsService
+  ) {}
 
   ngOnInit(): void {
     this.loadUserProfile();
     this.calculateBudget();
     this.getUserLocation();
+    this.loadReservations();
   }
 
   ngOnDestroy(): void {
@@ -282,10 +290,20 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   // ============ MODULE 1: PROFILE ============
   loadUserProfile(): void {
-    const storedName = localStorage.getItem('gogenius.fname');
-    if (storedName) {
-      this.userProfile.fullName = storedName;
-      this.userInitials = this.getInitials(storedName);
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        this.userProfile.fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.login || 'Utilisateur';
+        this.userProfile.email = user.email || '';
+        this.userInitials = this.getInitials(this.userProfile.fullName);
+      } catch (e) {
+        const storedName = localStorage.getItem('gogenius.fname');
+        if (storedName) {
+          this.userProfile.fullName = storedName;
+          this.userInitials = this.getInitials(storedName);
+        }
+      }
     }
   }
 
@@ -342,14 +360,24 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   bookRecommendation(rec: Recommendation): void {
+    const typeMap: { [key: string]: ReservationType } = {
+      'Restaurant': 'RESTAURANT',
+      'Hôtel': 'HOTEL',
+      'Spa': 'SPA',
+      'Activité': 'ACTIVITY',
+      'Transport': 'TRANSPORT',
+      'Café': 'RESTAURANT'
+    };
+    
     this.newReservation = {
-      name: rec.name,
-      type: rec.type,
+      establishmentName: rec.name,
+      type: typeMap[rec.type] || 'ACTIVITY',
+      reservationDate: this.getTodayDate(),
+      reservationTime: '12:00',
+      numberOfPersons: 2,
       price: rec.price,
       location: rec.location,
-      guests: 2,
-      date: new Date(),
-      time: '12:00'
+      notes: ''
     };
     this.closeRecommendationModal();
     this.showNewReservationModal = true;
@@ -441,8 +469,26 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.notificationCount = this.alerts.filter(a => !a.isRead).length;
   }
 
-  // ============ MODULE 4: RESERVATIONS ============
-  viewReservation(res: Reservation): void {
+  // ============ MODULE 4: RESERVATIONS - API BRANCHÉE ============
+  
+  loadReservations(): void {
+    this.isLoadingReservations = true;
+    this.reservationError = null;
+    
+    this.reservationService.getLatestReservations().subscribe({
+      next: (data) => {
+        this.reservations = data;
+        this.isLoadingReservations = false;
+      },
+      error: (err) => {
+        console.error('Erreur chargement réservations:', err);
+        this.reservationError = 'Impossible de charger les réservations';
+        this.isLoadingReservations = false;
+      }
+    });
+  }
+
+  viewReservation(res: ApiReservation): void {
     this.selectedReservation = res;
     this.showReservationModal = true;
   }
@@ -453,69 +499,188 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   openNewReservationModal(): void {
-    this.newReservation = { date: new Date(), time: '12:00', guests: 2 };
+    this.resetNewReservationForm();
+    this.showNewReservationModal = true;
+  }
+
+  openNewReservationWithType(type: ReservationType): void {
+    this.resetNewReservationForm();
+    this.newReservation.type = type;
     this.showNewReservationModal = true;
   }
 
   closeNewReservationModal(): void {
     this.showNewReservationModal = false;
-    this.newReservation = {};
+    this.resetNewReservationForm();
+  }
+
+  resetNewReservationForm(): void {
+    this.newReservation = {
+      establishmentName: '',
+      type: 'HOTEL',
+      reservationDate: this.getTodayDate(),
+      reservationTime: '12:00',
+      numberOfPersons: 2,
+      price: undefined,
+      location: '',
+      notes: ''
+    };
+    this.reservationError = null;
   }
 
   createReservation(): void {
-    if (this.newReservation.name && this.newReservation.type) {
-      this.reservations.unshift({
-        id: Date.now(),
-        name: this.newReservation.name,
-        type: this.newReservation.type,
-        date: this.newReservation.date || new Date(),
-        time: this.newReservation.time || '12:00',
-        guests: this.newReservation.guests || 2,
-        status: 'pending',
-        image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200',
-        price: this.newReservation.price || 0,
-        location: this.newReservation.location || ''
-      });
-      
-      // Ajouter aux dépenses
-      if (this.newReservation.price) {
-        this.expenses.unshift({
-          id: Date.now(),
-          category: this.newReservation.type || 'Autre',
-          name: this.newReservation.name,
-          amount: this.newReservation.price,
-          date: new Date(),
-          icon: 'bi-bookmark-check',
-          color: '#1a5f7a'
-        });
-        this.calculateBudget();
-      }
-      
-      this.closeNewReservationModal();
+    if (!this.newReservation.establishmentName?.trim()) {
+      this.reservationError = 'Le nom de l\'établissement est requis';
+      return;
     }
+    if (!this.newReservation.location?.trim()) {
+      this.reservationError = 'La ville est requise';
+      return;
+    }
+
+    this.isSubmittingReservation = true;
+    this.reservationError = null;
+
+    this.reservationService.createReservation(this.newReservation).subscribe({
+      next: (reservation) => {
+        this.reservations.unshift(reservation);
+        if (this.reservations.length > 3) {
+          this.reservations = this.reservations.slice(0, 3);
+        }
+        
+        if (this.newReservation.price && this.newReservation.price > 0) {
+          const typeOption = getTypeOption(this.newReservation.type);
+          this.expenses.unshift({
+            id: Date.now(),
+            category: typeOption.label,
+            name: this.newReservation.establishmentName,
+            amount: this.newReservation.price,
+            date: new Date(),
+            icon: typeOption.icon,
+            color: typeOption.color
+          });
+          this.calculateBudget();
+        }
+        
+        this.isSubmittingReservation = false;
+        this.closeNewReservationModal();
+      },
+      error: (err) => {
+        console.error('Erreur création réservation:', err);
+        this.reservationError = err?.message || 'Erreur lors de la création';
+        this.isSubmittingReservation = false;
+      }
+    });
   }
 
-  cancelReservation(id: number): void {
-    const res = this.reservations.find(r => r.id === id);
-    if (res) res.status = 'cancelled';
-    this.closeReservationModal();
+  cancelReservation(id: string): void {
+    if (!confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) return;
+    
+    this.reservationService.cancelReservation(id).subscribe({
+      next: (updated) => {
+        const index = this.reservations.findIndex(r => r.id === id);
+        if (index !== -1) {
+          this.reservations[index] = updated;
+        }
+        this.closeReservationModal();
+      },
+      error: (err) => {
+        console.error('Erreur annulation:', err);
+        alert('Erreur lors de l\'annulation');
+      }
+    });
   }
 
   modifyReservation(): void {
-    // Ouvrir le modal de modification
     if (this.selectedReservation) {
-      this.newReservation = { ...this.selectedReservation };
+      this.newReservation = {
+        establishmentName: this.selectedReservation.establishmentName,
+        type: this.selectedReservation.type,
+        reservationDate: this.selectedReservation.reservationDate,
+        reservationTime: this.selectedReservation.reservationTime,
+        numberOfPersons: this.selectedReservation.numberOfPersons,
+        price: this.selectedReservation.price || undefined,
+        location: this.selectedReservation.location,
+        notes: this.selectedReservation.notes || ''
+      };
       this.closeReservationModal();
       this.showNewReservationModal = true;
     }
   }
 
+  // ============ HELPERS RÉSERVATIONS ============
+  
+  getTodayDate(): string {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  getTypeOption(type: ReservationType) {
+    return getTypeOption(type);
+  }
+
+  getStatusOption(status: string) {
+    return getStatusOption(status as any);
+  }
+
   getStatusLabel(status: string): string {
-    return { confirmed: 'Confirmé', pending: 'En attente', cancelled: 'Annulé' }[status] || status;
+    const statusMap: { [key: string]: string } = {
+      'PENDING': 'En attente',
+      'CONFIRMED': 'Confirmé',
+      'CANCELLED': 'Annulé',
+      'COMPLETED': 'Terminé'
+    };
+    return statusMap[status] || status;
   }
 
   getStatusClass(status: string): string {
-    return { confirmed: 'status-confirmed', pending: 'status-pending', cancelled: 'status-cancelled' }[status] || '';
+    const classMap: { [key: string]: string } = {
+      'PENDING': 'status-pending',
+      'CONFIRMED': 'status-confirmed',
+      'CANCELLED': 'status-cancelled',
+      'COMPLETED': 'status-completed'
+    };
+    return classMap[status] || '';
+  }
+
+  formatReservationDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
+  formatShortDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+  }
+
+  formatTime(timeStr: string): string {
+    return timeStr?.substring(0, 5) || '';
+  }
+
+  formatPrice(price: number | null): string {
+    if (!price) return '';
+    return price.toLocaleString('fr-FR') + ' MAD';
+  }
+
+  getReservationImage(type: ReservationType): string {
+    const images: { [key: string]: string } = {
+      'HOTEL': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200',
+      'RESTAURANT': 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200',
+      'SPA': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=200',
+      'ACTIVITY': 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?w=200',
+      'TRANSPORT': 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=200'
+    };
+    return images[type] || images['ACTIVITY'];
+  }
+
+  canModifyReservation(reservation: ApiReservation): boolean {
+    return reservation.status === 'PENDING' || reservation.status === 'CONFIRMED';
   }
 
   // ============ MODULE 5: GEOLOCATION ============
@@ -630,20 +795,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.isAnalyzing = true;
     this.recognitionError = null;
 
-    // ============ MODE DÉMO ============
     if (this.DEMO_MODE) {
-      // Simule un délai d'analyse
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Résultats de démonstration
       const demoResults = [
-        { name: 'Marina Casablanca', description: 'Complexe touristique moderne situé sur le littoral de Casablanca, connu pour ses restaurants, boutiques et vue sur l\'océan.', location: 'Casablanca, Maroc', lat: 33.5970, lng: -7.6296 },
-        { name: 'Morocco Mall', description: 'Le plus grand centre commercial d\'Afrique, situé à Casablanca avec une vue imprenable sur l\'océan Atlantique.', location: 'Casablanca, Maroc', lat: 33.5731, lng: -7.6568 },
-        { name: 'Corniche Ain Diab', description: 'Promenade balnéaire populaire le long de la côte atlantique de Casablanca.', location: 'Casablanca, Maroc', lat: 33.5878, lng: -7.6670 }
+        { name: 'Marina Casablanca', description: 'Complexe touristique moderne.', location: 'Casablanca, Maroc', lat: 33.5970, lng: -7.6296 },
+        { name: 'Morocco Mall', description: 'Le plus grand centre commercial d\'Afrique.', location: 'Casablanca, Maroc', lat: 33.5731, lng: -7.6568 }
       ];
-      
       const randomResult = demoResults[Math.floor(Math.random() * demoResults.length)];
-      
       this.recognitionResult = {
         name: randomResult.name,
         description: randomResult.description,
@@ -652,14 +810,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
         mapsUrl: `https://www.google.com/maps?q=${randomResult.lat},${randomResult.lng}`,
         wikipediaUrl: `https://fr.wikipedia.org/wiki/${encodeURIComponent(randomResult.name)}`
       };
-      
       this.isAnalyzing = false;
       return;
     }
 
-    // ============ MODE API RÉELLE ============
     if (!this.VISION_API_KEY || this.VISION_API_KEY.trim() === '') {
-      this.recognitionError = 'Configurez votre clé API Google Vision dans dashboard.component.ts (ligne 218)';
+      this.recognitionError = 'Configurez votre clé API Google Vision';
       this.isAnalyzing = false;
       return;
     }
@@ -679,8 +835,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       ).toPromise();
 
       const result = response?.responses?.[0];
-      
-      // Vérifier les erreurs API
       if (result?.error) {
         this.recognitionError = `Erreur API: ${result.error.message}`;
         this.isAnalyzing = false;
@@ -701,7 +855,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
           wikipediaUrl: `https://fr.wikipedia.org/wiki/${encodeURIComponent(landmark.description)}`
         };
       } else if (webDetection?.webEntities?.length > 0) {
-        // Fallback sur Web Detection
         const entity = webDetection.webEntities[0];
         this.recognitionResult = {
           name: entity.description || 'Lieu détecté',
@@ -711,11 +864,10 @@ export class DashboardComponent implements OnInit, OnDestroy {
           wikipediaUrl: `https://fr.wikipedia.org/wiki/${encodeURIComponent(entity.description || '')}`
         };
       } else {
-        this.recognitionError = 'Aucun lieu reconnu dans cette image. Essayez avec une photo de monument ou lieu célèbre.';
+        this.recognitionError = 'Aucun lieu reconnu dans cette image.';
       }
     } catch (error: any) {
-      console.error('Vision API Error:', error);
-      this.recognitionError = `Erreur: ${error?.message || 'Vérifiez votre clé API et connexion internet'}`;
+      this.recognitionError = `Erreur: ${error?.message || 'Vérifiez votre clé API'}`;
     } finally {
       this.isAnalyzing = false;
     }
@@ -738,5 +890,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
   // ============ UI ============
   setActiveTab(tab: 'recommendations' | 'budget' | 'reservations' | 'nearby'): void {
     this.activeTab = tab;
+    if (tab === 'reservations') {
+      this.loadReservations();
+    }
   }
 }

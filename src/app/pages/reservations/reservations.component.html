@@ -1,0 +1,498 @@
+<!-- src/app/pages/reservations/reservations.component.html -->
+<div class="reservations-page">
+  
+  <!-- Notification Toast -->
+  <div class="notification-toast" *ngIf="showNotificationFlag" [class]="'toast-' + getNotificationType()">
+    <i class="bi" [ngClass]="{
+      'bi-check-circle-fill': getNotificationType() === 'success',
+      'bi-exclamation-circle-fill': getNotificationType() === 'error',
+      'bi-info-circle-fill': getNotificationType() === 'info'
+    }"></i>
+    <span>{{ getNotificationMessage() }}</span>
+  </div>
+
+  <!-- Page Header -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="page-title">
+          <i class="bi bi-calendar-check"></i>
+          Mes Réservations
+        </h1>
+        <p class="page-subtitle">Gérez toutes vos réservations d'hôtels, restaurants et activités</p>
+      </div>
+      <div class="header-right">
+        <button class="btn-primary" (click)="openCreateModal()">
+          <i class="bi bi-plus-lg"></i>
+          Nouvelle réservation
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Stats Cards -->
+  <section class="stats-section" *ngIf="stats">
+    <div class="stat-card">
+      <div class="stat-icon total">
+        <i class="bi bi-calendar-range"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.totalReservations }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon upcoming">
+        <i class="bi bi-calendar-event"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.upcomingReservations }}</span>
+        <span class="stat-label">À venir</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon pending">
+        <i class="bi bi-clock-history"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.pendingReservations }}</span>
+        <span class="stat-label">En attente</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon confirmed">
+        <i class="bi bi-check-circle"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.confirmedReservations }}</span>
+        <span class="stat-label">Confirmées</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filters Section -->
+  <section class="filters-section">
+    <div class="filters-row">
+      <!-- Search -->
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input 
+          type="text" 
+          placeholder="Rechercher par nom, ville ou code..."
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="applyFilters()">
+        <button class="btn-clear" *ngIf="searchQuery" (click)="clearSearch()">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      
+      <!-- Type Filter -->
+      <div class="filter-select">
+        <select [(ngModel)]="filterType" (ngModelChange)="applyFilters()">
+          <option value="all">Tous les types</option>
+          <option *ngFor="let type of reservationTypes" [value]="type.value">
+            {{ type.label }}
+          </option>
+        </select>
+      </div>
+      
+      <!-- Status Filter -->
+      <div class="filter-select">
+        <select [(ngModel)]="filterStatus" (ngModelChange)="applyFilters()">
+          <option value="all">Tous les statuts</option>
+          <option *ngFor="let status of reservationStatuses" [value]="status.value">
+            {{ status.label }}
+          </option>
+        </select>
+      </div>
+      
+      <!-- Period Filter -->
+      <div class="filter-select">
+        <select [(ngModel)]="filterPeriod" (ngModelChange)="applyFilters()">
+          <option value="all">Toutes les dates</option>
+          <option value="today">Aujourd'hui</option>
+          <option value="week">Cette semaine</option>
+          <option value="month">Ce mois</option>
+          <option value="upcoming">À venir</option>
+          <option value="past">Passées</option>
+        </select>
+      </div>
+      
+      <!-- View Toggle -->
+      <div class="view-toggle">
+        <button [class.active]="viewMode === 'cards'" (click)="viewMode = 'cards'">
+          <i class="bi bi-grid-3x3-gap"></i>
+        </button>
+        <button [class.active]="viewMode === 'list'" (click)="viewMode = 'list'">
+          <i class="bi bi-list-ul"></i>
+        </button>
+      </div>
+      
+      <!-- Reset -->
+      <button class="btn-reset" (click)="resetFilters()">
+        <i class="bi bi-arrow-counterclockwise"></i>
+      </button>
+    </div>
+    
+    <!-- Results count -->
+    <div class="results-info">
+      <span>{{ filteredReservations.length }} réservation(s)</span>
+      <div class="sort-options">
+        <label>Trier par :</label>
+        <select [(ngModel)]="sortBy" (ngModelChange)="applyFilters()">
+          <option value="date">Date</option>
+          <option value="createdAt">Date création</option>
+          <option value="establishment">Établissement</option>
+          <option value="status">Statut</option>
+        </select>
+        <button class="btn-sort" (click)="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'; applyFilters()">
+          <i class="bi" [class.bi-sort-up]="sortOrder === 'asc'" [class.bi-sort-down]="sortOrder === 'desc'"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Chargement des réservations...</p>
+  </div>
+
+  <!-- Reservations Grid/List -->
+  <section class="reservations-container" *ngIf="!isLoading" [class.list-view]="viewMode === 'list'">
+    
+    <!-- Reservation Card -->
+    <article 
+      class="reservation-card" 
+      *ngFor="let reservation of filteredReservations; trackBy: trackById"
+      [class.past]="!isUpcoming(reservation)"
+      [class.cancelled]="reservation.status === 'CANCELLED'">
+      
+      <!-- Card Header -->
+      <div class="card-header">
+        <div class="type-badge" [style.background]="getTypeOption(reservation.type).color">
+          <i [class]="'bi ' + getTypeOption(reservation.type).icon"></i>
+          <span>{{ reservation.typeDisplayName }}</span>
+        </div>
+        <div class="status-badge" [class]="'status-' + reservation.status.toLowerCase()">
+          <i [class]="'bi ' + getStatusOption(reservation.status).icon"></i>
+          <span>{{ reservation.statusDisplayName }}</span>
+        </div>
+      </div>
+      
+      <!-- Card Body -->
+      <div class="card-body">
+        <h3 class="establishment-name">{{ reservation.establishmentName }}</h3>
+        
+        <div class="reservation-details">
+          <div class="detail-row">
+            <i class="bi bi-calendar3"></i>
+            <span>{{ formatDate(reservation.reservationDate) }}</span>
+          </div>
+          <div class="detail-row">
+            <i class="bi bi-clock"></i>
+            <span>{{ formatTime(reservation.reservationTime) }}</span>
+          </div>
+          <div class="detail-row">
+            <i class="bi bi-geo-alt"></i>
+            <span>{{ reservation.location }}</span>
+          </div>
+          <div class="detail-row">
+            <i class="bi bi-people"></i>
+            <span>{{ reservation.numberOfPersons }} personne(s)</span>
+          </div>
+          <div class="detail-row" *ngIf="reservation.price">
+            <i class="bi bi-cash"></i>
+            <span>{{ formatPrice(reservation.price) }}</span>
+          </div>
+        </div>
+        
+        <div class="confirmation-code">
+          <span class="code-label">Code :</span>
+          <span class="code-value">{{ reservation.confirmationCode }}</span>
+        </div>
+      </div>
+      
+      <!-- Card Footer -->
+      <div class="card-footer">
+        <button class="btn-action view" (click)="openViewModal(reservation)" title="Voir détails">
+          <i class="bi bi-eye"></i>
+        </button>
+        <button class="btn-action edit" *ngIf="canModify(reservation)" (click)="openEditModal(reservation)" title="Modifier">
+          <i class="bi bi-pencil"></i>
+        </button>
+        <button class="btn-action cancel" *ngIf="canCancel(reservation)" (click)="openCancelModal(reservation)" title="Annuler">
+          <i class="bi bi-x-circle"></i>
+        </button>
+        <button class="btn-action delete" (click)="deleteReservation(reservation)" title="Supprimer">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    </article>
+    
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredReservations.length === 0">
+      <i class="bi bi-calendar-x"></i>
+      <h3>Aucune réservation trouvée</h3>
+      <p>Vous n'avez pas encore de réservations ou aucune ne correspond à vos filtres.</p>
+      <button class="btn-primary" (click)="openCreateModal()">
+        <i class="bi bi-plus-lg"></i>
+        Créer une réservation
+      </button>
+    </div>
+  </section>
+
+  <!-- Modal -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      
+      <!-- Modal Header -->
+      <div class="modal-header">
+        <h2>
+          <i class="bi" [ngClass]="{
+            'bi-plus-square': modalMode === 'create',
+            'bi-pencil-square': modalMode === 'edit',
+            'bi-eye': modalMode === 'view',
+            'bi-x-circle': modalMode === 'cancel'
+          }"></i>
+          <span *ngIf="modalMode === 'create'">Nouvelle réservation</span>
+          <span *ngIf="modalMode === 'edit'">Modifier la réservation</span>
+          <span *ngIf="modalMode === 'view'">Détails de la réservation</span>
+          <span *ngIf="modalMode === 'cancel'">Annuler la réservation</span>
+        </h2>
+        <button class="btn-close" (click)="closeModal()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      
+      <!-- Modal Body - Create/Edit Form -->
+      <div class="modal-body" *ngIf="modalMode === 'create' || modalMode === 'edit'">
+        <form (ngSubmit)="submitReservation()">
+          
+          <div class="form-group">
+            <label>Établissement</label>
+            <input 
+              type="text" 
+              [(ngModel)]="formData.establishmentName"
+              name="establishmentName"
+              placeholder="Nom de l'établissement"
+              required>
+          </div>
+          
+          <div class="form-group">
+            <label>Type</label>
+            <select [(ngModel)]="formData.type" name="type" required>
+              <option value="" disabled>Sélectionner...</option>
+              <option *ngFor="let type of reservationTypes" [value]="type.value">
+                {{ type.label }}
+              </option>
+            </select>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date</label>
+              <input 
+                type="date" 
+                [(ngModel)]="formData.reservationDate"
+                name="reservationDate"
+                [min]="getTodayDate()"
+                required>
+            </div>
+            <div class="form-group">
+              <label>Heure</label>
+              <input 
+                type="time" 
+                [(ngModel)]="formData.reservationTime"
+                name="reservationTime"
+                required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Personnes</label>
+              <input 
+                type="number" 
+                [(ngModel)]="formData.numberOfPersons"
+                name="numberOfPersons"
+                min="1"
+                max="100"
+                required>
+            </div>
+            <div class="form-group">
+              <label>Prix (MAD)</label>
+              <input 
+                type="number" 
+                [(ngModel)]="formData.price"
+                name="price"
+                min="0"
+                placeholder="Optionnel">
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Lieu</label>
+            <select [(ngModel)]="formData.location" name="location" required>
+              <option value="" disabled>Ville</option>
+              <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label>Notes (optionnel)</label>
+            <textarea 
+              [(ngModel)]="formData.notes"
+              name="notes"
+              rows="3"
+              placeholder="Instructions spéciales, demandes..."></textarea>
+          </div>
+          
+        </form>
+      </div>
+      
+      <!-- Modal Body - View Details -->
+      <div class="modal-body view-details" *ngIf="modalMode === 'view' && selectedReservation">
+        <div class="detail-section">
+          <div class="detail-header">
+            <div class="type-badge large" [style.background]="getTypeOption(selectedReservation.type).color">
+              <i [class]="'bi ' + getTypeOption(selectedReservation.type).icon"></i>
+              {{ selectedReservation.typeDisplayName }}
+            </div>
+            <div class="status-badge large" [class]="'status-' + selectedReservation.status.toLowerCase()">
+              <i [class]="'bi ' + getStatusOption(selectedReservation.status).icon"></i>
+              {{ selectedReservation.statusDisplayName }}
+            </div>
+          </div>
+          
+          <h3 class="detail-title">{{ selectedReservation.establishmentName }}</h3>
+          
+          <div class="detail-grid">
+            <div class="detail-item">
+              <i class="bi bi-calendar3"></i>
+              <div>
+                <span class="label">Date</span>
+                <span class="value">{{ formatDate(selectedReservation.reservationDate) }}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="bi bi-clock"></i>
+              <div>
+                <span class="label">Heure</span>
+                <span class="value">{{ formatTime(selectedReservation.reservationTime) }}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="bi bi-geo-alt"></i>
+              <div>
+                <span class="label">Lieu</span>
+                <span class="value">{{ selectedReservation.location }}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="bi bi-people"></i>
+              <div>
+                <span class="label">Personnes</span>
+                <span class="value">{{ selectedReservation.numberOfPersons }}</span>
+              </div>
+            </div>
+            <div class="detail-item" *ngIf="selectedReservation.price">
+              <i class="bi bi-cash"></i>
+              <div>
+                <span class="label">Prix</span>
+                <span class="value">{{ formatPrice(selectedReservation.price) }}</span>
+              </div>
+            </div>
+            <div class="detail-item">
+              <i class="bi bi-upc-scan"></i>
+              <div>
+                <span class="label">Code confirmation</span>
+                <span class="value code">{{ selectedReservation.confirmationCode }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="detail-notes" *ngIf="selectedReservation.notes">
+            <span class="label">Notes</span>
+            <p>{{ selectedReservation.notes }}</p>
+          </div>
+          
+          <div class="detail-meta">
+            <span>Créé le {{ formatDateTime(selectedReservation.createdAt) }}</span>
+            <span *ngIf="selectedReservation.updatedAt">• Modifié le {{ formatDateTime(selectedReservation.updatedAt) }}</span>
+          </div>
+          
+          <div class="cancellation-info" *ngIf="selectedReservation.status === 'CANCELLED'">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div>
+              <strong>Annulée le {{ formatDateTime(selectedReservation.cancelledAt!) }}</strong>
+              <p *ngIf="selectedReservation.cancellationReason">Raison : {{ selectedReservation.cancellationReason }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Modal Body - Cancel -->
+      <div class="modal-body cancel-form" *ngIf="modalMode === 'cancel' && selectedReservation">
+        <div class="cancel-warning">
+          <i class="bi bi-exclamation-triangle"></i>
+          <p>Êtes-vous sûr de vouloir annuler cette réservation ?</p>
+        </div>
+        
+        <div class="cancel-summary">
+          <strong>{{ selectedReservation.establishmentName }}</strong>
+          <span>{{ formatDate(selectedReservation.reservationDate) }} à {{ formatTime(selectedReservation.reservationTime) }}</span>
+        </div>
+        
+        <div class="form-group">
+          <label>Raison de l'annulation (optionnel)</label>
+          <textarea 
+            [(ngModel)]="cancelReason"
+            rows="3"
+            placeholder="Pourquoi annulez-vous cette réservation ?"></textarea>
+        </div>
+      </div>
+      
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="closeModal()">
+          <span *ngIf="modalMode === 'view'">Fermer</span>
+          <span *ngIf="modalMode !== 'view'">Annuler</span>
+        </button>
+        
+        <button 
+          type="button" 
+          class="btn-primary" 
+          *ngIf="modalMode === 'create' || modalMode === 'edit'"
+          (click)="submitReservation()"
+          [disabled]="isSubmitting">
+          <i class="bi bi-check-lg" *ngIf="!isSubmitting"></i>
+          <span class="spinner-small" *ngIf="isSubmitting"></span>
+          <span *ngIf="modalMode === 'create'">Réserver</span>
+          <span *ngIf="modalMode === 'edit'">Enregistrer</span>
+        </button>
+        
+        <button 
+          type="button" 
+          class="btn-danger" 
+          *ngIf="modalMode === 'cancel'"
+          (click)="confirmCancel()"
+          [disabled]="isSubmitting">
+          <i class="bi bi-x-circle" *ngIf="!isSubmitting"></i>
+          <span class="spinner-small" *ngIf="isSubmitting"></span>
+          Confirmer l'annulation
+        </button>
+        
+        <button 
+          type="button" 
+          class="btn-primary" 
+          *ngIf="modalMode === 'view' && canModify(selectedReservation!)"
+          (click)="openEditModal(selectedReservation!)">
+          <i class="bi bi-pencil"></i>
+          Modifier
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -388,7 +388,12 @@
 .res-image { width: 160px; height: 140px; object-fit: cover; flex-shrink: 0; }
 .res-content { flex: 1; padding: 16px 16px 16px 0; display: flex; flex-direction: column; }
 .res-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-.res-type { font-size: 0.75rem; color: #1a5f7a; font-weight: 600; text-transform: uppercase; }
+.res-type { font-size: 0.75rem; color: #ffffff;
+    padding: 6px; font-weight: 600; text-transform: uppercase; }
+.type-badge {
+    color: #ffffff;
+    padding: 6px;
+}
 .res-status { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
 .status-confirmed { background: rgba(42, 157, 143, 0.1); color: #2a9d8f; }
 .status-pending { background: rgba(233, 196, 106, 0.2); color: #9a7b2c; }

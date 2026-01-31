@@ -64,6 +64,10 @@ export class EventsComponent implements OnInit, AfterViewInit {
   // Loading state
   isLoading = true;
 
+  // Propriétés
+  showPastEvents = false;
+  pastEventsCount = 0;
+
   constructor(
     private router: Router, 
     private cdr: ChangeDetectorRef
@@ -75,6 +79,7 @@ export class EventsComponent implements OnInit, AfterViewInit {
     this.calculateStats();
     this.filterEvents();
     this.isLoading = false;
+    this.pastEventsCount = this.events.filter(e => e.isPast).length;
   }
 
   ngAfterViewInit(): void {
@@ -122,6 +127,10 @@ export class EventsComponent implements OnInit, AfterViewInit {
         e.city.toLowerCase().includes(query) ||
         e.tags.some(tag => tag.toLowerCase().includes(query))
       );
+    }
+    // Filtre événements passés
+    if (!this.showPastEvents) {
+      filtered = filtered.filter(e => !e.isPast);
     }
 
     // Filtre par catégorie
@@ -221,6 +230,7 @@ export class EventsComponent implements OnInit, AfterViewInit {
   }
 
   resetFilters(): void {
+    this.showPastEvents = false;  // Ajouter cette ligne
     this.searchQuery = '';
     this.selectedCategory = 'all';
     this.selectedDate = 'all';
@@ -383,6 +393,7 @@ export class EventsComponent implements OnInit, AfterViewInit {
   onImageError(event: any): void {
     event.target.src = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800';
   }
+
 }
 
 
