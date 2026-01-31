@@ -1,4 +1,4 @@
-<!-- Events Page - Gogenius FR - FIXED VERSION -->
+<!-- Events Page - Gogenius FR -->
 <div class="events-page">
   
   <!-- Page Header -->
@@ -12,10 +12,10 @@
         <p class="page-subtitle">Découvrez les festivals, concerts et événements culturels</p>
       </div>
       <div class="header-right">
-        <button class="btn-view" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'" title="Vue grille">
+        <button class="btn-view" [class.active]="viewMode === 'grid'" (click)="setViewMode('grid')" title="Vue grille">
           <i class="bi bi-grid-3x3-gap"></i>
         </button>
-        <button class="btn-view" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'" title="Vue liste">
+        <button class="btn-view" [class.active]="viewMode === 'list'" (click)="setViewMode('list')" title="Vue liste">
           <i class="bi bi-list-ul"></i>
         </button>
       </div>
@@ -126,7 +126,8 @@
   <section class="events-container" [class.list-view]="viewMode === 'list'">
     
     <article 
-      class="event-card" [class.past-event]="event.isPast"
+      class="event-card" 
+      [class.past-event]="event.isPast"
       *ngFor="let event of filteredEvents; trackBy: trackByEventId"
       (click)="viewEventDetails(event)">
       <div class="event-image">
@@ -144,7 +145,7 @@
         <button 
           class="btn-favorite" 
           [class.active]="event.isFavorite" 
-          (click)="toggleFavorite(event); $event.stopPropagation()">
+          (click)="onToggleFavorite(event, $event)">
           <i class="bi" [class.bi-heart]="!event.isFavorite" [class.bi-heart-fill]="event.isFavorite"></i>
         </button>
         <div class="event-date-badge">
@@ -190,7 +191,7 @@
             </span>
           </div>
           
-          <button class="btn-details" (click)="viewEventDetails(event); $event.stopPropagation()">
+          <button class="btn-details" (click)="onViewDetails(event, $event)">
             Voir détails
             <i class="bi bi-arrow-right"></i>
           </button>
@@ -225,4 +226,220 @@
     </button>
   </nav>
 
+</div>
+
+<!-- EVENT DETAIL MODAL -->
+<div class="event-modal-overlay" *ngIf="showEventModal && selectedEvent" (click)="closeEventModal()">
+  <div class="event-modal" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Image Header -->
+    <div class="modal-image-header">
+      <img [src]="selectedEvent.image" [alt]="selectedEvent.title" (error)="onImageError($event)">
+      <div class="image-overlay"></div>
+      
+      <button class="btn-close-modal" (click)="closeEventModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+      
+      <span class="modal-category-badge" [style.background]="selectedEvent.categoryColor">
+        {{ selectedEvent.category }}
+      </span>
+      
+      <button 
+        class="btn-favorite-modal" 
+        [class.active]="selectedEvent.isFavorite"
+        (click)="toggleFavorite(selectedEvent)">
+        <i class="bi" [class.bi-heart]="!selectedEvent.isFavorite" [class.bi-heart-fill]="selectedEvent.isFavorite"></i>
+      </button>
+      
+      <div class="modal-date-badge">
+        <span class="day">{{ selectedEvent.date | date:'dd' }}</span>
+        <span class="month">{{ selectedEvent.date | date:'MMM' }}</span>
+        <span class="year">{{ selectedEvent.date | date:'yyyy' }}</span>
+      </div>
+      
+      <div class="past-event-overlay" *ngIf="selectedEvent.isPast">
+        <i class="bi bi-clock-history"></i>
+        <span>Événement terminé</span>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      
+      <!-- Event Title & Stats -->
+      <div class="modal-header-info">
+        <h2 class="modal-event-title">{{ selectedEvent.title }}</h2>
+        <div class="modal-stats">
+          <span class="stat" title="Participants">
+            <i class="bi bi-people-fill"></i> {{ formatAttendees(selectedEvent.attendees) }}
+          </span>
+          <span class="stat" title="Vues">
+            <i class="bi bi-eye-fill"></i> {{ formatAttendees(selectedEvent.views) }}
+          </span>
+          <span class="stat featured" *ngIf="selectedEvent.isFeatured">
+            <i class="bi bi-star-fill"></i> En vedette
+          </span>
+        </div>
+      </div>
+
+      <!-- Date & Time Info -->
+      <div class="info-section">
+        <div class="info-row">
+          <div class="info-icon date-icon">
+            <i class="bi bi-calendar-event"></i>
+          </div>
+          <div class="info-content">
+            <span class="info-label">Date</span>
+            <span class="info-value">{{ selectedEvent.date | date:'EEEE dd MMMM yyyy' }}</span>
+          </div>
+        </div>
+        
+        <div class="info-row">
+          <div class="info-icon time-icon">
+            <i class="bi bi-clock"></i>
+          </div>
+          <div class="info-content">
+            <span class="info-label">Heure</span>
+            <span class="info-value">{{ selectedEvent.time }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Location Info -->
+      <div class="info-section clickable" (click)="openMaps(selectedEvent)">
+        <div class="info-row">
+          <div class="info-icon location-icon">
+            <i class="bi bi-geo-alt-fill"></i>
+          </div>
+          <div class="info-content">
+            <span class="info-label">Lieu</span>
+            <span class="info-value">{{ selectedEvent.venue }}</span>
+            <span class="info-subvalue">{{ selectedEvent.city }}, Maroc</span>
+          </div>
+          <i class="bi bi-box-arrow-up-right external-link-icon"></i>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="info-section description-section">
+        <h3 class="section-title">
+          <i class="bi bi-info-circle"></i> À propos
+        </h3>
+        <p class="event-full-description">{{ selectedEvent.description }}</p>
+      </div>
+
+      <!-- Tags -->
+      <div class="info-section tags-section" *ngIf="selectedEvent.tags && selectedEvent.tags.length > 0">
+        <div class="tags-list">
+          <span class="tag-chip" *ngFor="let tag of selectedEvent.tags">#{{ tag }}</span>
+        </div>
+      </div>
+
+      <!-- Price & Organizer -->
+      <div class="price-organizer-section">
+        <div class="price-box" [class.free]="selectedEvent.price === 0">
+          <span class="price-label">Prix</span>
+          <span class="price-value" *ngIf="selectedEvent.price === 0">
+            <i class="bi bi-gift"></i> Gratuit
+          </span>
+          <span class="price-value" *ngIf="selectedEvent.price > 0">
+            {{ selectedEvent.price | number }} MAD
+            <small>/personne</small>
+          </span>
+        </div>
+        <div class="organizer-box" *ngIf="selectedEvent.organizer">
+          <span class="organizer-label">Organisé par</span>
+          <span class="organizer-name">{{ selectedEvent.organizer }}</span>
+        </div>
+      </div>
+
+      <!-- Quick Reservation Section -->
+      <div class="quick-reservation-section" *ngIf="!selectedEvent.isPast">
+        <div class="reservation-header">
+          <i class="bi bi-lightning-fill"></i>
+          <h3>Réservation rapide</h3>
+        </div>
+        
+        <div class="reservation-form">
+          <div class="form-row">
+            <div class="form-group persons-group">
+              <label><i class="bi bi-people"></i> Nombre de personnes</label>
+              <div class="number-stepper">
+                <button class="stepper-btn" (click)="decrementPersons()" [disabled]="reservationPersons <= 1">
+                  <i class="bi bi-dash-lg"></i>
+                </button>
+                <span class="stepper-value">{{ reservationPersons }}</span>
+                <button class="stepper-btn" (click)="incrementPersons()" [disabled]="reservationPersons >= 20">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="form-group total-group" *ngIf="selectedEvent.price > 0">
+              <label><i class="bi bi-calculator"></i> Total estimé</label>
+              <span class="total-price">{{ selectedEvent.price * reservationPersons | number }} MAD</span>
+            </div>
+          </div>
+          
+          <div class="form-group notes-group">
+            <label><i class="bi bi-chat-left-text"></i> Notes (optionnel)</label>
+            <input 
+              type="text" 
+              [(ngModel)]="reservationNotes" 
+              placeholder="Demandes spéciales, allergies, accessibilité...">
+          </div>
+        </div>
+
+        <div class="reservation-error" *ngIf="reservationError">
+          <i class="bi bi-exclamation-triangle"></i>
+          <span>{{ reservationError }}</span>
+        </div>
+
+        <div class="reservation-success" *ngIf="reservationSuccess">
+          <i class="bi bi-check-circle"></i>
+          <span>{{ reservationSuccess }}</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <div class="footer-actions">
+        <button class="btn-action btn-share" (click)="onShareEvent(selectedEvent, $event)">
+          <i class="bi bi-share"></i>
+          <span>Partager</span>
+        </button>
+        
+        <button 
+          class="btn-action btn-ticket" 
+          *ngIf="selectedEvent.ticketUrl && !selectedEvent.isPast" 
+          (click)="onBuyTicket(selectedEvent, $event)">
+          <i class="bi bi-ticket-perforated"></i>
+          <span>Billets</span>
+        </button>
+        
+        <button 
+          class="btn-action btn-reserve" 
+          *ngIf="!selectedEvent.isPast"
+          [disabled]="isReserving"
+          (click)="quickReserveEvent()">
+          <span *ngIf="!isReserving">
+            <i class="bi bi-calendar-check"></i>
+            <span>Réserver</span>
+          </span>
+          <span *ngIf="isReserving" class="loading-state">
+            <i class="bi bi-arrow-repeat spin"></i>
+            <span>En cours...</span>
+          </span>
+        </button>
+
+        <button class="btn-action btn-past" *ngIf="selectedEvent.isPast" disabled>
+          <i class="bi bi-calendar-x"></i>
+          <span>Événement terminé</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

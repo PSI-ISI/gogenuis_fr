@@ -937,3 +937,787 @@
     justify-content: center;
   }
 }
+/* ============================================================
+   EVENT DETAIL MODAL STYLES
+   À ajouter à la fin de events.component.css
+   ============================================================ */
+
+/* Modal Overlay */
+.event-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 20px;
+  animation: modalFadeIn 0.25s ease;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal Container */
+.event-modal {
+  background: #fff;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+  animation: modalSlideUp 0.3s ease;
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal Image Header */
+.modal-image-header {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.modal-image-header img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-image-header .image-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  pointer-events: none;
+}
+
+/* Close Button */
+.btn-close-modal {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.btn-close-modal:hover {
+  background: #fff;
+  transform: scale(1.1);
+}
+
+.btn-close-modal i {
+  font-size: 1.3rem;
+  color: #333;
+}
+
+/* Category Badge */
+.modal-category-badge {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  padding: 8px 18px;
+  border-radius: 25px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
+  z-index: 10;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+/* Favorite Button Modal */
+.btn-favorite-modal {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.btn-favorite-modal:hover {
+  background: #fff;
+  transform: scale(1.1);
+}
+
+.btn-favorite-modal i {
+  font-size: 1.3rem;
+  color: #6c757d;
+  transition: all 0.2s;
+}
+
+.btn-favorite-modal.active i {
+  color: #e74c3c;
+}
+
+/* Date Badge in Modal */
+.modal-date-badge {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: white;
+  border-radius: 12px;
+  padding: 10px 14px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  z-index: 10;
+}
+
+.modal-date-badge .day {
+  display: block;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1a5f7a;
+  line-height: 1;
+}
+
+.modal-date-badge .month {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e74c3c;
+  text-transform: uppercase;
+}
+
+.modal-date-badge .year {
+  display: block;
+  font-size: 0.7rem;
+  color: #6c757d;
+}
+
+/* Past Event Overlay */
+.past-event-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  z-index: 5;
+}
+
+.past-event-overlay i {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+  opacity: 0.9;
+}
+
+.past-event-overlay span {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+/* Modal Body */
+.event-modal .modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Header Info */
+.modal-header-info {
+  margin-bottom: 20px;
+}
+
+.modal-event-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 12px 0;
+  line-height: 1.3;
+}
+
+.modal-stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.modal-stats .stat {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.modal-stats .stat i {
+  color: #1a5f7a;
+}
+
+.modal-stats .stat.featured {
+  color: #f4a261;
+}
+
+.modal-stats .stat.featured i {
+  color: #f4a261;
+}
+
+/* Info Sections */
+.info-section {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.info-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.info-section.clickable {
+  cursor: pointer;
+  padding: 12px;
+  margin: 0 -12px 20px;
+  border-radius: 12px;
+  border-bottom: none;
+  transition: background 0.2s;
+}
+
+.info-section.clickable:hover {
+  background: #f8f9fa;
+}
+
+.info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.info-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.info-icon i {
+  font-size: 1.2rem;
+  color: white;
+}
+
+.info-icon.date-icon {
+  background: linear-gradient(135deg, #1a5f7a, #2980b9);
+}
+
+.info-icon.time-icon {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.info-icon.location-icon {
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+}
+
+.info-content {
+  flex: 1;
+}
+
+.info-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.info-value {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.info-subvalue {
+  display: block;
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-top: 2px;
+}
+
+.duration {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 400;
+}
+
+.date-badge-inline {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.date-badge-inline.badge-today {
+  background: #27ae60;
+  color: white;
+}
+
+.date-badge-inline.badge-tomorrow {
+  background: #3498db;
+  color: white;
+}
+
+.date-badge-inline.badge-soon {
+  background: #f4a261;
+  color: white;
+}
+
+.date-badge-inline.badge-past {
+  background: #95a5a6;
+  color: white;
+}
+
+.external-link-icon {
+  color: #1a5f7a;
+  font-size: 1rem;
+  align-self: center;
+}
+
+/* Description Section */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin: 0 0 12px 0;
+}
+
+.section-title i {
+  color: #1a5f7a;
+}
+
+.event-full-description {
+  font-size: 0.95rem;
+  color: #4a4a4a;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* Tags */
+.tags-section {
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+}
+
+.tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-chip {
+  padding: 6px 14px;
+  background: #eef2f7;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: #1a5f7a;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.tag-chip:hover {
+  background: #1a5f7a;
+  color: white;
+}
+
+/* Price & Organizer Section */
+.price-organizer-section {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 16px;
+}
+
+.price-box, .organizer-box {
+  flex: 1;
+}
+
+.price-label, .organizer-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.price-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a5f7a;
+}
+
+.price-value small {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: #6c757d;
+}
+
+.price-box.free .price-value {
+  color: #27ae60;
+}
+
+.price-value i {
+  margin-right: 6px;
+}
+
+.organizer-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+/* Quick Reservation Section */
+.quick-reservation-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #eef2f7 100%);
+  border-radius: 16px;
+  padding: 20px;
+  border: 2px solid #e0e6ed;
+}
+
+.reservation-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.reservation-header i {
+  font-size: 1.3rem;
+  color: #f4a261;
+}
+
+.reservation-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.reservation-form .form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.reservation-form .form-group {
+  flex: 1;
+}
+
+.reservation-form .form-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #4a4a4a;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.reservation-form .form-group label i {
+  color: #1a5f7a;
+}
+
+/* Number Stepper */
+.number-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: white;
+  border-radius: 12px;
+  border: 2px solid #e0e6ed;
+  overflow: hidden;
+}
+
+.stepper-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.stepper-btn:hover:not(:disabled) {
+  background: #f0f4f8;
+}
+
+.stepper-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.stepper-btn i {
+  font-size: 1.2rem;
+  color: #1a5f7a;
+}
+
+.stepper-value {
+  flex: 1;
+  text-align: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  min-width: 50px;
+}
+
+/* Total Price */
+.total-group {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.total-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #27ae60;
+}
+
+/* Notes Input */
+.notes-group input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e0e6ed;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  background: white;
+}
+
+.notes-group input:focus {
+  outline: none;
+  border-color: #1a5f7a;
+  box-shadow: 0 0 0 4px rgba(26, 95, 122, 0.1);
+}
+
+.notes-group input::placeholder {
+  color: #adb5bd;
+}
+
+/* Reservation Messages */
+.reservation-error, .reservation-success {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  margin-top: 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.reservation-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.reservation-error i {
+  font-size: 1.2rem;
+}
+
+.reservation-success {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.reservation-success i {
+  font-size: 1.2rem;
+}
+
+/* Modal Footer */
+.event-modal .modal-footer {
+  padding: 20px 24px;
+  background: #fff;
+  border-top: 1px solid #eef2f7;
+  flex-shrink: 0;
+}
+
+.footer-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-action {
+  flex: 1;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-share {
+  background: #eef2f7;
+  color: #4a4a4a;
+}
+
+.btn-share:hover {
+  background: #e0e6ed;
+}
+
+.btn-ticket {
+  background: #e8f4fd;
+  color: #1a5f7a;
+}
+
+.btn-ticket:hover {
+  background: #d1e9fa;
+}
+
+.btn-reserve {
+  background: linear-gradient(135deg, #1a5f7a 0%, #2980b9 100%);
+  color: white;
+  flex: 2;
+}
+
+.btn-reserve:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(26, 95, 122, 0.35);
+}
+
+.btn-reserve:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-past {
+  background: #f3f4f6;
+  color: #9ca3af;
+  flex: 2;
+}
+
+/* Spin Animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .event-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+  
+  .event-modal {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 24px 24px 0 0;
+  }
+  
+  .modal-image-header {
+    height: 180px;
+  }
+  
+  .event-modal .modal-body {
+    padding: 20px;
+  }
+  
+  .modal-event-title {
+    font-size: 1.3rem;
+  }
+  
+  .reservation-form .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .footer-actions {
+    flex-wrap: wrap;
+  }
+  
+  .btn-action {
+    flex: 1 1 calc(50% - 6px);
+  }
+  
+  .btn-reserve, .btn-past {
+    flex: 1 1 100%;
+  }
+  
+  .price-organizer-section {
+    flex-direction: column;
+    gap: 12px;
+  }
+}

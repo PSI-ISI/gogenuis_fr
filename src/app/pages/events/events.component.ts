@@ -8,16 +8,11 @@ import {
   EVENTS_DATA, 
   CATEGORIES, 
   CITIES,
-  getEventsByCategory,
-  getEventsByCity,
-  getFeaturedEvents,
-  getUpcomingEvents,
-  searchEvents,
-  getEventById,
   getCategoryCount
 } from '../../dataset/events-morocco-2026_data';
 import { Router } from '@angular/router';
-
+import { CreateReservationRequest } from '../../models/reservation.model';
+import { ReservationsService } from 'src/app/sevices/reservations.service';
 
 @Component({
   selector: 'app-events',
@@ -25,7 +20,6 @@ import { Router } from '@angular/router';
   imports: [CommonModule, FormsModule],
   templateUrl: './events.component.html',
   styleUrls: ['./events.component.css'],
-  // IMPORTANT: Default change detection pour éviter les problèmes de lazy loading
   changeDetection: ChangeDetectionStrategy.Default
 })
 export class EventsComponent implements OnInit, AfterViewInit {
@@ -47,12 +41,10 @@ export class EventsComponent implements OnInit, AfterViewInit {
   totalPages = 1;
   pages: number[] = [];
 
-  // Data from external file
+  // Data
   events: Event[] = [];
   filteredEvents: Event[] = [];
   paginatedEvents: Event[] = [];
-  
-  // Categories et Cities depuis le fichier externe
   categories: Category[] = [];
   cities: City[] = [];
 
@@ -64,13 +56,25 @@ export class EventsComponent implements OnInit, AfterViewInit {
   // Loading state
   isLoading = true;
 
-  // Propriétés
+  // Past events
   showPastEvents = false;
   pastEventsCount = 0;
 
+  // Modal Event Detail
+  showEventModal = false;
+  selectedEvent: Event | null = null;
+  
+  // Quick Reservation
+  reservationPersons = 2;
+  reservationNotes = '';
+  isReserving = false;
+  reservationError: string | null = null;
+  reservationSuccess: string | null = null;
+
   constructor(
     private router: Router, 
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private reservationService: ReservationsService
   ) {}
 
   ngOnInit(): void {
@@ -83,28 +87,20 @@ export class EventsComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Force la détection des changements après le rendu initial
     setTimeout(() => {
       this.cdr.markForCheck();
       this.cdr.detectChanges();
     }, 0);
   }
 
-  // ============ CHARGEMENT DES DONNÉES ============
+  // ============ DATA LOADING ============
   loadData(): void {
-    // Charger les événements depuis le fichier externe
-    this.events = EVENTS_DATA.map(e => ({...e})); // Deep copy
-    
-    // Charger les catégories avec le comptage
+    this.events = EVENTS_DATA.map(e => ({...e}));
     this.categories = CATEGORIES.map(cat => ({
       ...cat,
       count: getCategoryCount(cat.id)
     }));
-    
-    // Charger les villes
     this.cities = [...CITIES];
-    
-    // Force update
     this.cdr.detectChanges();
   }
 
@@ -114,11 +110,15 @@ export class EventsComponent implements OnInit, AfterViewInit {
     this.featuredEvents = this.events.filter(e => e.isFeatured).length;
   }
 
-  // ============ FILTRAGE ============
+  // ============ VIEW MODE ============
+  setViewMode(mode: 'grid' | 'list' | 'calendar'): void {
+    this.viewMode = mode;
+  }
+
+  // ============ FILTERING ============
   filterEvents(): void {
     let filtered = [...this.events];
 
-    // Filtre de recherche
     if (this.searchQuery.trim()) {
       const query = this.searchQuery.toLowerCase();
       filtered = filtered.filter(e =>
@@ -128,37 +128,27 @@ export class EventsComponent implements OnInit, AfterViewInit {
         e.tags.some(tag => tag.toLowerCase().includes(query))
       );
     }
-    // Filtre événements passés
+
     if (!this.showPastEvents) {
       filtered = filtered.filter(e => !e.isPast);
     }
 
-    // Filtre par catégorie
     if (this.selectedCategory !== 'all') {
       filtered = filtered.filter(e => 
         e.category.toLowerCase() === this.selectedCategory.toLowerCase()
       );
     }
 
-    // Filtre par ville
     if (this.selectedCity !== 'all') {
       filtered = filtered.filter(e => e.city === this.selectedCity);
     }
 
-    // Filtre par prix
     if (this.selectedPrice === 'free') {
       filtered = filtered.filter(e => e.price === 0);
     } else if (this.selectedPrice === 'paid') {
       filtered = filtered.filter(e => e.price > 0);
-    } else if (this.selectedPrice === 'under100') {
-      filtered = filtered.filter(e => e.price > 0 && e.price <= 100);
-    } else if (this.selectedPrice === 'under500') {
-      filtered = filtered.filter(e => e.price > 0 && e.price <= 500);
-    } else if (this.selectedPrice === 'premium') {
-      filtered = filtered.filter(e => e.price > 500);
     }
 
-    // Filtre par date
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
@@ -178,26 +168,19 @@ export class EventsComponent implements OnInit, AfterViewInit {
       filtered = filtered.filter(e => new Date(e.date) >= today && new Date(e.date) <= monthEnd);
     } else if (this.selectedDate === 'upcoming') {
       filtered = filtered.filter(e => new Date(e.date) >= today);
-    } else if (this.selectedDate === 'past') {
-      filtered = filtered.filter(e => new Date(e.date) < today);
     }
 
     this.filteredEvents = filtered;
     this.sortEvents();
     this.updatePagination();
-    
-    // Force la mise à jour de la vue
     this.cdr.detectChanges();
   }
 
-  // ============ TRI ============
+  // ============ SORTING ============
   sortEvents(): void {
     switch (this.sortBy) {
       case 'date':
         this.filteredEvents.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-        break;
-      case 'date-desc':
-        this.filteredEvents.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         break;
       case 'name':
         this.filteredEvents.sort((a, b) => a.title.localeCompare(b.title));
@@ -205,19 +188,13 @@ export class EventsComponent implements OnInit, AfterViewInit {
       case 'price':
         this.filteredEvents.sort((a, b) => a.price - b.price);
         break;
-      case 'price-desc':
-        this.filteredEvents.sort((a, b) => b.price - a.price);
-        break;
       case 'popularity':
         this.filteredEvents.sort((a, b) => b.attendees - a.attendees);
-        break;
-      case 'views':
-        this.filteredEvents.sort((a, b) => b.views - a.views);
         break;
     }
   }
 
-  // ============ ACTIONS ============
+  // ============ FILTER ACTIONS ============
   selectCategory(categoryId: string): void {
     this.selectedCategory = categoryId;
     this.currentPage = 1;
@@ -230,7 +207,7 @@ export class EventsComponent implements OnInit, AfterViewInit {
   }
 
   resetFilters(): void {
-    this.showPastEvents = false;  // Ajouter cette ligne
+    this.showPastEvents = false;
     this.searchQuery = '';
     this.selectedCategory = 'all';
     this.selectedDate = 'all';
@@ -241,10 +218,16 @@ export class EventsComponent implements OnInit, AfterViewInit {
     this.filterEvents();
   }
 
+  // ============ FAVORITES ============
   toggleFavorite(event: Event): void {
     event.isFavorite = !event.isFavorite;
     this.saveFavorites();
     this.cdr.detectChanges();
+  }
+
+  onToggleFavorite(event: Event, e: MouseEvent): void {
+    e.stopPropagation();
+    this.toggleFavorite(event);
   }
 
   saveFavorites(): void {
@@ -262,11 +245,105 @@ export class EventsComponent implements OnInit, AfterViewInit {
     }
   }
 
+  // ============ EVENT MODAL ============
   viewEventDetails(event: Event): void {
-    console.log('View event:', event.id);
-    // this.router.navigate(['/events', event.id]);
+    this.selectedEvent = event;
+    this.showEventModal = true;
+    this.resetReservationForm();
+    document.body.style.overflow = 'hidden';
   }
 
+  onViewDetails(event: Event, e: MouseEvent): void {
+    e.stopPropagation();
+    this.viewEventDetails(event);
+  }
+
+  closeEventModal(): void {
+    this.showEventModal = false;
+    this.selectedEvent = null;
+    this.resetReservationForm();
+    document.body.style.overflow = 'auto';
+  }
+
+  resetReservationForm(): void {
+    this.reservationPersons = 2;
+    this.reservationNotes = '';
+    this.reservationError = null;
+    this.reservationSuccess = null;
+    this.isReserving = false;
+  }
+
+  // ============ QUICK RESERVATION ============
+  incrementPersons(): void {
+    if (this.reservationPersons < 20) {
+      this.reservationPersons++;
+    }
+  }
+
+  decrementPersons(): void {
+    if (this.reservationPersons > 1) {
+      this.reservationPersons--;
+    }
+  }
+
+  quickReserveEvent(): void {
+    if (!this.selectedEvent || this.selectedEvent.isPast) return;
+
+    this.isReserving = true;
+    this.reservationError = null;
+    this.reservationSuccess = null;
+
+    const categoryToType: { [key: string]: string } = {
+      'Festival': 'ACTIVITY',
+      'Concert': 'ACTIVITY',
+      'Exposition': 'ACTIVITY',
+      'Sport': 'ACTIVITY',
+      'Théâtre': 'ACTIVITY',
+      'Gastronomie': 'RESTAURANT',
+      'Conférence': 'ACTIVITY',
+      'Marché': 'ACTIVITY',
+      'Religieux': 'ACTIVITY',
+      'Famille': 'ACTIVITY'
+    };
+
+    const reservationType = categoryToType[this.selectedEvent.category] || 'ACTIVITY';
+    const eventDate = new Date(this.selectedEvent.date);
+    const formattedDate = eventDate.toISOString().split('T')[0];
+    const timeMatch = this.selectedEvent.time?.match(/(\d{1,2})[h:](\d{2})/);
+    const formattedTime = timeMatch 
+      ? `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}` 
+      : '10:00';
+
+    const request: CreateReservationRequest = {
+      establishmentName: this.selectedEvent.title,
+      type: reservationType as any,
+      reservationDate: formattedDate,
+      reservationTime: formattedTime,
+      numberOfPersons: this.reservationPersons,
+      price: this.selectedEvent.price * this.reservationPersons,
+      location: this.selectedEvent.city,
+      notes: this.reservationNotes 
+        ? `${this.reservationNotes} | Lieu: ${this.selectedEvent.venue}` 
+        : `Lieu: ${this.selectedEvent.venue}`
+    };
+
+    this.reservationService.createReservation(request).subscribe({
+      next: (reservation) => {
+        this.isReserving = false;
+        this.reservationSuccess = `Réservation confirmée ! Code: ${reservation.confirmationCode}`;
+        setTimeout(() => {
+          this.closeEventModal();
+        }, 3000);
+      },
+      error: (err) => {
+        console.error('Erreur réservation:', err);
+        this.isReserving = false;
+        this.reservationError = err?.message || 'Erreur lors de la réservation. Veuillez réessayer.';
+      }
+    });
+  }
+
+  // ============ SHARE & TICKETS ============
   shareEvent(event: Event, e: MouseEvent): void {
     e.stopPropagation();
     if (navigator.share) {
@@ -281,11 +358,24 @@ export class EventsComponent implements OnInit, AfterViewInit {
     }
   }
 
+  onShareEvent(event: Event, e: MouseEvent): void {
+    this.shareEvent(event, e);
+  }
+
   buyTicket(event: Event, e: MouseEvent): void {
     e.stopPropagation();
     if (event.ticketUrl) {
       window.open(event.ticketUrl, '_blank');
     }
+  }
+
+  onBuyTicket(event: Event, e: MouseEvent): void {
+    this.buyTicket(event, e);
+  }
+
+  openMaps(event: Event): void {
+    const query = encodeURIComponent(`${event.venue}, ${event.city}, Maroc`);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
   }
 
   // ============ PAGINATION ============
@@ -311,39 +401,7 @@ export class EventsComponent implements OnInit, AfterViewInit {
     }
   }
 
-  previousPage(): void {
-    if (this.currentPage > 1) {
-      this.goToPage(this.currentPage - 1);
-    }
-  }
-
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.goToPage(this.currentPage + 1);
-    }
-  }
-
   // ============ HELPERS ============
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('fr-FR', {
-      weekday: 'short',
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  }
-
-  formatPrice(price: number, priceType: string): string {
-    if (price === 0 || priceType === 'free') {
-      return 'Gratuit';
-    }
-    const formatted = price.toLocaleString('fr-FR') + ' MAD';
-    if (priceType === 'starting_from') {
-      return 'À partir de ' + formatted;
-    }
-    return formatted;
-  }
-
   formatAttendees(count: number): string {
     if (count >= 1000000) {
       return (count / 1000000).toFixed(1) + 'M';
@@ -380,34 +438,11 @@ export class EventsComponent implements OnInit, AfterViewInit {
     return null;
   }
 
-  getCityNames(): string[] {
-    return this.cities.map(c => c.name);
-  }
-
-  // TrackBy pour optimiser le rendu - IMPORTANT pour éviter le lazy loading bug
   trackByEventId(index: number, event: Event): number {
     return event.id;
   }
 
-  // Gestion des erreurs d'images
   onImageError(event: any): void {
     event.target.src = 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800';
   }
-
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

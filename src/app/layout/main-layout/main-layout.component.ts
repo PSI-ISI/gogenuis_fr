@@ -47,19 +47,19 @@ export class MainLayoutComponent implements OnInit {
   private companyMenu: MenuItem[] = [
     { label: 'Dashboard', icon: 'bi bi-grid-1x2-fill', route: '/dashboard-etablissement', exact: true },
     { label: 'Réservations', icon: 'bi bi-calendar-check', route: '/reservations', exact: false, badge: 12 },
-    { label: 'Offres', icon: 'bi bi-tag', route: '/offers', exact: false },
-    { label: 'Avis', icon: 'bi bi-chat-quote', route: '/reviews', exact: false },
-    { label: 'Statistiques', icon: 'bi bi-graph-up', route: '/stats', exact: false },
-    { label: 'Paramètres', icon: 'bi bi-gear', route: '/settings', exact: false }
+    // { label: 'Offres', icon: 'bi bi-tag', route: '/offers', exact: false },
+    // { label: 'Avis', icon: 'bi bi-chat-quote', route: '/reviews', exact: false },
+    // { label: 'Statistiques', icon: 'bi bi-graph-up', route: '/stats', exact: false },
+    // { label: 'Paramètres', icon: 'bi bi-gear', route: '/settings', exact: false }
   ];
 
   private collaboratorMenu: MenuItem[] = [
     { label: 'Dashboard', icon: 'bi bi-grid-1x2-fill', route: '/dashboard-collaborateur', exact: true },
-    { label: 'Mes Tâches', icon: 'bi bi-list-task', route: '/tasks', exact: false, badge: 8 },
+    // { label: 'Mes Tâches', icon: 'bi bi-list-task', route: '/tasks', exact: false, badge: 8 },
     { label: 'Établissements', icon: 'bi bi-building', route: '/establishments', exact: false },
-    { label: 'Messages', icon: 'bi bi-envelope', route: '/messages', exact: false, badge: 5 },
-    { label: 'Rapports', icon: 'bi bi-file-earmark-bar-graph', route: '/reports', exact: false },
-    { label: 'Paramètres', icon: 'bi bi-gear', route: '/settings', exact: false }
+    // { label: 'Messages', icon: 'bi bi-envelope', route: '/messages', exact: false, badge: 5 },
+    // { label: 'Rapports', icon: 'bi bi-file-earmark-bar-graph', route: '/reports', exact: false },
+    // { label: 'Paramètres', icon: 'bi bi-gear', route: '/settings', exact: false }
   ];
 
   constructor(private router: Router) {}
