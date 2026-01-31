@@ -1,0 +1,184 @@
+<!-- Collaborateur Dashboard -->
+<div class="dashboard-container">
+
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-left">
+      <div class="user-avatar-large">{{ userAvatar }}</div>
+      <div class="header-info">
+        <span class="greeting">Bonjour,</span>
+        <h1>{{ userName }}</h1>
+        <span class="role">{{ userRole }}</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="date-display">
+        <i class="bi bi-calendar3"></i>
+        <span>Vendredi 30 Janvier 2026</span>
+      </div>
+      <button class="btn-notifications">
+        <i class="bi bi-bell"></i>
+        <span class="notif-badge">3</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card" *ngFor="let stat of stats" [style.--accent]="stat.color">
+      <div class="stat-icon">
+        <i [class]="'bi ' + stat.icon"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stat.value }}</span>
+        <span class="stat-title">{{ stat.title }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+
+    <!-- Left Column -->
+    <div class="col-left">
+
+      <!-- Tasks Section -->
+      <div class="card tasks-card">
+        <div class="card-header">
+          <h3><i class="bi bi-list-task"></i> Mes tâches</h3>
+          <div class="header-tabs">
+            <button class="tab active">À faire</button>
+            <button class="tab">En cours</button>
+            <button class="tab">Terminées</button>
+          </div>
+        </div>
+        <div class="tasks-list">
+          <div class="task-item" *ngFor="let task of tasks" [class]="getStatusClass(task.status)">
+            <button class="task-check" (click)="toggleTaskStatus(task)">
+              <i class="bi" [class.bi-circle]="task.status === 'todo'" 
+                           [class.bi-arrow-repeat]="task.status === 'in-progress'"
+                           [class.bi-check-circle-fill]="task.status === 'done'"></i>
+            </button>
+            <div class="task-content">
+              <span class="task-title">{{ task.title }}</span>
+              <div class="task-meta">
+                <span class="task-establishment">
+                  <i class="bi bi-building"></i> {{ task.establishment }}
+                </span>
+                <span class="task-due">
+                  <i class="bi bi-clock"></i> {{ task.dueDate }}
+                </span>
+              </div>
+            </div>
+            <span class="task-priority" [class]="getPriorityClass(task.priority)">
+              {{ task.priority === 'high' ? 'Urgent' : task.priority === 'medium' ? 'Normal' : 'Faible' }}
+            </span>
+          </div>
+        </div>
+        <button class="btn-add-task">
+          <i class="bi bi-plus"></i> Ajouter une tâche
+        </button>
+      </div>
+
+      <!-- Establishments Section -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="bi bi-building"></i> Établissements gérés</h3>
+          <a routerLink="/establishments" class="link">Voir tous</a>
+        </div>
+        <div class="establishments-grid">
+          <div class="establishment-card" *ngFor="let etab of establishments">
+            <div class="etab-image" [style.backgroundImage]="'url(' + etab.image + ')'">
+              <span class="etab-status" [class]="getStatusClass(etab.status)">
+                {{ getStatusLabel(etab.status) }}
+              </span>
+            </div>
+            <div class="etab-info">
+              <h4>{{ etab.name }}</h4>
+              <div class="etab-meta">
+                <span><i class="bi bi-geo-alt"></i> {{ etab.city }}</span>
+                <span><i class="bi bi-star-fill"></i> {{ etab.rating }}</span>
+              </div>
+              <div class="etab-footer">
+                <span class="etab-type">{{ etab.type }}</span>
+                <span class="etab-tasks" *ngIf="etab.tasksCount > 0">
+                  {{ etab.tasksCount }} tâche(s)
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-right">
+
+      <!-- Performance Chart -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="bi bi-graph-up"></i> Ma performance</h3>
+          <span class="period">Cette semaine</span>
+        </div>
+        <div class="mini-chart">
+          <div class="chart-bars">
+            <div class="chart-bar" *ngFor="let data of performanceData">
+              <div class="bar-fill" [style.height.%]="getBarHeight(data.value)">
+                <span class="bar-value">{{ data.value }}</span>
+              </div>
+              <span class="bar-label">{{ data.label }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="chart-summary">
+          <span><strong>42</strong> tâches cette semaine</span>
+          <span class="trend positive"><i class="bi bi-arrow-up"></i> +15% vs semaine dernière</span>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="bi bi-envelope"></i> Messages</h3>
+          <a routerLink="/messages" class="link">Voir tous</a>
+        </div>
+        <div class="messages-list">
+          <div class="message-item" *ngFor="let msg of messages" [class.unread]="msg.unread">
+            <div class="msg-avatar">{{ msg.senderAvatar }}</div>
+            <div class="msg-content">
+              <div class="msg-header">
+                <span class="msg-sender">{{ msg.sender }}</span>
+                <span class="msg-time">{{ msg.time }}</span>
+              </div>
+              <span class="msg-establishment">{{ msg.establishment }}</span>
+              <p class="msg-preview">{{ msg.preview }}</p>
+            </div>
+            <div class="msg-unread-dot" *ngIf="msg.unread"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="card">
+        <div class="card-header">
+          <h3><i class="bi bi-activity"></i> Activité récente</h3>
+        </div>
+        <div class="activity-list">
+          <div class="activity-item" *ngFor="let act of activities">
+            <div class="activity-icon" [class]="act.type">
+              <i [class]="'bi ' + act.icon"></i>
+            </div>
+            <div class="activity-content">
+              <span class="activity-title">{{ act.title }}</span>
+              <span class="activity-desc">{{ act.description }}</span>
+            </div>
+            <span class="activity-time">{{ act.time }}</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

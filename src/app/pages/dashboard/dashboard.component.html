@@ -11,6 +11,13 @@
         <i class="bi bi-search"></i>
         <input type="text" placeholder="Rechercher..." [(ngModel)]="searchQuery">
       </div>
+      
+      <!-- Place Recognition Button -->
+      <button class="btn-place-recognition" (click)="openPlaceModal()" title="Identifier un lieu">
+        <i class="bi bi-camera"></i>
+        <span class="btn-label">Où suis-je ?</span>
+      </button>
+      
       <button class="btn-notification" (click)="toggleNotifications()">
         <i class="bi bi-bell"></i>
         <span class="badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
@@ -281,6 +288,155 @@
           </button>
         </div>
       </section>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL RECONNAISSANCE DE LIEU ==================== -->
+<div class="place-modal-overlay" *ngIf="showPlaceModal" (click)="closePlaceModal()">
+  <div class="place-modal" (click)="$event.stopPropagation()">
+    
+    <!-- Modal Header -->
+    <div class="place-modal-header">
+      <div class="modal-title-group">
+        <div class="modal-icon">
+          <i class="bi bi-geo-alt"></i>
+        </div>
+        <div>
+          <h2>Identifier un lieu</h2>
+          <p>Prenez une photo ou importez une image</p>
+        </div>
+      </div>
+      <button class="btn-close-modal" (click)="closePlaceModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="place-modal-body">
+      
+      <!-- Initial State - Choose Method -->
+      <div class="choose-method" *ngIf="!capturedImage && !isUsingCamera">
+        <div class="method-card" (click)="startCamera()">
+          <div class="method-icon camera">
+            <i class="bi bi-camera-fill"></i>
+          </div>
+          <h3>Prendre une photo</h3>
+          <p>Utilisez votre caméra pour capturer le lieu</p>
+        </div>
+        
+        <div class="method-divider">
+          <span>ou</span>
+        </div>
+        
+        <div class="method-card" (click)="triggerFileInput()">
+          <div class="method-icon upload">
+            <i class="bi bi-image"></i>
+          </div>
+          <h3>Importer une image</h3>
+          <p>Sélectionnez une photo depuis votre appareil</p>
+        </div>
+        
+        <input type="file" #fileInput accept="image/*" (change)="onFileSelected($event)" style="display: none;">
+      </div>
+
+      <!-- Camera View -->
+      <div class="camera-view" *ngIf="isUsingCamera && !capturedImage">
+        <div class="video-container">
+          <video #videoElement autoplay playsinline></video>
+          <div class="camera-overlay">
+            <div class="focus-frame"></div>
+          </div>
+        </div>
+        <div class="camera-controls">
+          <button class="btn-cancel" (click)="stopCamera()">
+            <i class="bi bi-x-lg"></i>
+          </button>
+          <button class="btn-capture" (click)="capturePhoto()" [disabled]="!isCameraActive">
+            <span class="capture-ring"></span>
+          </button>
+          <button class="btn-switch" disabled>
+            <i class="bi bi-arrow-repeat"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Captured Image Preview -->
+      <div class="image-preview" *ngIf="capturedImage && !recognitionResult">
+        <div class="preview-container">
+          <img [src]="capturedImage" alt="Captured image">
+          <div class="analyzing-overlay" *ngIf="isAnalyzing">
+            <div class="analyzing-spinner"></div>
+            <p>Analyse en cours...</p>
+          </div>
+        </div>
+        
+        <div class="preview-actions" *ngIf="!isAnalyzing">
+          <button class="btn-retake" (click)="retakePhoto()">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            Reprendre
+          </button>
+          <button class="btn-analyze" (click)="analyzeImage()">
+            <i class="bi bi-search"></i>
+            Identifier le lieu
+          </button>
+        </div>
+        
+        <div class="error-message" *ngIf="recognitionError && !isAnalyzing">
+          <i class="bi bi-exclamation-circle"></i>
+          <p>{{ recognitionError }}</p>
+          <button (click)="retakePhoto()">Réessayer</button>
+        </div>
+      </div>
+
+      <!-- Recognition Result -->
+      <div class="recognition-result" *ngIf="recognitionResult">
+        <div class="result-image">
+          <img [src]="capturedImage" alt="Analyzed image">
+          <div class="confidence-badge">
+            <i class="bi bi-check-circle-fill"></i>
+            {{ recognitionResult.confidence }}%
+          </div>
+        </div>
+        
+        <div class="result-content">
+          <div class="result-header">
+            <h3>{{ recognitionResult.name }}</h3>
+            <span class="location-tag">
+              <i class="bi bi-geo-alt-fill"></i>
+              {{ recognitionResult.location }}
+            </span>
+          </div>
+          
+          <p class="result-description">{{ recognitionResult.description }}</p>
+          
+          <div class="result-actions">
+            <button class="btn-maps" (click)="openInMaps()" *ngIf="recognitionResult.mapsUrl">
+              <i class="bi bi-map"></i>
+              Voir sur Maps
+            </button>
+            <button class="btn-wiki" (click)="openWikipedia()" *ngIf="recognitionResult.wikipediaUrl">
+              <i class="bi bi-wikipedia"></i>
+              En savoir plus
+            </button>
+          </div>
+          
+          <button class="btn-new-search" (click)="resetPlaceRecognition()">
+            <i class="bi bi-camera"></i>
+            Nouvelle recherche
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Hidden canvas for photo capture -->
+    <canvas #canvasElement style="display: none;"></canvas>
+    
+    <!-- API Configuration Notice -->
+    <div class="api-notice" *ngIf="!recognitionResult && !isAnalyzing && !capturedImage">
+      <i class="bi bi-cloud-check"></i>
+      <span>Reconnaissance réelle via Google Cloud Vision API</span>
     </div>
   </div>
 </div>

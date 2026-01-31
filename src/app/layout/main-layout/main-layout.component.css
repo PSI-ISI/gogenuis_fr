@@ -62,6 +62,70 @@
   color: #1d1d2c;
 }
 
+/* Main Layout Styles - Gogenius FR */
+/* Sidebar Always Expanded */
+/* ================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+/* ================================================ */
+/* APP LAYOUT */
+/* ================================================ */
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f4f6f8;
+}
+
+/* ================================================ */
+/* SIDEBAR */
+/* ================================================ */
+
+.sidebar {
+  width: 260px;
+  background: white;
+  border-right: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.logo-img {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.logo-text {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1d1d2c;
+}
+
 /* Sidebar Navigation */
 .sidebar-nav {
   flex: 1;
@@ -384,3 +448,345 @@
     padding-top: 60px;
   }
 }
+
+/* ================================================ */
+/* SIDEBAR THEMES - Based on User Role */
+/* ================================================ */
+
+/* --- TOURIST (Default - White/Light) --- */
+.sidebar.sidebar-tourist {
+  background: #ffffff !important;
+  border-right: 1px solid #e9ecef !important;
+}
+
+.sidebar.sidebar-tourist .sidebar-header {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.sidebar.sidebar-tourist .nav-link {
+  color: #6c757d;
+}
+
+.sidebar.sidebar-tourist .nav-link:hover {
+  background: #f4f6f8;
+  color: #1a5f7a;
+}
+
+.sidebar.sidebar-tourist .nav-link.active {
+  background: linear-gradient(135deg, #1a5f7a 0%, #2d8bba 100%);
+  color: white;
+}
+
+.sidebar.sidebar-tourist .user-avatar {
+  background: linear-gradient(135deg, #1a5f7a 0%, #2d8bba 100%);
+}
+
+.sidebar.sidebar-tourist .user-name {
+  color: #1d1d2c;
+}
+
+.sidebar.sidebar-tourist .user-role {
+  color: #6c757d;
+}
+
+/* --- COMPANY/ÉTABLISSEMENT (Blue Marine) --- */
+.sidebar.sidebar-company {
+  background: linear-gradient(180deg, #0a1628 0%, #1a2d4a 50%, #0f2744 100%) !important;
+  border-right: 1px solid #1e3a5f !important;
+}
+
+.sidebar.sidebar-company .sidebar-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.sidebar.sidebar-company .logo-text {
+  color: #ffffff !important;
+}
+
+.sidebar.sidebar-company .nav-link {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.sidebar.sidebar-company .nav-link:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.sidebar.sidebar-company .nav-link.active {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
+  color: white !important;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+}
+
+.sidebar.sidebar-company .nav-link.active i {
+  color: white !important;
+}
+
+.sidebar.sidebar-company .nav-badge {
+  background: #3b82f6 !important;
+  color: white !important;
+}
+
+.sidebar.sidebar-company .sidebar-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.sidebar.sidebar-company .user-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.sidebar.sidebar-company .user-card:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.sidebar.sidebar-company .user-avatar {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
+}
+
+.sidebar.sidebar-company .user-name {
+  color: #ffffff !important;
+}
+
+.sidebar.sidebar-company .user-role {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.sidebar.sidebar-company .user-chevron {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.sidebar.sidebar-company .user-menu {
+  background: #1a2d4a !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.sidebar.sidebar-company .user-menu .menu-item {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.sidebar.sidebar-company .user-menu .menu-item:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.sidebar.sidebar-company .user-menu .menu-item.logout {
+  color: #f87171 !important;
+}
+
+.sidebar.sidebar-company .user-menu .menu-item.logout:hover {
+  background: rgba(248, 113, 113, 0.15) !important;
+}
+
+.sidebar.sidebar-company .user-menu .menu-divider {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* --- COLLABORATOR (Gold/Doré) --- */
+.sidebar.sidebar-collaborator {
+  background: linear-gradient(180deg, #1a1506 0%, #2d2510 50%, #3d3215 100%) !important;
+  border-right: 1px solid #4a3f20 !important;
+}
+
+.sidebar.sidebar-collaborator .sidebar-header {
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2) !important;
+}
+
+.sidebar.sidebar-collaborator .logo-text {
+  color: #d4af37 !important;
+}
+
+.sidebar.sidebar-collaborator .nav-link {
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.sidebar.sidebar-collaborator .nav-link:hover {
+  background: rgba(212, 175, 55, 0.15) !important;
+  color: #d4af37 !important;
+}
+
+.sidebar.sidebar-collaborator .nav-link.active {
+  background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%) !important;
+  color: #1a1506 !important;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+}
+
+.sidebar.sidebar-collaborator .nav-link.active i {
+  color: #1a1506 !important;
+}
+
+.sidebar.sidebar-collaborator .nav-badge {
+  background: #d4af37 !important;
+  color: #1a1506 !important;
+}
+
+.sidebar.sidebar-collaborator .sidebar-footer {
+  border-top: 1px solid rgba(212, 175, 55, 0.2) !important;
+}
+
+.sidebar.sidebar-collaborator .user-card {
+  background: rgba(212, 175, 55, 0.1) !important;
+}
+
+.sidebar.sidebar-collaborator .user-card:hover {
+  background: rgba(212, 175, 55, 0.2) !important;
+}
+
+.sidebar.sidebar-collaborator .user-avatar {
+  background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%) !important;
+  color: #1a1506 !important;
+}
+
+.sidebar.sidebar-collaborator .user-avatar span {
+  color: #1a1506 !important;
+}
+
+.sidebar.sidebar-collaborator .user-name {
+  color: #ffffff !important;
+}
+
+.sidebar.sidebar-collaborator .user-role {
+  color: #d4af37 !important;
+}
+
+.sidebar.sidebar-collaborator .user-chevron {
+  color: #d4af37 !important;
+}
+
+.sidebar.sidebar-collaborator .user-menu {
+  background: #2d2510 !important;
+  border: 1px solid rgba(212, 175, 55, 0.2) !important;
+}
+
+.sidebar.sidebar-collaborator .user-menu .menu-item {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.sidebar.sidebar-collaborator .user-menu .menu-item:hover {
+  background: rgba(212, 175, 55, 0.15) !important;
+  color: #d4af37 !important;
+}
+
+.sidebar.sidebar-collaborator .user-menu .menu-item.logout {
+  color: #f87171 !important;
+}
+
+.sidebar.sidebar-collaborator .user-menu .menu-item.logout:hover {
+  background: rgba(248, 113, 113, 0.15) !important;
+}
+
+.sidebar.sidebar-collaborator .user-menu .menu-divider {
+  background: rgba(212, 175, 55, 0.2) !important;
+}
+
+/* ================================================ */
+/* MOBILE HEADER THEMES */
+/* ================================================ */
+
+.mobile-header.sidebar-company {
+  background: linear-gradient(90deg, #0a1628 0%, #1a2d4a 100%);
+  border-bottom: 1px solid #1e3a5f;
+}
+
+.mobile-header.sidebar-company .btn-menu {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-header.sidebar-company .btn-menu i {
+  color: white;
+}
+
+.mobile-header.sidebar-company .mobile-logo span {
+  color: white;
+}
+
+.mobile-header.sidebar-company .mobile-avatar {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+}
+
+.mobile-header.sidebar-collaborator {
+  background: linear-gradient(90deg, #1a1506 0%, #2d2510 100%);
+  border-bottom: 1px solid #4a3f20;
+}
+
+.mobile-header.sidebar-collaborator .btn-menu {
+  background: rgba(212, 175, 55, 0.2);
+}
+
+.mobile-header.sidebar-collaborator .btn-menu i {
+  color: #d4af37;
+}
+
+.mobile-header.sidebar-collaborator .mobile-logo span {
+  color: #d4af37;
+}
+
+.mobile-header.sidebar-collaborator .mobile-avatar {
+  background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+}
+
+.mobile-header.sidebar-collaborator .mobile-avatar span {
+  color: #1a1506;
+}
+/* Sidebar Always Expanded */
+/* ================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+/* ================================================ */
+/* APP LAYOUT */
+/* ================================================ */
+
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f4f6f8;
+}
+
+/* ================================================ */
+/* SIDEBAR */
+/* ================================================ */
+
+.sidebar {
+  width: 260px;
+  background: white;
+  border-right: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  z-index: 1000;
+  transition: transform 0.3s ease;
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.logo-img {
+  width: 200px;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.logo-text {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1d1d2c;
+}
+

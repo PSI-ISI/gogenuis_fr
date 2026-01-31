@@ -57,8 +57,14 @@ export class LoginComponent implements OnInit {
           localStorage.setItem('token', response.data.token);
           this.authService.setToken(response.data.token);
         }
+        if(response.data.profile=="dG91cmlzdA=="){ //tourist
+          this.router.navigate(['/dashboard']);
+        }else if(response.data.profile=="Y29tcGFueQ=="){ // company
+          this.router.navigate(['/dashboard-etablissement']);
+        }else {
+          this.router.navigate(['/dashboard-collaborateur']);
+        }
         
-        this.router.navigate(['/dashboard']);
       },
       error: (error) => {
         this.isLoading = false;

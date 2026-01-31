@@ -1,7 +1,8 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 // Interfaces
 interface Stat {
   icon: string;
@@ -74,6 +75,15 @@ interface Reservation {
   iconBg: string;
   status: 'confirmed' | 'pending' | 'cancelled';
 }
+interface PlaceRecognitionResult {
+  name: string;
+  description: string;
+  location: string;
+  confidence: number;
+  wikipediaUrl?: string;
+  mapsUrl?: string;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -82,7 +92,11 @@ interface Reservation {
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent implements OnInit, OnDestroy{
-// User info
+  @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
+  @ViewChild('canvasElement') canvasElement!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+
+  // User info
   userName = 'Jean';
   userInitials = 'JD';
   searchQuery = '';
@@ -421,5 +435,302 @@ export class DashboardComponent implements OnInit, OnDestroy{
       'cancelled': 'Annulé'
     };
     return labels[status] || status;
+  }
+
+  // ==================== PLACE RECOGNITION ====================
+  
+  showPlaceModal = false;
+  isUsingCamera = false;
+  isCameraActive = false;
+  isAnalyzing = false;
+  capturedImage: string | null = null;
+  recognitionResult: PlaceRecognitionResult | null = null;
+  recognitionError: string | null = null;
+  private mediaStream: MediaStream | null = null;
+
+  // ============ CONFIGURATION API ============
+  // Google Cloud Vision API - Obtenez votre clé gratuite :
+  // 1. Allez sur https://console.cloud.google.com/
+  // 2. Créez un projet (ou sélectionnez un existant)
+  // 3. Activez "Cloud Vision API" dans APIs & Services > Library
+  // 4. Créez une clé API dans APIs & Services > Credentials
+  // 5. Collez votre clé ci-dessous
+  // GRATUIT : 1000 requêtes/mois
+  
+  private readonly VISION_API_KEY = 'AIzaSyCc1MBZ21R3BYlRpeRYCX_2Z8e3B0Kw6SI';
+  private readonly VISION_API_URL = 'https://vision.googleapis.com/v1/images:annotate';
+
+  constructor(private http: HttpClient) {}
+
+  openPlaceModal(): void {
+    this.showPlaceModal = true;
+    this.resetPlaceRecognition();
+    document.body.style.overflow = 'hidden';
+  }
+
+  closePlaceModal(): void {
+    this.showPlaceModal = false;
+    this.stopCamera();
+    document.body.style.overflow = '';
+  }
+
+  resetPlaceRecognition(): void {
+    this.capturedImage = null;
+    this.recognitionResult = null;
+    this.recognitionError = null;
+    this.isAnalyzing = false;
+    this.isUsingCamera = false;
+    this.stopCamera();
+  }
+
+  // Camera methods
+  async startCamera(): Promise<void> {
+    this.isUsingCamera = true;
+    this.capturedImage = null;
+    this.recognitionResult = null;
+    
+    try {
+      this.mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+      });
+      
+      setTimeout(() => {
+        if (this.videoElement?.nativeElement) {
+          this.videoElement.nativeElement.srcObject = this.mediaStream;
+          this.isCameraActive = true;
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Camera error:', error);
+      this.recognitionError = 'Impossible d\'accéder à la caméra. Vérifiez les permissions.';
+      this.isUsingCamera = false;
+    }
+  }
+
+  stopCamera(): void {
+    if (this.mediaStream) {
+      this.mediaStream.getTracks().forEach(track => track.stop());
+      this.mediaStream = null;
+    }
+    this.isCameraActive = false;
+    this.isUsingCamera = false;
+  }
+
+  capturePhoto(): void {
+    if (!this.videoElement?.nativeElement || !this.canvasElement?.nativeElement) return;
+
+    const video = this.videoElement.nativeElement;
+    const canvas = this.canvasElement.nativeElement;
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0);
+      this.capturedImage = canvas.toDataURL('image/jpeg', 0.8);
+      this.stopCamera();
+    }
+  }
+
+  // File upload
+  triggerFileInput(): void {
+    this.fileInput?.nativeElement?.click();
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        this.recognitionError = 'Veuillez sélectionner une image valide.';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.capturedImage = e.target?.result as string;
+        this.recognitionResult = null;
+        this.recognitionError = null;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  // Analyze image with Google Cloud Vision API
+  async analyzeImage(): Promise<void> {
+    if (!this.capturedImage) return;
+
+    // Check if API key is configured
+    if (!this.VISION_API_KEY || this.VISION_API_KEY === 'AIzaSyCc1MBZ21R3BYlRpeRYCX_2Z8e3B0Kw6SI') {
+      this.recognitionError = 'Veuillez configurer votre clé API Google Vision dans le fichier dashboard.component.ts';
+      return;
+    }
+
+    this.isAnalyzing = true;
+    this.recognitionError = null;
+    this.recognitionResult = null;
+
+    // Extract base64 data (remove data:image/...;base64, prefix)
+    const base64Image = this.capturedImage.split(',')[1];
+
+    // Build request for Google Cloud Vision API
+    const requestBody = {
+      requests: [{
+        image: { content: base64Image },
+        features: [
+          { type: 'LANDMARK_DETECTION', maxResults: 10 },
+          { type: 'WEB_DETECTION', maxResults: 10 },
+          { type: 'LABEL_DETECTION', maxResults: 10 }
+        ]
+      }]
+    };
+
+    try {
+      const response: any = await this.http.post(
+        `${this.VISION_API_URL}?key=${this.VISION_API_KEY}`,
+        requestBody
+      ).toPromise();
+
+      this.processVisionResponse(response);
+    } catch (error: any) {
+      console.error('Vision API error:', error);
+      
+      if (error.status === 403) {
+        this.recognitionError = 'Clé API invalide ou API non activée. Vérifiez votre configuration Google Cloud.';
+      } else if (error.status === 429) {
+        this.recognitionError = 'Quota API dépassé. Réessayez plus tard ou vérifiez votre quota Google Cloud.';
+      } else {
+        this.recognitionError = 'Erreur de connexion à l\'API. Vérifiez votre connexion internet.';
+      }
+    } finally {
+      this.isAnalyzing = false;
+    }
+  }
+
+  private processVisionResponse(response: any): void {
+    const result = response?.responses?.[0];
+    
+    if (!result) {
+      this.recognitionError = 'Aucune réponse de l\'API. Réessayez.';
+      return;
+    }
+
+    // Check for API errors
+    if (result.error) {
+      this.recognitionError = `Erreur API: ${result.error.message}`;
+      return;
+    }
+
+    // Priority 1: Landmark Detection (monuments, lieux célèbres)
+    const landmarks = result?.landmarkAnnotations;
+    if (landmarks && landmarks.length > 0) {
+      const landmark = landmarks[0];
+      const location = landmark.locations?.[0]?.latLng;
+      
+      this.recognitionResult = {
+        name: landmark.description,
+        description: this.generateLandmarkDescription(landmark, result),
+        location: location ? this.formatLocation(location) : 'Localisation non disponible',
+        confidence: Math.round((landmark.score || 0.9) * 100),
+        mapsUrl: location ? `https://www.google.com/maps?q=${location.latitude},${location.longitude}` : 
+                 `https://www.google.com/maps/search/${encodeURIComponent(landmark.description)}`,
+        wikipediaUrl: `https://fr.wikipedia.org/wiki/${encodeURIComponent(landmark.description.replace(/ /g, '_'))}`
+      };
+      return;
+    }
+
+    // Priority 2: Web Detection (recherche d'image inversée)
+    const webDetection = result?.webDetection;
+    if (webDetection) {
+      // Check for web entities (identified places/things)
+      if (webDetection.webEntities && webDetection.webEntities.length > 0) {
+        const topEntities = webDetection.webEntities
+          .filter((e: any) => e.description && e.score > 0.5)
+          .slice(0, 3);
+        
+        if (topEntities.length > 0) {
+          const mainEntity = topEntities[0];
+          
+          // Check if we have matching pages with location info
+          const bestGuess = webDetection.bestGuessLabels?.[0]?.label || mainEntity.description;
+          
+          this.recognitionResult = {
+            name: bestGuess,
+            description: this.generateWebDescription(topEntities, result?.labelAnnotations),
+            location: 'Rechercher sur Google Maps',
+            confidence: Math.round((mainEntity.score || 0.7) * 100),
+            mapsUrl: `https://www.google.com/maps/search/${encodeURIComponent(bestGuess)}`,
+            wikipediaUrl: `https://fr.wikipedia.org/wiki/${encodeURIComponent(bestGuess.replace(/ /g, '_'))}`
+          };
+          return;
+        }
+      }
+    }
+
+    // Priority 3: Label Detection (description générale de la scène)
+    const labels = result?.labelAnnotations;
+    if (labels && labels.length > 0) {
+      const topLabels = labels.slice(0, 5).map((l: any) => l.description);
+      
+      this.recognitionResult = {
+        name: 'Lieu non identifié',
+        description: `Cette image semble contenir : ${topLabels.join(', ')}.`,
+        location: 'Non déterminée',
+        confidence: Math.round((labels[0].score || 0.5) * 100),
+        mapsUrl: undefined,
+        wikipediaUrl: undefined
+      };
+      return;
+    }
+
+    // No results found
+    this.recognitionError = 'Aucun lieu reconnu dans cette image. Essayez avec une photo plus claire d\'un monument ou lieu célèbre.';
+  }
+
+  private generateLandmarkDescription(landmark: any, result: any): string {
+    let description = `${landmark.description} - Monument ou lieu célèbre identifié`;
+    
+    // Add labels context if available
+    const labels = result?.labelAnnotations?.slice(0, 3).map((l: any) => l.description);
+    if (labels && labels.length > 0) {
+      description += `. Caractéristiques détectées : ${labels.join(', ')}.`;
+    }
+    
+    return description;
+  }
+
+  private generateWebDescription(entities: any[], labels: any[]): string {
+    const entityNames = entities.map((e: any) => e.description).join(', ');
+    let description = `Lieu potentiellement identifié comme : ${entityNames}`;
+    
+    if (labels && labels.length > 0) {
+      const labelNames = labels.slice(0, 3).map((l: any) => l.description);
+      description += `. Éléments détectés : ${labelNames.join(', ')}.`;
+    }
+    
+    return description;
+  }
+
+  private formatLocation(latLng: { latitude: number; longitude: number }): string {
+    // Try to get a readable location name using reverse geocoding
+    return `${latLng.latitude.toFixed(6)}, ${latLng.longitude.toFixed(6)}`;
+  }
+
+  retakePhoto(): void {
+    this.capturedImage = null;
+    this.recognitionResult = null;
+    this.recognitionError = null;
+  }
+
+  openInMaps(): void {
+    if (this.recognitionResult?.mapsUrl) {
+      window.open(this.recognitionResult.mapsUrl, '_blank');
+    }
+  }
+
+  openWikipedia(): void {
+    if (this.recognitionResult?.wikipediaUrl) {
+      window.open(this.recognitionResult.wikipediaUrl, '_blank');
+    }
   }
 }

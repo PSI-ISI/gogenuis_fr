@@ -30,6 +30,14 @@ export const appRoutes: Routes = [
         loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       { 
+        path: 'dashboard-etablissement', 
+        loadComponent: () => import('./pages/etablissement-dashboard/etablissement-dashboard.component').then(m => m.EtablissementDashboardComponent)
+      },
+      { 
+        path: 'dashboard-collaborateur', 
+        loadComponent: () => import('./pages/collaborateur-dashboard/collaborateur-dashboard.component').then(m => m.CollaborateurDashboardComponent)
+      },
+      { 
         path: 'events', 
          loadComponent: () => import('./pages/events/events.component').then(m => m.EventsComponent)
       },

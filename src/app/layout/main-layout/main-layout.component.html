@@ -1,12 +1,14 @@
 <!-- Main Layout with Sidebar (Always Expanded) -->
 <div class="app-layout" [class.mobile-menu-open]="isMobileMenuOpen">
   
-  <!-- Sidebar -->
-  <aside class="sidebar" [class.show]="isMobileMenuOpen">
+  <!-- Sidebar with dynamic theme -->
+  <aside class="sidebar" [class.show]="isMobileMenuOpen" [ngClass]="getSidebarClass()">
     <!-- Header -->
     <div class="sidebar-header">
-      <a routerLink="/dashboard" class="logo">
-        <img src="../../assets/img/logo.png" alt="Gogenius" class="logo-img">
+      <a [routerLink]="userProfile === 'company' ? '/dashboard-etablissement' : userProfile === 'collaborator' ? '/dashboard-collaborateur' : '/dashboard'" class="logo">
+        <img src="assets/img/logo_comp.png" alt="Gogenius" class="logo-img" *ngIf="userProfile === 'company'">
+        <img src="assets/img/logo_part.png" alt="Gogenius" class="logo-img" *ngIf="userProfile !== 'company' && userProfile !== 'tourist'">
+        <img src="assets/img/logo.png" alt="Gogenius" class="logo-img" *ngIf="userProfile === 'tourist'">
       </a>
     </div>
     
@@ -35,7 +37,7 @@
         </div>
         <div class="user-info">
           <span class="user-name">{{ fullname }}</span>
-          <!-- <span class="user-role">{{ userRole }}</span> -->
+          <span class="user-role">{{ userRole }}</span>
         </div>
         <i class="bi bi-chevron-down user-chevron" [class.rotated]="showUserMenu"></i>
       </div>
@@ -59,14 +61,16 @@
     </div>
   </aside>
   
-  <!-- Mobile Header -->
-  <header class="mobile-header">
+  <!-- Mobile Header with dynamic theme -->
+  <header class="mobile-header" [ngClass]="getSidebarClass()">
     <button type="button" class="btn-menu" (click)="toggleMobileMenu()">
       <i class="bi" [class.bi-list]="!isMobileMenuOpen" [class.bi-x-lg]="isMobileMenuOpen"></i>
     </button>
-    <a routerLink="/dashboard" class="mobile-logo">
-      <img src="assets/img/logo.png" alt="Gogenius" class="mobile-logo-img">
-      <span>Gogenius</span>
+    <a [routerLink]="userProfile === 'company' ? '/dashboard-etablissement' : userProfile === 'collaborator' ? '/dashboard-collaborateur' : '/dashboard'" class="mobile-logo">
+      <img src="assets/img/logo_comp.png" alt="Gogenius" class="mobile-logo-img" *ngIf="userProfile === 'company'">
+      <img src="assets/img/logo_part.png" alt="Gogenius" class="mobile-logo-img" *ngIf="userProfile !== 'company' && userProfile !== 'tourist'">
+      <img src="assets/img/logo.png" alt="Gogenius" class="mobile-logo-img" *ngIf="userProfile === 'tourist'">
+      <!-- <span>Gogenius</span> -->
     </a>
     <div class="mobile-avatar">
       <span>{{ userInitials }}</span>
