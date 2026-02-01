@@ -158,8 +158,7 @@
     <div class="loader">
       <div class="spinner"></div>
       <h3>Génération en cours...</h3>
-      <p>Analyse de vos préférences</p>
-    </div>
+      <p class="loading-text">{{ loadingText }}</p>    </div>
   </div>
 
   <!-- ==================== RESULTS ==================== -->
@@ -223,9 +222,7 @@
             <span>{{ dp.timeRange }}</span>
           </div>
           <div class="timeline-card">
-            <div class="card-img" [style.backgroundImage]="'url(' + dp.suggestion.image + ')'">
-              <span class="card-type">{{ dp.suggestion.type }}</span>
-            </div>
+            <div class="card-img" [style.backgroundImage]="getPlaceImage(dp.suggestion)"></div>
             <div class="card-body">
               <div class="card-header">
                 <h4>{{ dp.suggestion.name }}</h4>

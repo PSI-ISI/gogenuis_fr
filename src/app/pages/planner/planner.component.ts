@@ -1,3 +1,4 @@
+import { CITIES_CONFIG, CATEGORIES_CONFIG, TIME_SLOTS_CONFIG, SMART_TIPS } from '../../dataset/planner.config';
 import { REAL_SUGGESTIONS, Suggestion } from '../../dataset/planner-suggestions.data';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -107,36 +108,15 @@ export class PlannerComponent implements OnInit {
   budgetStep = 10;
 
   // Step 2: Time Slots
-  timeSlots: TimeSlot[] = [
-    { id: 'morning', name: 'Petit-déjeuner / Café', icon: 'bi-cup-hot-fill', timeRange: '07:00 - 10:00', selected: true },
-    { id: 'lunch', name: 'Déjeuner', icon: 'bi-egg-fried', timeRange: '12:00 - 15:00', selected: true },
-    { id: 'afternoon', name: 'Pause Café / Goûter', icon: 'bi-cake2', timeRange: '16:00 - 18:00', selected: false },
-    { id: 'dinner', name: 'Dîner', icon: 'bi-moon-stars', timeRange: '19:00 - 22:00', selected: true },
-    { id: 'relax', name: 'Détente / Repos', icon: 'bi-tree', timeRange: 'Flexible', selected: false },
-    { id: 'activity', name: 'Activité / Sortie', icon: 'bi-bicycle', timeRange: 'Flexible', selected: false }
-  ];
+  timeSlots = JSON.parse(JSON.stringify(TIME_SLOTS_CONFIG));
 
   // Step 3: Categories / Preferences
-  categories: Category[] = [
-    { id: 'economique', name: 'Économique', icon: 'bi-piggy-bank-fill', color: '#06d6a0', selected: true },
-    { id: 'traditionnel', name: 'Cuisine Traditionnelle', icon: 'bi-shop', color: '#e85d04', selected: false },
-    { id: 'moderne', name: 'Moderne / Tendance', icon: 'bi-stars', color: '#7209b7', selected: false },
-    { id: 'healthy', name: 'Healthy / Bio', icon: 'bi-heart-pulse-fill', color: '#2a9d8f', selected: false },
-    { id: 'fastfood', name: 'Fast Food', icon: 'bi-lightning-fill', color: '#f72585', selected: false },
-    { id: 'cafe', name: 'Café / Salon de Thé', icon: 'bi-cup-straw', color: '#8b5a2b', selected: false },
-    { id: 'nature', name: 'Plein Air / Nature', icon: 'bi-flower1', color: '#588157', selected: false },
-    { id: 'culturel', name: 'Culturel / Historique', icon: 'bi-bank2', color: '#bc6c25', selected: false }
-  ];
+  categories = JSON.parse(JSON.stringify(CATEGORIES_CONFIG));
 
   // Step 4: City Selection
-  cities: City[] = [
-    { id: 'casablanca', name: 'Casablanca', image: 'https://images.unsplash.com/photo-1569383746724-6f1b882b8f46?w=400', selected: false },
-    { id: 'rabat', name: 'Rabat', image: 'https://images.unsplash.com/photo-1570299437488-d430e1e677c7?w=400', selected: false },
-    { id: 'marrakech', name: 'Marrakech', image: 'https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=400', selected: false },
-    { id: 'fes', name: 'Fès', image: 'https://images.unsplash.com/photo-1549140600-78c9b8275e9d?w=400', selected: false },
-    { id: 'tanger', name: 'Tanger', image: 'https://images.unsplash.com/photo-1553899017-a4c0e77a8c93?w=400', selected: false },
-    { id: 'agadir', name: 'Agadir', image: 'https://images.unsplash.com/photo-1596627116790-af6f46dddbf7?w=400', selected: false }
-  ];
+  cities = JSON.parse(JSON.stringify(CITIES_CONFIG));
+
+  loadingText = 'Analyse de vos préférences...';
 
   // Results
   generatedPlans: GeneratedPlan[] = [];
@@ -146,7 +126,7 @@ export class PlannerComponent implements OnInit {
   // Animation
   budgetAnimationValue = 0;
 
-  constructor() {}
+  constructor() { }
 
   ngOnInit(): void {
     this.budgetAnimationValue = this.budget;
@@ -271,21 +251,34 @@ export class PlannerComponent implements OnInit {
   }
 
   // ==================== PLAN GENERATION ====================
-
   generatePlans(): void {
     this.isGenerating = true;
     this.showResults = false;
 
+    // Séquence accélérée (Total 1.5s au lieu de 3s)
+    this.loadingText = 'Analyse de vos préférences...';
+
+    setTimeout(() => {
+      const city = this.getSelectedCity()?.name || 'votre destination';
+      this.loadingText = `Recherche des meilleurs lieux à ${city}...`;
+    }, 500); // Était 800
+
+    setTimeout(() => {
+      this.loadingText = `Optimisation du budget ${this.getBudgetLevel().toLowerCase()}...`;
+    }, 1000); // Était 1600
+
+    // On saute l'étape "Finalisation" pour aller plus vite
+    
     setTimeout(() => {
       this.generatedPlans = this.createMockPlans();
       this.isGenerating = false;
       this.showResults = true;
-    }, 2500);
+    }, 1500); // Fin à 1.5s (Était 3000)
   }
 
   createMockPlans(): GeneratedPlan[] {
     const selectedCity = this.getSelectedCity()?.name || 'Casablanca';
-    const selectedSlots = this.timeSlots.filter(t => t.selected);
+    const selectedSlots = this.timeSlots.filter((t: any) => t.selected);
 
     // Plan Économique
     const economiquePlan: GeneratedPlan = {
@@ -295,9 +288,9 @@ export class PlannerComponent implements OnInit {
       savingsPercentage: 40,
       dayPlans: this.generateDayPlans(selectedSlots, 'economique', selectedCity),
       tips: [
-        'Privilégiez les snacks locaux pour le petit-déjeuner',
-        'Les marchés offrent les meilleurs prix pour le déjeuner',
-        'Évitez les zones touristiques pour économiser'
+        SMART_TIPS.economique[0],
+        `Profitez des parcs gratuits de ${selectedCity}`,
+        'Évitez les zones trop touristiques'
       ]
     };
 
@@ -309,9 +302,9 @@ export class PlannerComponent implements OnInit {
       savingsPercentage: 15,
       dayPlans: this.generateDayPlans(selectedSlots, 'equilibre', selectedCity),
       tips: [
-        'Un bon compromis qualité-prix',
-        'Mélangez restaurants locaux et modernes',
-        'Profitez des happy hours pour les cafés'
+        SMART_TIPS.equilibre[2],
+        'Un mix parfait entre culture et détente',
+        SMART_TIPS.equilibre[1]
       ]
     };
 
@@ -323,22 +316,23 @@ export class PlannerComponent implements OnInit {
       savingsPercentage: 5,
       dayPlans: this.generateDayPlans(selectedSlots, 'confort', selectedCity),
       tips: [
-        'Expériences premium sélectionnées',
-        'Ambiances soignées garanties',
-        'Service de qualité assuré'
+        SMART_TIPS.confort[0],
+        `Les meilleurs spots VIP de ${selectedCity}`,
+        SMART_TIPS.confort[1]
       ]
     };
 
     return [economiquePlan, equilibrePlan, confortPlan];
   }
+  
 
   generateDayPlans(slots: TimeSlot[], planType: string, city: string): DayPlan[] {
     const suggestions = this.getMockSuggestions(city, planType);
-    
+
     return slots.map((slot, index) => {
       const suggestion = suggestions[index % suggestions.length];
       const budgetMultiplier = planType === 'economique' ? 0.5 : planType === 'equilibre' ? 0.75 : 1;
-      
+
       return {
         timeSlot: slot.name,
         timeRange: slot.timeRange,
@@ -349,13 +343,13 @@ export class PlannerComponent implements OnInit {
     });
   }
 
-getMockSuggestions(city: string, planType: string): Suggestion[] {
+  getMockSuggestions(city: string, planType: string): Suggestion[] {
     console.log('🔍 Recherche de données pour :', city);
 
     // 1. Filtrer par ville (insensible à la casse)
     // On normalise les noms (ex: "Fès" vs "Fes")
     let filtered = REAL_SUGGESTIONS.filter(s =>
-      s.city.toLowerCase().includes(city.toLowerCase()) || 
+      s.city.toLowerCase().includes(city.toLowerCase()) ||
       city.toLowerCase().includes(s.city.toLowerCase())
     );
 
@@ -370,7 +364,7 @@ getMockSuggestions(city: string, planType: string): Suggestion[] {
     if (planType === 'economique') {
       // On garde les lieux pas chers (Niveau 0, 1) et parfois 2
       return filtered.filter(s => s.priceLevel <= 1);
-    } 
+    }
     else if (planType === 'confort') {
       // On privilégie le confort et le luxe (Niveau 2 et 3)
       const luxe = filtered.filter(s => s.priceLevel >= 2);
@@ -400,8 +394,7 @@ getMockSuggestions(city: string, planType: string): Suggestion[] {
   }
 
   savePlan(plan: GeneratedPlan): void {
-    console.log('Saving plan:', plan);
-    alert(`Plan "${plan.title}" sauvegardé ! 🎉`);
+  window.print(); 
   }
 
   sharePlan(plan: GeneratedPlan): void {
@@ -450,4 +443,38 @@ getMockSuggestions(city: string, planType: string): Suggestion[] {
   getPriceLevelStars(level: number): string {
     return '💰'.repeat(level + 1);
   }
+
+  // Méthode sécurisée avec les liens HD frais
+  getPlaceImage(suggestion: Suggestion): string {
+    // 1. Priorité à l'image réelle si elle existe
+    if (suggestion.image && suggestion.image.startsWith('http')) {
+      return `url('${suggestion.image}')`;
+    }
+
+    // 2. Images de secours HD (Récupérées par script)
+    const type = suggestion.type ? suggestion.type.toLowerCase() : '';
+    const tags = suggestion.tags ? suggestion.tags.join(' ').toLowerCase() : '';
+    
+    if (type.includes('restaurant') || type.includes('diner')) {
+        if (suggestion.priceLevel >= 3) {
+            // Luxury restaurant interior
+            return `url('https://plus.unsplash.com/premium_photo-1670984940206-0318b607fb9f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8THV4dXJ5JTIwcmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fHx8MTc2OTkwOTI5MXww&ixlib=rb-4.1.0&q=80&w=600')`;
+        }
+        // Moroccan Couscous par défaut
+        return `url('https://plus.unsplash.com/premium_photo-1664391688423-7cb847237bcd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8TW9yb2NjYW4lMjBDb3VzY291c3xlbnwwfHx8fDE3Njk5MDkyODh8MA&ixlib=rb-4.1.0&q=80&w=600')`;
+    } 
+    else if (type.includes('cafe') || type.includes('café') || type.includes('thé')) {
+        // Cozy cafe interior
+        return `url('https://plus.unsplash.com/premium_photo-1670984939630-8c3b98012f06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8Q296eSUyMGNhZmUlMjBpbnRlcmlvcnxlbnwwfHx8fDE3Njk5MDkyOTN8MA&ixlib=rb-4.1.0&q=80&w=600')`;
+    } 
+    else if (type.includes('fast') || type.includes('burger')) {
+        // Fast food burger
+        return `url('https://plus.unsplash.com/premium_photo-1683655058728-415f4f2674bf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8RmFzdCUyMGZvb2QlMjBidXJnZXJ8ZW58MHx8fHwxNzY5OTA5Mjk1fDA&ixlib=rb-4.1.0&q=80&w=600')`;
+    } 
+    else {
+        // Mint tea Morocco (Générique)
+        return `url('https://plus.unsplash.com/premium_photo-1682097617396-e510665e0dc8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8TWludCUyMHRlYSUyME1vcm9jY298ZW58MHx8fHwxNzY5OTA5MjkwfDA&ixlib=rb-4.1.0&q=80&w=600')`;
+    }
+  }
+
 }
