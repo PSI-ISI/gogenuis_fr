@@ -1,45 +1,45 @@
 export const CITIES_CONFIG = [
-  { 
-    id: 'casablanca', 
-    name: 'Casablanca', 
-    image: 'https://plus.unsplash.com/premium_photo-1697729894473-f42211860691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8Q2FzYWJsYW5jYSUyME1vcm9jY28lMjBsYW5kbWFya3xlbnwwfHx8fDE3Njk5MDkyNzF8MA&ixlib=rb-4.1.0&q=80&w=1080', 
+  {
+    id: 'casablanca',
+    name: 'Casablanca',
+    image: 'https://plus.unsplash.com/premium_photo-1697729894473-f42211860691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8Q2FzYWJsYW5jYSUyME1vcm9jY28lMjBsYW5kbWFya3xlbnwwfHx8fDE3Njk5MDkyNzF8MA&ixlib=rb-4.1.0&q=80&w=1080',
     desc: 'La métropole dynamique',
-    selected: true 
+    selected: true
   },
-  { 
-    id: 'rabat', 
-    name: 'Rabat', 
-    image: 'https://plus.unsplash.com/premium_photo-1697730046699-02d93a2ce32d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8UmFiYXQlMjBNb3JvY2NvJTIwSGFzc2FuJTIwVG93ZXJ8ZW58MHx8fHwxNzY5OTA5MjczfDA&ixlib=rb-4.1.0&q=80&w=1080', 
+  {
+    id: 'rabat',
+    name: 'Rabat',
+    image: 'https://plus.unsplash.com/premium_photo-1697730046699-02d93a2ce32d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8UmFiYXQlMjBNb3JvY2NvJTIwSGFzc2FuJTIwVG93ZXJ8ZW58MHx8fHwxNzY5OTA5MjczfDA&ixlib=rb-4.1.0&q=80&w=1080',
     desc: 'Capitale culturelle',
-    selected: false 
+    selected: false
   },
-  { 
-    id: 'marrakech', 
-    name: 'Marrakech', 
-    image: 'https://images.unsplash.com/photo-1739686176648-2b53d1bbe87f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8TWFycmFrZWNoJTIwTW9yb2NjbyUyMEphcmRpbiUyME1ham9yZWxsZXxlbnwwfHx8fDE3Njk5MDkyNzV8MA&ixlib=rb-4.1.0&q=80&w=1080', 
+  {
+    id: 'marrakech',
+    name: 'Marrakech',
+    image: 'https://images.unsplash.com/photo-1739686176648-2b53d1bbe87f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8TWFycmFrZWNoJTIwTW9yb2NjbyUyMEphcmRpbiUyME1ham9yZWxsZXxlbnwwfHx8fDE3Njk5MDkyNzV8MA&ixlib=rb-4.1.0&q=80&w=1080',
     desc: 'La ville ocre',
-    selected: false 
+    selected: false
   },
-  { 
-    id: 'tanger', 
-    name: 'Tanger', 
-    image: 'https://images.unsplash.com/photo-1641753352787-754ac585ab11?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8VGFuZ2VyJTIwTW9yb2NjbyUyMGNpdHl8ZW58MHx8fHwxNzY5OTA5Mjc3fDA&ixlib=rb-4.1.0&q=80&w=1080', 
+  {
+    id: 'tanger',
+    name: 'Tanger',
+    image: 'https://images.unsplash.com/photo-1641753352787-754ac585ab11?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8VGFuZ2VyJTIwTW9yb2NjbyUyMGNpdHl8ZW58MHx8fHwxNzY5OTA5Mjc3fDA&ixlib=rb-4.1.0&q=80&w=1080',
     desc: 'La porte de l\'Afrique',
-    selected: false 
+    selected: false
   },
-  { 
-    id: 'agadir', 
-    name: 'Agadir', 
-    image: 'https://images.unsplash.com/photo-1675271815142-2b8c5373d091?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8QWdhZGlyJTIwTW9yb2NjbyUyMGJlYWNofGVufDB8fHx8MTc2OTkwOTI3OHww&ixlib=rb-4.1.0&q=80&w=1080', 
+  {
+    id: 'agadir',
+    name: 'Agadir',
+    image: 'https://images.unsplash.com/photo-1675271815142-2b8c5373d091?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8QWdhZGlyJTIwTW9yb2NjbyUyMGJlYWNofGVufDB8fHx8MTc2OTkwOTI3OHww&ixlib=rb-4.1.0&q=80&w=1080',
     desc: 'Soleil et plage',
-    selected: false 
+    selected: false
   },
-  { 
-    id: 'fes', 
-    name: 'Fès', 
-    image: 'https://plus.unsplash.com/premium_photo-1675875487519-52d6b2e3edba?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8RmVzJTIwTW9yb2NjbyUyMHRhbm5lcmllc3xlbnwwfHx8fDE3Njk5MDkyODB8MA&ixlib=rb-4.1.0&q=80&w=1080', 
+  {
+    id: 'fes',
+    name: 'Fès',
+    image: 'https://plus.unsplash.com/premium_photo-1675875487519-52d6b2e3edba?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8RmVzJTIwTW9yb2NjbyUyMHRhbm5lcmllc3xlbnwwfHx8fDE3Njk5MDkyODB8MA&ixlib=rb-4.1.0&q=80&w=1080',
     desc: 'Cité impériale',
-    selected: false 
+    selected: false
   },
   {
     id: 'chefchaouen',
@@ -77,7 +77,19 @@ export const TIME_SLOTS_CONFIG = [
 ];
 
 export const SMART_TIPS = {
-  economique: ["Privilégiez les 'Mahlabas'.", "Utilisez les petits taxis rouges."],
-  confort: ["Réservez votre table à l'avance.", "Demandez une vue mer."],
-  equilibre: ["Le pourboire est de 10%.", "Un bon mix culture/détente."]
+  economique: [
+    "Privilégiez les 'Mahlabas' pour les jus.",
+    "Utilisez les petits taxis rouges (compteur).",
+    "Les parcs publics sont gratuits et agréables."
+  ],
+  confort: [
+    "Réservez votre table pour le dîner.",
+    "Demandez une place en terrasse ou vue mer.",
+    "Le service voiturier est souvent disponible."
+  ],
+  equilibre: [
+    "Le pourboire usuel est d'environ 10%.",
+    "Un mix parfait entre culture et détente.",
+    "Vérifiez les horaires des musées (fermé le mardi ?)."
+  ]
 };

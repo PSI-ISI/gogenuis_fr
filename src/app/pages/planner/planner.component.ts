@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; 
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CITIES_CONFIG, CATEGORIES_CONFIG, TIME_SLOTS_CONFIG, SMART_TIPS } from '../../dataset/planner.config';
 import { REAL_SUGGESTIONS, Suggestion } from '../../dataset/planner-suggestions.data';
 import { CommonModule } from '@angular/common';
@@ -174,23 +174,22 @@ export class PlannerComponent implements OnInit {
   // ==================== STEP 1: BUDGET ====================
 
   onBudgetChange(): void {
+    // SÉCURITÉ : Forcer une valeur strictement positive
+    if (this.budget < 0) {
+      this.budget = Math.abs(this.budget);
+    }
+
+    // Si l'utilisateur essaie de mettre 0 ou moins que le minimum, on corrige
+    if (this.budget < this.minBudget) {
+      this.budget = this.minBudget;
+    }
+
     this.animateBudget();
   }
 
   animateBudget(): void {
-    const target = this.budget;
-    const diff = target - this.budgetAnimationValue;
-    const step = diff / 10;
-
-    const animate = () => {
-      if (Math.abs(target - this.budgetAnimationValue) > 1) {
-        this.budgetAnimationValue += step;
-        requestAnimationFrame(animate);
-      } else {
-        this.budgetAnimationValue = target;
-      }
-    };
-    animate();
+    // Animation fluide vers la nouvelle valeur positive
+    this.budgetAnimationValue = this.budget;
   }
 
   getBudgetPercentage(): number {
@@ -266,15 +265,15 @@ export class PlannerComponent implements OnInit {
     setTimeout(() => {
       // 1. Créer les plans
       this.generatedPlans = this.createMockPlans();
-      
+
       // 2. Changer les états
       this.isGenerating = false;
       this.showResults = true;
 
       // 3. IMPORTANT : Forcer Angular à détecter les changements et mettre à jour l'écran
       this.cd.detectChanges();
-      
-    }, 1000); 
+
+    }, 1000);
   }
   createMockPlans(): GeneratedPlan[] {
     const selectedCity = this.getSelectedCity()?.name || 'Casablanca';
@@ -324,7 +323,7 @@ export class PlannerComponent implements OnInit {
 
     return [economiquePlan, equilibrePlan, confortPlan];
   }
-  
+
 
   generateDayPlans(slots: TimeSlot[], planType: string, city: string): DayPlan[] {
     const suggestions = this.getMockSuggestions(city, planType);
@@ -394,7 +393,7 @@ export class PlannerComponent implements OnInit {
   }
 
   savePlan(plan: GeneratedPlan): void {
-  window.print(); 
+    window.print();
   }
 
   sharePlan(plan: GeneratedPlan): void {
@@ -454,26 +453,26 @@ export class PlannerComponent implements OnInit {
     // 2. Images de secours HD (Récupérées par script)
     const type = suggestion.type ? suggestion.type.toLowerCase() : '';
     const tags = suggestion.tags ? suggestion.tags.join(' ').toLowerCase() : '';
-    
+
     if (type.includes('restaurant') || type.includes('diner')) {
-        if (suggestion.priceLevel >= 3) {
-            // Luxury restaurant interior
-            return `url('https://plus.unsplash.com/premium_photo-1670984940206-0318b607fb9f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8THV4dXJ5JTIwcmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fHx8MTc2OTkwOTI5MXww&ixlib=rb-4.1.0&q=80&w=600')`;
-        }
-        // Moroccan Couscous par défaut
-        return `url('https://plus.unsplash.com/premium_photo-1664391688423-7cb847237bcd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8TW9yb2NjYW4lMjBDb3VzY291c3xlbnwwfHx8fDE3Njk5MDkyODh8MA&ixlib=rb-4.1.0&q=80&w=600')`;
-    } 
+      if (suggestion.priceLevel >= 3) {
+        // Luxury restaurant interior
+        return `url('https://plus.unsplash.com/premium_photo-1670984940206-0318b607fb9f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8THV4dXJ5JTIwcmVzdGF1cmFudCUyMGludGVyaW9yfGVufDB8fHx8MTc2OTkwOTI5MXww&ixlib=rb-4.1.0&q=80&w=600')`;
+      }
+      // Moroccan Couscous par défaut
+      return `url('https://plus.unsplash.com/premium_photo-1664391688423-7cb847237bcd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8TW9yb2NjYW4lMjBDb3VzY291c3xlbnwwfHx8fDE3Njk5MDkyODh8MA&ixlib=rb-4.1.0&q=80&w=600')`;
+    }
     else if (type.includes('cafe') || type.includes('café') || type.includes('thé')) {
-        // Cozy cafe interior
-        return `url('https://plus.unsplash.com/premium_photo-1670984939630-8c3b98012f06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8Q296eSUyMGNhZmUlMjBpbnRlcmlvcnxlbnwwfHx8fDE3Njk5MDkyOTN8MA&ixlib=rb-4.1.0&q=80&w=600')`;
-    } 
+      // Cozy cafe interior
+      return `url('https://plus.unsplash.com/premium_photo-1670984939630-8c3b98012f06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8Q296eSUyMGNhZmUlMjBpbnRlcmlvcnxlbnwwfHx8fDE3Njk5MDkyOTN8MA&ixlib=rb-4.1.0&q=80&w=600')`;
+    }
     else if (type.includes('fast') || type.includes('burger')) {
-        // Fast food burger
-        return `url('https://plus.unsplash.com/premium_photo-1683655058728-415f4f2674bf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8RmFzdCUyMGZvb2QlMjBidXJnZXJ8ZW58MHx8fHwxNzY5OTA5Mjk1fDA&ixlib=rb-4.1.0&q=80&w=600')`;
-    } 
+      // Fast food burger
+      return `url('https://plus.unsplash.com/premium_photo-1683655058728-415f4f2674bf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8RmFzdCUyMGZvb2QlMjBidXJnZXJ8ZW58MHx8fHwxNzY5OTA5Mjk1fDA&ixlib=rb-4.1.0&q=80&w=600')`;
+    }
     else {
-        // Mint tea Morocco (Générique)
-        return `url('https://plus.unsplash.com/premium_photo-1682097617396-e510665e0dc8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8TWludCUyMHRlYSUyME1vcm9jY298ZW58MHx8fHwxNzY5OTA5MjkwfDA&ixlib=rb-4.1.0&q=80&w=600')`;
+      // Mint tea Morocco (Générique)
+      return `url('https://plus.unsplash.com/premium_photo-1682097617396-e510665e0dc8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8TWludCUyMHRlYSUyME1vcm9jY298ZW58MHx8fHwxNzY5OTA5MjkwfDA&ixlib=rb-4.1.0&q=80&w=600')`;
     }
   }
 
