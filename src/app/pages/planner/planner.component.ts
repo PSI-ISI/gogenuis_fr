@@ -1,6 +1,6 @@
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core'; 
 import { CITIES_CONFIG, CATEGORIES_CONFIG, TIME_SLOTS_CONFIG, SMART_TIPS } from '../../dataset/planner.config';
 import { REAL_SUGGESTIONS, Suggestion } from '../../dataset/planner-suggestions.data';
-import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
@@ -126,7 +126,7 @@ export class PlannerComponent implements OnInit {
   // Animation
   budgetAnimationValue = 0;
 
-  constructor() { }
+  constructor(private cd: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     this.budgetAnimationValue = this.budget;
@@ -255,27 +255,27 @@ export class PlannerComponent implements OnInit {
     this.isGenerating = true;
     this.showResults = false;
 
-    // Séquence accélérée (Total 1.5s au lieu de 3s)
+    // Séquence d'animation
     this.loadingText = 'Analyse de vos préférences...';
 
     setTimeout(() => {
       const city = this.getSelectedCity()?.name || 'votre destination';
       this.loadingText = `Recherche des meilleurs lieux à ${city}...`;
-    }, 500); // Était 800
+    }, 400);
 
     setTimeout(() => {
-      this.loadingText = `Optimisation du budget ${this.getBudgetLevel().toLowerCase()}...`;
-    }, 1000); // Était 1600
-
-    // On saute l'étape "Finalisation" pour aller plus vite
-    
-    setTimeout(() => {
+      // 1. Créer les plans
       this.generatedPlans = this.createMockPlans();
+      
+      // 2. Changer les états
       this.isGenerating = false;
       this.showResults = true;
-    }, 1500); // Fin à 1.5s (Était 3000)
-  }
 
+      // 3. IMPORTANT : Forcer Angular à détecter les changements et mettre à jour l'écran
+      this.cd.detectChanges();
+      
+    }, 1000); 
+  }
   createMockPlans(): GeneratedPlan[] {
     const selectedCity = this.getSelectedCity()?.name || 'Casablanca';
     const selectedSlots = this.timeSlots.filter((t: any) => t.selected);
@@ -475,6 +475,13 @@ export class PlannerComponent implements OnInit {
         // Mint tea Morocco (Générique)
         return `url('https://plus.unsplash.com/premium_photo-1682097617396-e510665e0dc8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMjA3fDB8MXxzZWFyY2h8MXx8TWludCUyMHRlYSUyME1vcm9jY298ZW58MHx8fHwxNzY5OTA5MjkwfDA&ixlib=rb-4.1.0&q=80&w=600')`;
     }
+  }
+
+  // Génère un lien Google Maps vers le lieu
+  getMapsUrl(suggestion: Suggestion): string {
+    // On crée une requête de recherche : "Nom du lieu + Ville + Maroc"
+    const query = encodeURIComponent(`${suggestion.name}, ${suggestion.city}, Maroc`);
+    return `https://www.google.com/maps/search/?api=1&query=${query}`;
   }
 
 }

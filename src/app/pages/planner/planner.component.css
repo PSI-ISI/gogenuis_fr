@@ -1165,16 +1165,99 @@
 
 /* 4. Export PDF Propre */
 @media print {
-  .vertical-stepper, .btn-back, .results-top button, .plan-tabs, .plan-actions, .tips-box {
+  /* 1. Cacher les éléments inutiles */
+  .vertical-stepper, 
+  .btn-back, 
+  .results-top button, 
+  .plan-tabs, 
+  .plan-actions, 
+  .tips-box,
+  .nav-buttons,
+  .loading-screen {
     display: none !important;
   }
-  .wizard-content, .results-page {
+
+  /* 2. Ajuster la mise en page */
+  .wizard-content, 
+  .results-page {
     margin: 0 !important;
     padding: 0 !important;
     max-width: 100% !important;
     box-shadow: none !important;
+    width: 100% !important;
   }
+
+  /* 3. FORCER L'IMPRESSION DES IMAGES D'ARRIÈRE-PLAN (IMPORTANT) */
+  * {
+    -webkit-print-color-adjust: exact !important;   /* Chrome, Safari, Edge */
+    print-color-adjust: exact !important;           /* Firefox */
+    color-adjust: exact !important;                 /* Standard */
+  }
+
+  /* 4. Ajustements spécifiques Timeline */
   .timeline::before {
-    left: 19px; /* Ajustement spécifique pour l'impression */
+    left: 19px !important;
+    border-left: 2px solid #ddd !important; /* Remplacer background par border pour impression */
+  }
+  
+  .timeline-card {
+    box-shadow: none !important;
+    border: 1px solid #eee !important;
+    break-inside: avoid; /* Évite de couper une carte sur deux pages */
+  }
+
+  /* S'assurer que l'image est bien visible */
+  .card-img {
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+}
+
+
+/* ================================================ */
+/* GOOGLE MAPS LINK STYLE */
+/* ================================================ */
+
+.map-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gray);
+  text-decoration: none;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background-color: #f8f9fa; /* Gris très clair */
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  max-width: 70%; /* Pour éviter que ça prenne toute la largeur */
+}
+
+.map-link:hover {
+  background-color: rgba(26, 95, 122, 0.1); /* Couleur primaire très claire */
+  color: var(--primary);
+  border-color: rgba(26, 95, 122, 0.2);
+  transform: translateY(-1px);
+}
+
+.map-link i.bi-geo-alt-fill {
+  color: var(--danger); /* Icône de position en rouge */
+}
+
+.sm-icon {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* Ajustement pour l'impression */
+@media print {
+  .map-link {
+    border: none;
+    background: none;
+    padding: 0;
+    color: black;
+  }
+  .sm-icon {
+    display: none;
   }
 }
