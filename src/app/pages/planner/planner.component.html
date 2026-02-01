@@ -3,20 +3,17 @@
 
   <!-- ==================== WIZARD VIEW ==================== -->
   <div class="wizard-layout" *ngIf="!showResults && !isGenerating">
-    
+
     <!-- Vertical Stepper -->
     <div class="vertical-stepper">
       <div class="stepper-header">
         <img src="assets/img/logo.png" alt="Gogenius" class="stepper-logo">
         <span>Planificateur</span>
       </div>
-      
+
       <div class="stepper-steps">
-        <div class="step" 
-             *ngFor="let s of [1,2,3,4]"
-             [class.active]="currentStep >= s"
-             [class.current]="currentStep === s"
-             (click)="goToStep(s)">
+        <div class="step" *ngFor="let s of [1,2,3,4]" [class.active]="currentStep >= s"
+          [class.current]="currentStep === s" (click)="goToStep(s)">
           <div class="step-indicator">
             <span class="step-number">{{ s }}</span>
             <div class="step-line" *ngIf="s < 4"></div>
@@ -26,12 +23,13 @@
               {{ s === 1 ? 'Budget' : s === 2 ? 'Horaires' : s === 3 ? 'Style' : 'Ville' }}
             </span>
             <span class="step-desc">
-              {{ s === 1 ? 'Définir le montant' : s === 2 ? 'Choisir les créneaux' : s === 3 ? 'Vos préférences' : 'Localisation' }}
+              {{ s === 1 ? 'Définir le montant' : s === 2 ? 'Choisir les créneaux' : s === 3 ? 'Vos préférences' :
+              'Localisation' }}
             </span>
           </div>
         </div>
       </div>
-      
+
       <div class="stepper-footer">
         <span class="budget-preview">
           <i class="bi bi-wallet2"></i>
@@ -42,7 +40,7 @@
 
     <!-- Main Content Area -->
     <div class="wizard-content">
-      
+
       <!-- Step Header -->
       <div class="content-header">
         <h1>{{ getStepTitle() }}</h1>
@@ -51,7 +49,7 @@
 
       <!-- ==================== STEP 1: BUDGET ==================== -->
       <div class="step-panel" *ngIf="currentStep === 1" @slideIn>
-        
+
         <div class="budget-display">
           <span class="budget-emoji">{{ getBudgetEmoji() }}</span>
           <div class="budget-amount">
@@ -65,7 +63,8 @@
           <div class="slider-track-bg">
             <div class="slider-fill" [style.width.%]="getBudgetPercentage()"></div>
           </div>
-          <input type="range" [(ngModel)]="budget" [min]="minBudget" [max]="maxBudget" [step]="budgetStep" (input)="onBudgetChange()">
+          <input type="range" [(ngModel)]="budget" [min]="minBudget" [max]="maxBudget" [step]="budgetStep"
+            (input)="onBudgetChange()">
           <div class="slider-labels">
             <span>{{ minBudget }} MAD</span>
             <span>{{ maxBudget }} MAD</span>
@@ -91,10 +90,8 @@
       <!-- ==================== STEP 2: TIME SLOTS ==================== -->
       <div class="step-panel" *ngIf="currentStep === 2" @slideIn>
         <div class="slots-grid">
-          <div class="slot-card" 
-               *ngFor="let slot of timeSlots"
-               [class.selected]="slot.selected"
-               (click)="toggleTimeSlot(slot)">
+          <div class="slot-card" *ngFor="let slot of timeSlots" [class.selected]="slot.selected"
+            (click)="toggleTimeSlot(slot)">
             <i [class]="'bi ' + slot.icon"></i>
             <div class="slot-info">
               <span class="slot-name">{{ slot.name }}</span>
@@ -111,11 +108,8 @@
       <!-- ==================== STEP 3: CATEGORIES ==================== -->
       <div class="step-panel" *ngIf="currentStep === 3" @slideIn>
         <div class="categories-grid">
-          <div class="cat-card" 
-               *ngFor="let cat of categories"
-               [class.selected]="cat.selected"
-               [style.--cat-color]="cat.color"
-               (click)="toggleCategory(cat)">
+          <div class="cat-card" *ngFor="let cat of categories" [class.selected]="cat.selected"
+            [style.--cat-color]="cat.color" (click)="toggleCategory(cat)">
             <i [class]="'bi ' + cat.icon"></i>
             <span>{{ cat.name }}</span>
           </div>
@@ -128,10 +122,8 @@
       <!-- ==================== STEP 4: CITIES ==================== -->
       <div class="step-panel" *ngIf="currentStep === 4" @slideIn>
         <div class="cities-grid">
-          <div class="city-card" 
-               *ngFor="let city of cities"
-               [class.selected]="city.selected"
-               (click)="toggleCity(city)">
+          <div class="city-card" *ngFor="let city of cities" [class.selected]="city.selected"
+            (click)="toggleCity(city)">
             <div class="city-img" [style.backgroundImage]="'url(' + city.image + ')'">
               <div class="city-check"><i class="bi bi-check-circle-fill"></i></div>
             </div>
@@ -158,13 +150,13 @@
     <div class="loader">
       <div class="spinner"></div>
       <h3>Génération en cours...</h3>
-      <p>Analyse de vos préférences</p>
+      <p class="loading-text">{{ loadingText }}</p>
     </div>
   </div>
 
   <!-- ==================== RESULTS ==================== -->
   <div class="results-page" *ngIf="showResults" @fadeInUp>
-    
+
     <div class="results-top">
       <button class="btn-back" (click)="resetPlanner()">
         <i class="bi bi-arrow-left"></i> Nouvelle recherche
@@ -180,9 +172,8 @@
 
     <!-- Plan Tabs -->
     <div class="plan-tabs">
-      <button *ngFor="let plan of generatedPlans; let i = index"
-              class="tab" [class.active]="activePlanIndex === i"
-              (click)="selectPlanTab(i)">
+      <button *ngFor="let plan of generatedPlans; let i = index" class="tab" [class.active]="activePlanIndex === i"
+        (click)="selectPlanTab(i)">
         {{ plan.title }}
         <small>{{ plan.totalBudget }} MAD</small>
       </button>
@@ -190,7 +181,7 @@
 
     <!-- Active Plan -->
     <div class="plan-detail" *ngIf="generatedPlans[activePlanIndex]">
-      
+
       <div class="plan-stats">
         <div class="stat">
           <i class="bi bi-wallet2"></i>
@@ -223,9 +214,7 @@
             <span>{{ dp.timeRange }}</span>
           </div>
           <div class="timeline-card">
-            <div class="card-img" [style.backgroundImage]="'url(' + dp.suggestion.image + ')'">
-              <span class="card-type">{{ dp.suggestion.type }}</span>
-            </div>
+            <div class="card-img" [style.backgroundImage]="getPlaceImage(dp.suggestion)"></div>
             <div class="card-body">
               <div class="card-header">
                 <h4>{{ dp.suggestion.name }}</h4>
@@ -233,7 +222,11 @@
               </div>
               <p>{{ dp.suggestion.description }}</p>
               <div class="card-meta">
-                <span><i class="bi bi-geo-alt"></i> {{ dp.suggestion.address }}</span>
+                <a [href]="getMapsUrl(dp.suggestion)" target="_blank" class="map-link" title="Ouvrir dans Google Maps">
+                  <i class="bi bi-geo-alt-fill"></i>
+                  {{ dp.suggestion.address }}
+                  <i class="bi bi-box-arrow-up-right sm-icon"></i>
+                </a>
                 <span class="price">~{{ dp.estimatedBudget }} MAD</span>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { 
@@ -12,7 +12,9 @@ import {
 } from '../../dataset/events-morocco-2026_data';
 import { Router } from '@angular/router';
 import { CreateReservationRequest } from '../../models/reservation.model';
+import { Subscription } from 'rxjs';
 import { ReservationsService } from 'src/app/sevices/reservations.service';
+import { EventFavoritesService } from 'src/app/sevices/eventFavoritesService';
 
 @Component({
   selector: 'app-events',
@@ -22,7 +24,9 @@ import { ReservationsService } from 'src/app/sevices/reservations.service';
   styleUrls: ['./events.component.css'],
   changeDetection: ChangeDetectionStrategy.Default
 })
-export class EventsComponent implements OnInit, AfterViewInit {
+export class EventsComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  private favoritesSubscription?: Subscription;
 
   // View mode
   viewMode: 'grid' | 'list' | 'calendar' = 'grid';
@@ -74,7 +78,8 @@ export class EventsComponent implements OnInit, AfterViewInit {
   constructor(
     private router: Router, 
     private cdr: ChangeDetectorRef,
-    private reservationService: ReservationsService
+    private reservationService: ReservationsService,
+    private eventFavoritesService: EventFavoritesService
   ) {}
 
   ngOnInit(): void {
@@ -84,6 +89,12 @@ export class EventsComponent implements OnInit, AfterViewInit {
     this.filterEvents();
     this.isLoading = false;
     this.pastEventsCount = this.events.filter(e => e.isPast).length;
+
+    // S'abonner aux changements de favoris
+    this.favoritesSubscription = this.eventFavoritesService.favorites$.subscribe(() => {
+      this.syncFavoritesFromService();
+      this.cdr.detectChanges();
+    });
   }
 
   ngAfterViewInit(): void {
@@ -91,6 +102,20 @@ export class EventsComponent implements OnInit, AfterViewInit {
       this.cdr.markForCheck();
       this.cdr.detectChanges();
     }, 0);
+  }
+
+  ngOnDestroy(): void {
+    this.favoritesSubscription?.unsubscribe();
+  }
+
+  // Synchroniser les favoris depuis le service
+  syncFavoritesFromService(): void {
+    const favoriteIds = this.eventFavoritesService.getFavoriteIds();
+    console.log(favoriteIds);
+    
+    this.events.forEach(e => {
+      e.isFavorite = favoriteIds.includes(e.id);
+    });
   }
 
   // ============ DATA LOADING ============
@@ -220,8 +245,7 @@ export class EventsComponent implements OnInit, AfterViewInit {
 
   // ============ FAVORITES ============
   toggleFavorite(event: Event): void {
-    event.isFavorite = !event.isFavorite;
-    this.saveFavorites();
+    event.isFavorite = this.eventFavoritesService.toggleFavorite(event);
     this.cdr.detectChanges();
   }
 
@@ -230,19 +254,15 @@ export class EventsComponent implements OnInit, AfterViewInit {
     this.toggleFavorite(event);
   }
 
-  saveFavorites(): void {
-    const favorites = this.events.filter(e => e.isFavorite).map(e => e.id);
-    localStorage.setItem('event_favorites', JSON.stringify(favorites));
-  }
+  // syncFavoritesFromService(): void {
+  //   const favoriteIds = this.eventFavoritesService.getFavoriteIds();
+  //   this.events.forEach(e => {
+  //     e.isFavorite = favoriteIds.includes(e.id);
+  //   });
+  // }
 
   loadFavorites(): void {
-    const saved = localStorage.getItem('event_favorites');
-    if (saved) {
-      const favoriteIds = JSON.parse(saved) as number[];
-      this.events.forEach(e => {
-        e.isFavorite = favoriteIds.includes(e.id);
-      });
-    }
+    this.syncFavoritesFromService();
   }
 
   // ============ EVENT MODAL ============

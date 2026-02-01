@@ -3,7 +3,7 @@
   <!-- ============ HEADER ============ -->
   <header class="dashboard-header">
     <div class="header-left">
-      <h1 class="greeting">Bonjour, <span class="user-name">{{ userProfile.fullName.split(' ')[0] }}</span> 👋</h1>
+      <h1 class="greeting">Bonjour, <span class="user-name">{{ userName }}</span></h1>
       <p class="subtitle">Découvrez les meilleures expériences</p>
     </div>
     <div class="header-right">
@@ -14,29 +14,29 @@
       <button class="btn-icon btn-place" (click)="openPlaceModal()" title="Identifier un lieu">
         <i class="bi bi-camera"></i>
       </button>
-      <button class="btn-icon btn-notif" title="Alertes">
+      <!-- <button class="btn-icon btn-notif" title="Alertes">
         <i class="bi bi-bell"></i>
         <span class="badge" *ngIf="notificationCount > 0">{{ notificationCount }}</span>
-      </button>
-      <div class="user-avatar" (click)="openProfileModal()">
-        <span>{{ userInitials }}</span>
+      </button> -->
+      <div class="user-avatar btn-icon btn-place" (click)="openProfileModal()" style="width: 70px;">
+        <i class="bi bi-person-circle p-2"></i><span>{{ userInitials }}</span>
       </div>
     </div>
   </header>
 
   <!-- ============ TABS NAVIGATION ============ -->
   <nav class="tabs-nav">
-    <button [class.active]="activeTab === 'recommendations'" (click)="setActiveTab('recommendations')">
-      <i class="bi bi-stars"></i> Recommandations
-    </button>
-    <button [class.active]="activeTab === 'budget'" (click)="setActiveTab('budget')">
-      <i class="bi bi-wallet2"></i> Budget
+    <button [class.active]="activeTab === 'nearby'" (click)="setActiveTab('nearby')">
+      <i class="bi bi-geo-alt"></i> À proximité
     </button>
     <button [class.active]="activeTab === 'reservations'" (click)="setActiveTab('reservations')">
       <i class="bi bi-calendar-check"></i> Réservations
     </button>
-    <button [class.active]="activeTab === 'nearby'" (click)="setActiveTab('nearby')">
-      <i class="bi bi-geo-alt"></i> À proximité
+    <button class="btn-icon btn-place" (click)="openPlaceModal()" title="Identifier un lieu" style="width: auto !important;"
+        *ngIf="activeTab =='reservations'">
+        <!-- <i class="bi bi-camera"></i>  -->
+        <img src="../../assets/img/camera.gif" width="30" alt="">
+        <span style="color:white !important;">Je suis où ?</span>
     </button>
   </nav>
 
@@ -73,28 +73,9 @@
       </section>
 
       <!-- Sidebar -->
-      <aside class="sidebar-section">
-        <!-- Favorites -->
-        <div class="card">
-          <div class="card-header">
-            <h3><i class="bi bi-heart"></i> Mes Favoris</h3>
-            <a routerLink="/favorites">Voir tout</a>
-          </div>
-          <div class="favorites-list">
-            <div class="favorite-item" *ngFor="let fav of favorites">
-              <img [src]="fav.image" [alt]="fav.name">
-              <div class="fav-info">
-                <h4>{{ fav.name }}</h4>
-                <span>{{ fav.type }} • <i class="bi bi-star-fill"></i> {{ fav.rating }}</span>
-              </div>
-              <button class="btn-remove" (click)="removeFavorite(fav.id)">
-                <i class="bi bi-x"></i>
-              </button>
-            </div>
-            <p class="empty-state" *ngIf="favorites.length === 0">Aucun favori</p>
-          </div>
-        </div>
-      </aside>
+      <!-- <aside class="sidebar-section">
+        
+      </aside> -->
     </div>
   </div>
 
@@ -374,8 +355,27 @@
             <i class="bi bi-camera-fill"></i> Identifier
           </button>
         </div>
-
+        <!-- Favorites -->
         <div class="card">
+          <div class="card-header">
+            <h3><i class="bi bi-heart"></i> Mes Favoris</h3>
+            <!-- <a routerLink="/favorites">Voir tout</a> -->
+          </div>
+          <div class="favorites-list">
+            <div class="favorite-item" *ngFor="let fav of favorites">
+              <img [src]="fav.image" [alt]="fav.name">
+              <div class="fav-info">
+                <h4>{{ fav.name }}</h4>
+                <span>{{ fav.type }} • <i class="bi bi-star-fill"></i> {{ fav.rating }}</span>
+              </div>
+              <button class="btn-remove" (click)="removeFavorite(fav.id)">
+                <i class="bi bi-x"></i>
+              </button>
+            </div>
+            <p class="empty-state" *ngIf="favorites.length === 0">Aucun favori</p>
+          </div>
+        </div>
+        <!-- <div class="card">
           <div class="card-header">
             <h3><i class="bi bi-map"></i> Circuits suggérés</h3>
           </div>
@@ -402,7 +402,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </div> -->
       </aside>
     </div>
   </div>

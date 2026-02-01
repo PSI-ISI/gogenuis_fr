@@ -62,9 +62,9 @@ export class EtablissementDashboardComponent {
   // Stats
   stats: StatCard[] = [
     { title: 'Réservations', value: '156', change: 12, icon: 'bi-calendar-check', color: '#1a5f7a' },
-    { title: 'Revenus du mois', value: '45,800', change: 8, icon: 'bi-cash-stack', color: '#06d6a0' },
+    // { title: 'Revenus du mois', value: '45,800', change: 8, icon: 'bi-cash-stack', color: '#06d6a0' },
     { title: 'Taux occupation', value: '78%', change: 5, icon: 'bi-pie-chart', color: '#f4a261' },
-    { title: 'Avis reçus', value: '28', change: -3, icon: 'bi-star', color: '#e76f51' }
+    // { title: 'Avis reçus', value: '28', change: -3, icon: 'bi-star', color: '#e76f51' }
   ];
 
   // Recent Reservations
@@ -96,9 +96,9 @@ export class EtablissementDashboardComponent {
   // Quick Actions
   quickActions = [
     { label: 'Nouvelle offre', icon: 'bi-plus-circle', color: '#1a5f7a' },
-    { label: 'Gérer chambres', icon: 'bi-door-open', color: '#06d6a0' },
-    { label: 'Répondre avis', icon: 'bi-chat-dots', color: '#f4a261' },
-    { label: 'Voir rapport', icon: 'bi-file-earmark-bar-graph', color: '#7209b7' }
+    // { label: 'Gérer chambres', icon: 'bi-door-open', color: '#06d6a0' },
+    // { label: 'Répondre avis', icon: 'bi-chat-dots', color: '#f4a261' },
+    // { label: 'Voir rapport', icon: 'bi-file-earmark-bar-graph', color: '#7209b7' }
   ];
 
   constructor() {}

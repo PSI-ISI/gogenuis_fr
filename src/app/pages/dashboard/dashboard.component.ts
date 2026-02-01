@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { Subscription } from 'rxjs';
 
 // Import du service de réservation
 import { 
@@ -13,7 +14,10 @@ import {
   getTypeOption,
   getStatusOption
 } from '../../models/reservation.model';
+import { EventFavorite, EventFavoritesService } from 'src/app/sevices/eventFavoritesService';
 import { ReservationsService } from 'src/app/sevices/reservations.service';
+
+// Import du service de favoris événements
 
 // ============ INTERFACES ============
 interface UserProfile {
@@ -68,14 +72,6 @@ interface PlaceRecognitionResult {
   confidence: number;
   wikipediaUrl?: string;
   mapsUrl?: string;
-}
-
-interface FavoritePlace {
-  id: number;
-  name: string;
-  type: string;
-  image: string;
-  rating: number;
 }
 
 interface Alert {
@@ -161,11 +157,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     { id: 'nature', name: 'Nature', icon: 'bi-tree' }
   ];
 
-  favorites: FavoritePlace[] = [
-    { id: 1, name: 'Restaurant Le Méditerranée', type: 'Restaurant', image: 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200', rating: 4.5 },
-    { id: 2, name: 'Hôtel Royal Palace', type: 'Hôtel', image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200', rating: 4.8 },
-    { id: 3, name: 'Spa Zen Harmony', type: 'Spa', image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=200', rating: 4.7 }
-  ];
+  favorites: any[] = [];
 
   // ============ RECOMMENDATIONS (Module 2) ============
   recommendations: Recommendation[] = [
@@ -208,7 +200,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   deals = [
     { id: 1, name: 'Spa Détente', discount: 30, originalPrice: 800, image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=200', validUntil: '15 Fév' },
     { id: 2, name: 'Brunch Gourmet', discount: 20, originalPrice: 350, image: 'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=200', validUntil: '10 Fév' },
-    { id: 3, name: 'Circuit Guidé', discount: 15, originalPrice: 500, image: 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?w=200', validUntil: '20 Fév' }
+    { id: 3, name: 'Circuit Guidé', discount: 15, originalPrice: 500, image: 'https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=200', validUntil: '20 Fév' }
   ];
 
   // ============ RESERVATIONS (Module 4) - BRANCHEMENT API ============
@@ -268,26 +260,58 @@ export class DashboardComponent implements OnInit, OnDestroy {
   navigationMode: 'walking' | 'driving' | 'transit' = 'walking';
 
   // ============ UI STATE ============
-  activeTab: 'recommendations' | 'budget' | 'reservations' | 'nearby' = 'recommendations';
+  activeTab: 'recommendations' | 'budget' | 'reservations' | 'nearby' = 'nearby';
   searchQuery = '';
   notificationCount = 2;
 
+  private favoritesSubscription?: Subscription;
+
   constructor(
     private http: HttpClient,
-    private reservationService: ReservationsService
+    private reservationService: ReservationsService,
+    private eventFavoritesService: EventFavoritesService
   ) {}
 
+  fullname:any="";
   ngOnInit(): void {
     this.loadUserProfile();
     this.calculateBudget();
     this.getUserLocation();
     this.loadReservations();
+    this.loadEventFavorites();
+    
+    // S'abonner aux changements de favoris
+    this.favoritesSubscription = this.eventFavoritesService.favorites$.subscribe(favorites => {
+      console.log(favorites);
+      
+      this.favorites = favorites;
+    });
+    
+    // Use prefix as initials if available, otherwise generate
+    const storedPrefix = localStorage.getItem('gogenius.prefix');
+    const storedFullname = localStorage.getItem('gogenius.fname');
+    this.fullname = storedFullname || 'Utilisateur';
+    this.userInitials = storedPrefix || this.generateInitials(this.fullname);
+  }
+
+  private generateInitials(name: string): string {
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   }
 
   ngOnDestroy(): void {
     this.stopCamera();
+    this.favoritesSubscription?.unsubscribe();
   }
 
+  loadEventFavorites(): void {
+    this.favorites = this.eventFavoritesService.getFavorites();
+  }
+  userName:any="";
   // ============ MODULE 1: PROFILE ============
   loadUserProfile(): void {
     const storedUser = localStorage.getItem('user');
@@ -305,6 +329,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         }
       }
     }
+    this.userName = localStorage.getItem('username');
   }
 
   getInitials(name: string): string {
@@ -345,7 +370,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   removeFavorite(id: number): void {
-    this.favorites = this.favorites.filter(f => f.id !== id);
+    this.eventFavoritesService.removeFavorite(id);
   }
 
   // ============ MODULE 2: RECOMMENDATIONS ============
@@ -389,8 +414,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         id: Date.now(),
         name: rec.name,
         type: rec.type,
-        image: rec.image,
-        rating: rec.rating
+        image: rec.image
       });
     }
   }
@@ -673,7 +697,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       'HOTEL': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200',
       'RESTAURANT': 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200',
       'SPA': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=200',
-      'ACTIVITY': 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?w=200',
+      'ACTIVITY': 'https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=200',
       'TRANSPORT': 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=200'
     };
     return images[type] || images['ACTIVITY'];
@@ -893,5 +917,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (tab === 'reservations') {
       this.loadReservations();
     }
+    console.log(this.activeTab);
+    
   }
 }
