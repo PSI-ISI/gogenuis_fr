@@ -1,15 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
-import { Subscription } from 'rxjs';
-import { 
-  EtablissementDashboardService, 
-  EtablissementInfo, 
-  Reservation, 
-  DashboardStats,
-  MonthlyRevenue 
-} from '../../sevices/etablissement-dashboard.service';
-import { OffersService } from '../../sevices/offers.service';
+import { FormsModule } from '@angular/forms';
 
 interface StatCard {
   title: string;
@@ -17,6 +9,36 @@ interface StatCard {
   change: number;
   icon: string;
   color: string;
+  filter?: string;
+}
+
+interface Reservation {
+  id: string;
+  clientName: string;
+  clientAvatar: string;
+  clientEmail: string;
+  clientPhone: string;
+  type: string;
+  date: string;
+  time: string;
+  guests: number;
+  amount: number;
+  status: string;
+  notes: string;
+  createdAt: string;
+}
+
+interface Offer {
+  id: string;
+  title: string;
+  category: string;
+  originalPrice: number;
+  discountType: string;
+  discountValue: number;
+  finalPrice: number;
+  startDate: string;
+  endDate: string;
+  status: string;
 }
 
 interface NewOffer {
@@ -36,131 +58,164 @@ interface NewOffer {
 @Component({
   selector: 'app-etablissement-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './etablissement-dashboard.component.html',
   styleUrl: './etablissement-dashboard.component.css'
 })
-export class EtablissementDashboardComponent implements OnInit, OnDestroy {
+export class EtablissementDashboardComponent implements OnInit {
   
+  // Storage Keys
+  private readonly RESERVATIONS_KEY = 'gogenius_etablissement_reservations';
+  private readonly OFFERS_KEY = 'gogenius_offers';
+
   // État de chargement
   isLoading = true;
   
-  // Infos établissement
-  etablissementId = '';
-  etablissementName = 'Mon Établissement';
-  etablissementType = 'Hôtel';
-  etablissementRating = 0;
-  etablissementReviews = 0;
+  // Infos établissement (depuis localStorage user)
+  etablissementName = '';
+  etablissementType = 'Restaurant';
+  userName = '';
 
   // Stats
   stats: StatCard[] = [];
   
   // Réservations
   reservations: Reservation[] = [];
+  recentReservations: Reservation[] = [];
   
-  // Revenus mensuels
-  monthlyData: MonthlyRevenue[] = [];
+  // Offres
+  offers: Offer[] = [];
   
   // Quick Actions
   quickActions = [
-    { label: 'Nouvelle offre', icon: 'bi-plus-circle', color: '#1a5f7a' },
-    { label: 'Gérer services', icon: 'bi-gear', color: '#06d6a0' },
-    { label: 'Voir rapport', icon: 'bi-file-earmark-bar-graph', color: '#7209b7' }
+    { label: 'Nouvelle offre', icon: 'bi-plus-circle', color: '#1a5f7a', action: 'offer' },
+    { label: 'Voir réservations', icon: 'bi-calendar-check', color: '#06d6a0', action: 'reservations' },
+    { label: 'Gérer offres', icon: 'bi-tag', color: '#7209b7', action: 'offers' }
   ];
-  
-  // Occupation
-  occupancy = { value: 0, occupied: 0, available: 0, total: 0 };
 
-  // Subscriptions
-  private subscriptions: Subscription[] = [];
-
-  constructor(
-    private dashboardService: EtablissementDashboardService,
-    private offersService: OffersService,
-    private router: Router
-  ) {}
+  constructor(private router: Router) {}
 
   ngOnInit(): void {
+    this.loadUserInfo();
     this.loadDashboardData();
   }
 
-  ngOnDestroy(): void {
-    this.subscriptions.forEach(sub => sub.unsubscribe());
+  /**
+   * Charger les infos utilisateur depuis localStorage
+   */
+  loadUserInfo(): void {
+    this.userName = localStorage.getItem('fullname') || 'Utilisateur';
+    this.etablissementName = localStorage.getItem('company') || 'Mon Établissement';
+    
+    // Si pas de company, utiliser le nom complet
+    if (!this.etablissementName || this.etablissementName === 'null') {
+      this.etablissementName = this.userName;
+    }
   }
 
   /**
-   * Charger les données du dashboard depuis l'API
+   * Charger les données du dashboard depuis localStorage
    */
   loadDashboardData(): void {
     this.isLoading = true;
     
-    const sub = this.dashboardService.getDashboardData().subscribe({
-      next: (data) => {
-        // Infos établissement
-        this.etablissementId = data.etablissement.id;
-        this.etablissementName = data.etablissement.name;
-        this.etablissementType = data.etablissement.type;
-        this.etablissementRating = data.etablissement.rating;
-        this.etablissementReviews = data.etablissement.reviewCount;
-        
-        // Stocker l'ID pour les appels API
-        localStorage.setItem('etablissement_id', this.etablissementId);
-        
-        // Stats
-        this.buildStats(data.stats);
-        
-        // Occupation
-        this.occupancy = data.stats.occupancy;
-        
-        // Réservations récentes
-        this.reservations = data.recentReservations;
-        
-        // Revenus mensuels
-        this.monthlyData = data.monthlyRevenue;
-        
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Erreur chargement dashboard:', error);
-        this.isLoading = false;
-      }
-    });
+    // Charger les réservations
+    this.loadReservations();
     
-    this.subscriptions.push(sub);
+    // Charger les offres
+    this.loadOffers();
+    
+    // Construire les stats
+    this.buildStats();
+    
+    // Simuler un délai de chargement
+    setTimeout(() => {
+      this.isLoading = false;
+    }, 300);
+  }
+
+  /**
+   * Charger les réservations depuis localStorage
+   */
+  private loadReservations(): void {
+    const stored = localStorage.getItem(this.RESERVATIONS_KEY);
+    
+    if (stored) {
+      this.reservations = JSON.parse(stored);
+    } else {
+      // Initialiser avec des données démo
+      this.initDemoReservations();
+    }
+    
+    // Trier par date et prendre les 5 plus récentes
+    this.recentReservations = [...this.reservations]
+      .filter(r => r.status !== 'cancelled')
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5);
+  }
+
+  /**
+   * Charger les offres depuis localStorage
+   */
+  private loadOffers(): void {
+    const stored = localStorage.getItem(this.OFFERS_KEY);
+    
+    if (stored) {
+      this.offers = JSON.parse(stored);
+    } else {
+      this.offers = [];
+    }
   }
 
   /**
    * Construire les cartes de statistiques
    */
-  private buildStats(stats: DashboardStats): void {
+  private buildStats(): void {
+    const totalReservations = this.reservations.length;
+    const pendingCount = this.reservations.filter(r => r.status === 'pending').length;
+    const confirmedCount = this.reservations.filter(r => r.status === 'confirmed').length;
+    const completedCount = this.reservations.filter(r => r.status === 'completed').length;
+    
+    // Calculer le revenu (confirmées + terminées)
+    const revenue = this.reservations
+      .filter(r => r.status === 'confirmed' || r.status === 'completed')
+      .reduce((sum, r) => sum + r.amount, 0);
+    
+    // Offres actives
+    const activeOffers = this.offers.filter(o => o.status === 'active').length;
+
     this.stats = [
       { 
         title: 'Réservations', 
-        value: stats.reservations.value.toString(), 
-        change: stats.reservations.change, 
+        value: totalReservations.toString(), 
+        change: 12, 
         icon: 'bi-calendar-check', 
-        color: '#1a5f7a' 
+        color: '#1a5f7a',
+        filter: 'all'
       },
-      // { 
-      //   title: 'Revenus du mois', 
-      //   value: this.formatNumber(stats.revenue.value), 
-      //   change: stats.revenue.change, 
-      //   icon: 'bi-cash-stack', 
-      //   color: '#06d6a0' 
-      // },
-      // { 
-      //   title: 'Taux occupation', 
-      //   value: stats.occupancy.value + '%', 
-      //   change: 5, 
-      //   icon: 'bi-pie-chart', 
-      //   color: '#f4a261' 
-      // },
       { 
         title: 'En attente', 
-        value: stats.pending.toString(), 
-        change: 0, 
+        value: pendingCount.toString(), 
+        change: pendingCount > 0 ? -5 : 0, 
         icon: 'bi-hourglass-split', 
-        color: '#e76f51' 
+        color: '#f59e0b',
+        filter: 'pending'
+      },
+      { 
+        title: 'Confirmées', 
+        value: confirmedCount.toString(), 
+        change: 8, 
+        icon: 'bi-check-circle', 
+        color: '#10b981',
+        filter: 'confirmed'
+      },
+      { 
+        title: 'Revenus', 
+        value: this.formatCurrency(revenue), 
+        change: 15, 
+        icon: 'bi-cash-stack', 
+        color: '#8b5cf6',
+        filter: 'revenue'
       }
     ];
   }
@@ -169,18 +224,14 @@ export class EtablissementDashboardComponent implements OnInit, OnDestroy {
    * Confirmer une réservation
    */
   confirmReservation(reservation: Reservation): void {
-    const sub = this.dashboardService.confirmReservation(this.etablissementId, reservation.id).subscribe({
-      next: (success) => {
-        if (success) {
-          reservation.status = 'confirmed';
-          reservation.statusLabel = 'Confirmée';
-          // Rafraîchir les stats
-          this.refreshStats();
-        }
-      },
-      error: (err) => console.error('Erreur confirmation:', err)
-    });
-    this.subscriptions.push(sub);
+    const index = this.reservations.findIndex(r => r.id === reservation.id);
+    if (index !== -1) {
+      this.reservations[index].status = 'confirmed';
+      this.saveReservations();
+      this.buildStats();
+      this.loadReservations();
+      console.log('[Dashboard] Réservation confirmée:', reservation.id);
+    }
   }
 
   /**
@@ -188,18 +239,14 @@ export class EtablissementDashboardComponent implements OnInit, OnDestroy {
    */
   cancelReservation(reservation: Reservation): void {
     if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
-      const sub = this.dashboardService.cancelReservation(this.etablissementId, reservation.id).subscribe({
-        next: (success) => {
-          if (success) {
-            reservation.status = 'cancelled';
-            reservation.statusLabel = 'Annulée';
-            // Rafraîchir les stats
-            this.refreshStats();
-          }
-        },
-        error: (err) => console.error('Erreur annulation:', err)
-      });
-      this.subscriptions.push(sub);
+      const index = this.reservations.findIndex(r => r.id === reservation.id);
+      if (index !== -1) {
+        this.reservations[index].status = 'cancelled';
+        this.saveReservations();
+        this.buildStats();
+        this.loadReservations();
+        console.log('[Dashboard] Réservation annulée:', reservation.id);
+      }
     }
   }
 
@@ -207,25 +254,49 @@ export class EtablissementDashboardComponent implements OnInit, OnDestroy {
    * Marquer comme terminée
    */
   completeReservation(reservation: Reservation): void {
-    const sub = this.dashboardService.updateReservationStatus(this.etablissementId, reservation.id, 'COMPLETED').subscribe({
-      next: (success) => {
-        if (success) {
-          reservation.status = 'completed';
-          reservation.statusLabel = 'Terminée';
-        }
-      }
-    });
-    this.subscriptions.push(sub);
+    const index = this.reservations.findIndex(r => r.id === reservation.id);
+    if (index !== -1) {
+      this.reservations[index].status = 'completed';
+      this.saveReservations();
+      this.buildStats();
+      this.loadReservations();
+      console.log('[Dashboard] Réservation terminée:', reservation.id);
+    }
   }
 
   /**
-   * Rafraîchir les statistiques
+   * Sauvegarder les réservations dans localStorage
    */
-  private refreshStats(): void {
-    const sub = this.dashboardService.getStats(this.etablissementId).subscribe({
-      next: (stats) => this.buildStats(stats)
-    });
-    this.subscriptions.push(sub);
+  private saveReservations(): void {
+    localStorage.setItem(this.RESERVATIONS_KEY, JSON.stringify(this.reservations));
+  }
+
+  /**
+   * Navigation vers les réservations avec filtre
+   */
+  navigateToReservations(filter?: string): void {
+    if (filter && filter !== 'revenue') {
+      this.router.navigate(['/reservations-etablissement'], { queryParams: { status: filter } });
+    } else {
+      this.router.navigate(['/reservations-etablissement']);
+    }
+  }
+
+  /**
+   * Exécuter une action rapide
+   */
+  executeQuickAction(action: string): void {
+    switch (action) {
+      case 'offer':
+        this.openOfferModal();
+        break;
+      case 'reservations':
+        this.router.navigate(['/reservations-etablissement']);
+        break;
+      case 'offers':
+        this.router.navigate(['/offers']);
+        break;
+    }
   }
 
   // ==================== MODAL NOUVELLE OFFRE ====================
@@ -353,25 +424,40 @@ export class EtablissementDashboardComponent implements OnInit, OnDestroy {
   submitOffer(): void {
     this.isSubmitting = true;
     
-    // Créer l'offre via le service
+    // Créer l'offre et sauvegarder dans localStorage
     setTimeout(() => {
-      this.offersService.createOffer({
+      const newOffer = {
+        id: 'offer_' + Date.now(),
         title: this.newOffer.title,
         description: this.newOffer.description,
         category: this.newOffer.category,
         originalPrice: this.newOffer.originalPrice,
         discountType: this.newOffer.discountType,
         discountValue: this.newOffer.discountValue,
+        finalPrice: this.calculateFinalPrice(),
         startDate: this.newOffer.startDate,
         endDate: this.newOffer.endDate,
         maxUsage: this.newOffer.maxUsage || null,
+        currentUsage: 0,
         conditions: this.newOffer.conditions,
-        image: this.newOffer.image || ''
-      });
+        imageUrl: this.newOffer.image || this.previewImages[0],
+        status: 'active',
+        createdAt: new Date().toISOString()
+      };
+      
+      // Charger les offres existantes et ajouter la nouvelle
+      const stored = localStorage.getItem(this.OFFERS_KEY);
+      const offers = stored ? JSON.parse(stored) : [];
+      offers.push(newOffer);
+      localStorage.setItem(this.OFFERS_KEY, JSON.stringify(offers));
+      
+      console.log('[Dashboard] Offre créée:', newOffer.id);
       
       this.isSubmitting = false;
       this.offerCreated = true;
-    }, 1000);
+      this.loadOffers();
+      this.buildStats();
+    }, 800);
   }
 
   viewCreatedOffer(): void {
@@ -415,24 +501,108 @@ export class EtablissementDashboardComponent implements OnInit, OnDestroy {
     return labels[status] || status;
   }
 
-  getMaxValue(): number {
-    if (!this.monthlyData || this.monthlyData.length === 0) return 1;
-    return Math.max(...this.monthlyData.map(d => d.value));
-  }
-
-  getBarHeight(value: number): number {
-    const max = this.getMaxValue();
-    return max > 0 ? (value / max) * 100 : 0;
-  }
-
-  getRatingStars(rating: number): number[] {
-    return Array(5).fill(0).map((_, i) => i < rating ? 1 : 0);
-  }
-
-  formatNumber(num: number): string {
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1).replace('.0', '') + 'k';
+  formatCurrency(amount: number): string {
+    if (amount >= 1000) {
+      return (amount / 1000).toFixed(1).replace('.0', '') + 'k MAD';
     }
-    return num.toString();
+    return amount + ' MAD';
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short'
+    });
+  }
+
+  // ==================== DEMO DATA ====================
+
+  private initDemoReservations(): void {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const demoReservations: Reservation[] = [
+      {
+        id: 'res_001',
+        clientName: 'Rachid OUAGUID',
+        clientAvatar: 'RO',
+        clientEmail: 'rachidouaguid@gmail.com',
+        clientPhone: '+212 6 35 11 45 40',
+        type: 'restaurant',
+        date: today.toISOString().split('T')[0],
+        time: '12:30',
+        guests: 4,
+        amount: 450,
+        status: 'pending',
+        notes: 'Table près de la fenêtre si possible',
+        createdAt: new Date(today.getTime() - 2 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'res_002',
+        clientName: 'Rachid OUAGUID',
+        clientAvatar: 'RO',
+        clientEmail: 'rachidouaguid@gmail.com',
+        clientPhone: '+212 6 35 11 45 40',
+        type: 'sejour',
+        date: today.toISOString().split('T')[0],
+        time: '14:00',
+        guests: 2,
+        amount: 1200,
+        status: 'confirmed',
+        notes: 'Chambre avec vue mer',
+        createdAt: new Date(today.getTime() - 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'res_003',
+        clientName: 'Rachid OUAGUID',
+        clientAvatar: 'RO',
+        clientEmail: 'rachidouaguid@gmail.com',
+        clientPhone: '+212 6 35 11 45 40',
+        type: 'spa',
+        date: tomorrow.toISOString().split('T')[0],
+        time: '10:00',
+        guests: 2,
+        amount: 350,
+        status: 'confirmed',
+        notes: 'Massage en duo',
+        createdAt: new Date(today.getTime() - 48 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'res_004',
+        clientName: 'Rachid OUAGUID',
+        clientAvatar: 'RO',
+        clientEmail: 'rachidouaguid@gmail.com',
+        clientPhone: '+212 6 35 11 45 40',
+        type: 'restaurant',
+        date: tomorrow.toISOString().split('T')[0],
+        time: '20:00',
+        guests: 6,
+        amount: 890,
+        status: 'pending',
+        notes: 'Anniversaire - prévoir gâteau',
+        createdAt: new Date(today.getTime() - 1 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: 'res_005',
+        clientName: 'Rachid OUAGUID',
+        clientAvatar: 'RO',
+        clientEmail: 'rachidouaguid@gmail.com',
+        clientPhone: '+212 6 35 11 45 40',
+        type: 'activite',
+        date: new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        time: '09:00',
+        guests: 4,
+        amount: 560,
+        status: 'completed',
+        notes: 'Excursion Atlas',
+        createdAt: new Date(today.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+
+    this.reservations = demoReservations;
+    this.saveReservations();
+    console.log('[Dashboard] Demo reservations initialized');
   }
 }

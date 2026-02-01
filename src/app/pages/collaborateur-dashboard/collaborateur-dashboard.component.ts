@@ -57,9 +57,9 @@ export class CollaborateurDashboardComponent {
   // Stats
   stats = [
     { title: 'Établissements', value: '12', icon: 'bi-building', color: '#1a5f7a' },
-    { title: 'Tâches en cours', value: '8', icon: 'bi-list-task', color: '#f4a261' },
-    { title: 'Tâches terminées', value: '45', icon: 'bi-check-circle', color: '#06d6a0' },
-    { title: 'Messages', value: '5', icon: 'bi-envelope', color: '#7209b7' }
+    // { title: 'Tâches en cours', value: '8', icon: 'bi-list-task', color: '#f4a261' },
+    // { title: 'Tâches terminées', value: '45', icon: 'bi-check-circle', color: '#06d6a0' },
+    // { title: 'Messages', value: '5', icon: 'bi-envelope', color: '#7209b7' }
   ];
 
   // Tasks
@@ -81,10 +81,10 @@ export class CollaborateurDashboardComponent {
 
   // Recent Activity
   activities: Activity[] = [
-    { id: 1, type: 'task', title: 'Tâche complétée', description: 'Mise à jour du menu - Café Maure', time: 'Il y a 30 min', icon: 'bi-check-circle' },
-    { id: 2, type: 'review', title: 'Nouvel avis', description: 'Riad Andalous a reçu un avis 5 étoiles', time: 'Il y a 1h', icon: 'bi-star' },
+    // { id: 1, type: 'task', title: 'Tâche complétée', description: 'Mise à jour du menu - Café Maure', time: 'Il y a 30 min', icon: 'bi-check-circle' },
+    // { id: 2, type: 'review', title: 'Nouvel avis', description: 'Riad Andalous a reçu un avis 5 étoiles', time: 'Il y a 1h', icon: 'bi-star' },
     { id: 3, type: 'reservation', title: 'Nouvelle réservation', description: 'Hotel Atlas - 3 nuits', time: 'Il y a 2h', icon: 'bi-calendar-check' },
-    { id: 4, type: 'message', title: 'Nouveau message', description: 'Question du Riad Soleil', time: 'Il y a 3h', icon: 'bi-envelope' }
+    // { id: 4, type: 'message', title: 'Nouveau message', description: 'Question du Riad Soleil', time: 'Il y a 3h', icon: 'bi-envelope' }
   ];
 
   // Messages
@@ -107,7 +107,9 @@ export class CollaborateurDashboardComponent {
 
   constructor() {}
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.loadUserInfo();
+  }
 
   getPriorityClass(priority: string): string {
     return priority;
@@ -134,11 +136,44 @@ export class CollaborateurDashboardComponent {
     return (value / this.getMaxPerformance()) * 100;
   }
 
+  
   toggleTaskStatus(task: Task): void {
     if (task.status === 'todo') {
       task.status = 'in-progress';
     } else if (task.status === 'in-progress') {
       task.status = 'done';
+    }
+  }
+  // User info
+  private generateInitials(name: string): string {
+    if (!name) return 'U';
+    const parts = name.trim().split(' ');
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+  fullname = '';
+  userInitials = '';
+  private loadUserInfo(): void {
+    // Get user info from localStorage (clés Gogenius)
+    const storedFullname = localStorage.getItem('gogenius.fname');
+    const storedRole = localStorage.getItem('gogenius.role');
+    const storedPrefix = localStorage.getItem('gogenius.prefix');
+
+    // Set fullname
+    this.fullname = storedFullname || 'Utilisateur';
+    this.userInitials = storedPrefix || this.generateInitials(this.fullname);
+    
+    // Detect profile based on role and set menu
+    // Y29tcGFueQ== = company (base64)
+    // dG91cmlzdA== = tourist (base64)
+    if (storedRole === 'dG91cmlzdA==') { // tourist
+      this.userRole = 'Touriste';
+    } else if (storedRole === 'Y29tcGFueQ==') { // company
+      this.userRole = 'Établissement';
+    } else { // collaborator or other
+      this.userRole = 'Collaborateur';
     }
   }
 }

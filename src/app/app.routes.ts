@@ -73,6 +73,10 @@ export const appRoutes: Routes = [
         path: 'reservations-etablissement', 
         loadComponent: () => import('./pages/reservations-etablissement/reservations-etablissement.component').then(m => m.ReservationsEtablissementComponent)
       },
+      { 
+        path: 'establishments', 
+        loadComponent: () => import('./pages/etablissements-collaborateur/etablissements-collaborateur.component').then(m => m.EtablissementsCollaborateurComponent)
+      },
     ]
   },
   

@@ -18,18 +18,11 @@
         <div class="header-info">
           <h1>{{ etablissementName }}</h1>
           <div class="header-meta">
-            <span class="type">{{ etablissementType }}</span>
-            <span class="rating" *ngIf="etablissementRating > 0">
-              <i class="bi bi-star-fill"></i>
-              {{ etablissementRating }} ({{ etablissementReviews }} avis)
-            </span>
+            <span class="type"><i class="bi bi-shop"></i> {{ etablissementType }}</span>
           </div>
         </div>
       </div>
       <div class="header-actions">
-        <!-- <button class="btn-outline">
-          <i class="bi bi-pencil"></i> Modifier profil
-        </button> -->
         <button class="btn-primary" (click)="openOfferModal()">
           <i class="bi bi-plus-lg"></i> Nouvelle offre
         </button>
@@ -38,12 +31,14 @@
 
     <!-- Stats Cards -->
     <div class="stats-grid">
-      <div class="stat-card" *ngFor="let stat of stats" [style.--accent]="stat.color">
+      <div class="stat-card" *ngFor="let stat of stats" 
+           [style.--accent]="stat.color"
+           (click)="navigateToReservations(stat.filter)">
         <div class="stat-icon" [style.background]="'linear-gradient(135deg, ' + stat.color + ', ' + stat.color + '99)'">
           <i [class]="'bi ' + stat.icon"></i>
         </div>
         <div class="stat-content">
-          <span class="stat-value">{{ stat.value }}<small *ngIf="stat.title === 'Revenus du mois'"> MAD</small></span>
+          <span class="stat-value">{{ stat.value }}</span>
           <span class="stat-title">{{ stat.title }}</span>
         </div>
         <div class="stat-change" [class.positive]="stat.change > 0" [class.negative]="stat.change < 0" *ngIf="stat.change !== 0">
@@ -62,23 +57,23 @@
         <div class="card">
           <div class="card-header">
             <h3><i class="bi bi-calendar-check"></i> Réservations récentes</h3>
-            <a routerLink="/reservations" class="link">Voir tout</a>
+            <a routerLink="/reservations-etablissement" class="link">Voir tout</a>
           </div>
           
           <!-- Empty State -->
-          <div class="empty-state" *ngIf="reservations.length === 0">
+          <div class="empty-state" *ngIf="recentReservations.length === 0">
             <i class="bi bi-calendar-x"></i>
             <p>Aucune réservation récente</p>
           </div>
           
           <!-- Reservations List -->
-          <div class="reservations-list" *ngIf="reservations.length > 0">
-            <div class="reservation-item" *ngFor="let res of reservations">
+          <div class="reservations-list" *ngIf="recentReservations.length > 0">
+            <div class="reservation-item" *ngFor="let res of recentReservations">
               <div class="res-avatar">{{ res.clientAvatar }}</div>
               <div class="res-info">
                 <span class="res-name">{{ res.clientName }}</span>
                 <span class="res-details">
-                  <i class="bi bi-calendar3"></i> {{ res.date }}
+                  <i class="bi bi-calendar3"></i> {{ formatDate(res.date) }}
                   <i class="bi bi-clock"></i> {{ res.time }}
                   <i class="bi bi-people"></i> {{ res.guests }} pers.
                 </span>
@@ -86,7 +81,7 @@
               <div class="res-right">
                 <span class="res-amount">{{ res.amount }} MAD</span>
                 <span class="res-status" [class]="res.status">
-                  {{ res.statusLabel }}
+                  {{ getStatusLabel(res.status) }}
                 </span>
                 <!-- Actions pour réservations en attente -->
                 <div class="res-actions" *ngIf="res.status === 'pending'">
@@ -123,42 +118,50 @@
               <i class="bi bi-plus-circle"></i>
               <span>Nouvelle offre</span>
             </button>
-            <!-- <button class="action-btn" [style.--btn-color]="'#06d6a0'" routerLink="/offers">
+            <button class="action-btn" [style.--btn-color]="'#06d6a0'" routerLink="/offers">
               <i class="bi bi-tag"></i>
               <span>Mes offres</span>
             </button>
-            <button class="action-btn" [style.--btn-color]="'#7209b7'">
-              <i class="bi bi-file-earmark-bar-graph"></i>
-              <span>Voir rapport</span>
-            </button> -->
+            <button class="action-btn" [style.--btn-color]="'#7209b7'" routerLink="/reservations-etablissement">
+              <i class="bi bi-calendar-check"></i>
+              <span>Réservations</span>
+            </button>
           </div>
         </div>
 
-        <!-- Occupancy Widget -->
-        <div class="card occupancy-card">
+        <!-- Summary Widget -->
+        <div class="card summary-card">
           <div class="card-header">
-            <h3><i class="bi bi-pie-chart"></i> Occupation aujourd'hui</h3>
+            <h3><i class="bi bi-bar-chart"></i> Résumé</h3>
           </div>
-          <div class="occupancy-content">
-            <div class="occupancy-chart">
-              <svg viewBox="0 0 36 36" class="circular-chart">
-                <path class="circle-bg" d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                <path class="circle" [attr.stroke-dasharray]="occupancy.value + ', 100'" d="M18 2.0845
-                  a 15.9155 15.9155 0 0 1 0 31.831
-                  a 15.9155 15.9155 0 0 1 0 -31.831"/>
-                <text x="18" y="20.35" class="percentage">{{ occupancy.value }}%</text>
-              </svg>
-            </div>
-            <div class="occupancy-details">
-              <div class="occ-item">
-                <span class="occ-dot occupied"></span>
-                <span>Occupées: {{ occupancy.occupied }}</span>
+          <div class="summary-content">
+            <div class="summary-stats">
+              <div class="summary-item">
+                <div class="summary-icon pending">
+                  <i class="bi bi-hourglass-split"></i>
+                </div>
+                <div class="summary-info">
+                  <span class="summary-value">{{ stats[1]?.value || 0 }}</span>
+                  <span class="summary-label">En attente</span>
+                </div>
               </div>
-              <div class="occ-item">
-                <span class="occ-dot available"></span>
-                <span>Disponibles: {{ occupancy.available }}</span>
+              <div class="summary-item">
+                <div class="summary-icon confirmed">
+                  <i class="bi bi-check-circle"></i>
+                </div>
+                <div class="summary-info">
+                  <span class="summary-value">{{ stats[2]?.value || 0 }}</span>
+                  <span class="summary-label">Confirmées</span>
+                </div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-icon offers">
+                  <i class="bi bi-tag"></i>
+                </div>
+                <div class="summary-info">
+                  <span class="summary-value">{{ offers.length }}</span>
+                  <span class="summary-label">Offres actives</span>
+                </div>
               </div>
             </div>
           </div>
@@ -179,8 +182,8 @@
       <div class="success-icon">
         <i class="bi bi-check-circle-fill"></i>
       </div>
-      <h2>Offre créée avec succès ! 🎉</h2>
-      <p>Votre offre "{{ newOffer.title }}" est maintenant en ligne.</p>
+      <h2>Offre créée avec succès !</h2>
+      <p>Votre nouvelle offre est maintenant active et visible par les touristes.</p>
       <div class="success-actions">
         <button class="btn-outline" (click)="closeOfferModal()">Fermer</button>
         <button class="btn-primary" (click)="viewCreatedOffer()">
@@ -188,60 +191,53 @@
         </button>
       </div>
     </div>
-
+    
     <!-- Form State -->
     <ng-container *ngIf="!offerCreated">
+      <button class="modal-close" (click)="closeOfferModal()">
+        <i class="bi bi-x-lg"></i>
+      </button>
       
-      <!-- Modal Header -->
+      <!-- Header -->
       <div class="modal-header">
-        <div class="modal-title">
-          <div class="title-icon">
-            <i class="bi bi-plus-circle"></i>
-          </div>
-          <div>
-            <h2>Nouvelle Offre</h2>
-            <p>{{ getOfferStepTitle() }}</p>
-          </div>
-        </div>
-        <button class="btn-close-modal" (click)="closeOfferModal()">
-          <i class="bi bi-x-lg"></i>
-        </button>
+        <h2><i class="bi bi-tag"></i> Nouvelle offre</h2>
+        <p>Créez une offre attractive pour vos clients</p>
       </div>
 
       <!-- Progress Steps -->
-      <div class="modal-progress">
-        <div class="progress-track">
-          <div class="progress-fill" [style.width.%]="(currentOfferStep / totalOfferSteps) * 100"></div>
-        </div>
-        <div class="progress-steps">
-          <div class="step" *ngFor="let step of [1,2,3,4]"
-               [class.active]="currentOfferStep >= step"
-               [class.current]="currentOfferStep === step"
-               (click)="goToOfferStep(step)">
-            <span class="step-number">{{ step }}</span>
-            <span class="step-label">
-              {{ step === 1 ? 'Infos' : step === 2 ? 'Prix' : step === 3 ? 'Dates' : 'Aperçu' }}
-            </span>
+      <div class="modal-steps">
+        <div class="step" *ngFor="let step of [1,2,3,4]; let i = index"
+             [class.active]="currentOfferStep === step"
+             [class.completed]="currentOfferStep > step"
+             (click)="goToOfferStep(step)">
+          <div class="step-number">
+            <span *ngIf="currentOfferStep <= step">{{ step }}</span>
+            <i class="bi bi-check" *ngIf="currentOfferStep > step"></i>
           </div>
+          <span class="step-label">{{ ['Infos', 'Prix', 'Dates', 'Aperçu'][i] }}</span>
         </div>
       </div>
 
-      <!-- Modal Body -->
+      <!-- Step Content -->
       <div class="modal-body">
         
-        <!-- Step 1: Basic Info -->
+        <!-- Step 1: Informations -->
         <div class="step-content" *ngIf="currentOfferStep === 1">
+          <h3>{{ getOfferStepTitle() }}</h3>
+          
           <div class="form-group">
-            <label>Titre de l'offre <span class="required">*</span></label>
-            <input type="text" [value]="newOffer.title"
-                (input)="newOffer.title = $any($event.target).value" 
-                placeholder="Ex: Week-end romantique -30%"
-                class="form-input" maxlength="60">
-            <span class="char-count">{{ newOffer.title?.length || 0 }}/60</span>
+            <label>Titre de l'offre *</label>
+            <input type="text" [(ngModel)]="newOffer.title" placeholder="Ex: Menu découverte -30%">
           </div>
-
+          
           <div class="form-group">
-            <label>Catégorie <span class="required">*</span></label>
+            <label>Description</label>
+            <textarea [(ngModel)]="newOffer.description" rows="3" 
+                      placeholder="Décrivez votre offre en quelques mots..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>Catégorie *</label>
             <div class="category-grid">
               <div class="category-item" *ngFor="let cat of offerCategories"
                    [class.selected]="newOffer.category === cat.id"
@@ -251,114 +247,95 @@
               </div>
             </div>
           </div>
-
-          <div class="form-group">
-            <label>Description</label>
-            <textarea [value]="newOffer.description"
-                (input)="newOffer.description = $any($event.target).value"
-                placeholder="Décrivez votre offre en quelques mots..."
-                class="form-textarea" rows="3" maxlength="200"></textarea>
-            <span class="char-count">{{ newOffer.description?.length || 0 }}/200</span>
-          </div>
         </div>
 
-        <!-- Step 2: Pricing -->
+        <!-- Step 2: Prix -->
         <div class="step-content" *ngIf="currentOfferStep === 2">
+          <h3>{{ getOfferStepTitle() }}</h3>
+          
           <div class="form-row">
             <div class="form-group">
-              <label>Prix original <span class="required">*</span></label>
-              <div class="input-with-suffix">
-                <input type="number" [value]="newOffer.originalPrice"
-                    (input)="newOffer.originalPrice = +$any($event.target).value" 
-                    placeholder="0" class="form-input">
-                <span class="suffix">MAD</span>
-              </div>
+              <label>Prix original (MAD) *</label>
+              <input type="number" [(ngModel)]="newOffer.originalPrice" min="0" placeholder="0">
             </div>
           </div>
-
+          
           <div class="form-group">
-            <label>Type de réduction</label>
-            <div class="discount-type-toggle">
-              <button [class.active]="newOffer.discountType === 'percentage'"
+            <label>Type de réduction *</label>
+            <div class="discount-toggle">
+              <button [class.active]="newOffer.discountType === 'percentage'" 
                       (click)="newOffer.discountType = 'percentage'">
                 <i class="bi bi-percent"></i> Pourcentage
               </button>
-              <button [class.active]="newOffer.discountType === 'fixed'"
+              <button [class.active]="newOffer.discountType === 'fixed'" 
                       (click)="newOffer.discountType = 'fixed'">
                 <i class="bi bi-cash"></i> Montant fixe
               </button>
             </div>
           </div>
-
+          
           <div class="form-group">
-            <label>Valeur de la réduction <span class="required">*</span></label>
-            <div class="input-with-suffix">
-              <input type="number" [value]="newOffer.discountValue"
-                (input)="newOffer.discountValue = +$any($event.target).value" 
-                placeholder="0" class="form-input">
+            <label>Valeur de la réduction *</label>
+            <div class="discount-input">
+              <input type="number" [(ngModel)]="newOffer.discountValue" min="0" placeholder="0">
               <span class="suffix">{{ newOffer.discountType === 'percentage' ? '%' : 'MAD' }}</span>
             </div>
           </div>
-
-          <!-- Price Preview -->
+          
+          <!-- Preview -->
           <div class="price-preview" *ngIf="newOffer.originalPrice > 0 && newOffer.discountValue > 0">
-            <div class="preview-card">
-              <div class="preview-row">
-                <span>Prix original</span>
-                <span class="original-price">{{ newOffer.originalPrice }} MAD</span>
-              </div>
-              <div class="preview-row discount">
-                <span>Réduction</span>
-                <span>-{{ newOffer.discountType === 'percentage' ? newOffer.discountValue + '%' : newOffer.discountValue + ' MAD' }}</span>
-              </div>
-              <div class="preview-divider"></div>
-              <div class="preview-row final">
-                <span>Prix final</span>
-                <span class="final-price">{{ calculateFinalPrice() | number:'1.0-0' }} MAD</span>
-              </div>
-              <div class="savings-badge">
-                <i class="bi bi-piggy-bank"></i>
-                Économie de {{ calculateSavings() | number:'1.0-0' }} MAD
-              </div>
+            <div class="preview-row">
+              <span>Prix original</span>
+              <span class="original">{{ newOffer.originalPrice }} MAD</span>
+            </div>
+            <div class="preview-row savings">
+              <span>Économie</span>
+              <span>-{{ calculateSavings() | number:'1.0-0' }} MAD</span>
+            </div>
+            <div class="preview-row final">
+              <span>Prix final</span>
+              <span>{{ calculateFinalPrice() | number:'1.0-0' }} MAD</span>
             </div>
           </div>
         </div>
 
         <!-- Step 3: Dates -->
         <div class="step-content" *ngIf="currentOfferStep === 3">
+          <h3>{{ getOfferStepTitle() }}</h3>
+          
           <div class="form-row">
             <div class="form-group">
-              <label>Date de début <span class="required">*</span></label>
-              <input type="date" [value]="newOffer.startDate"
-                (input)="newOffer.startDate = $any($event.target).value" class="form-input">
+              <label>Date de début *</label>
+              <input type="date" [(ngModel)]="newOffer.startDate">
             </div>
             <div class="form-group">
-              <label>Date de fin <span class="required">*</span></label>
-              <input type="date" [value]="newOffer.endDate"
-                (input)="newOffer.endDate = $any($event.target).value" class="form-input">
+              <label>Date de fin *</label>
+              <input type="date" [(ngModel)]="newOffer.endDate">
             </div>
           </div>
-
+          
           <div class="form-group">
-            <label>Nombre maximum d'utilisations</label>
-            <input type="number" [value]="newOffer.maxUsage"
-                (input)="newOffer.maxUsage = +$any($event.target).value" 
-                placeholder="Illimité si vide" class="form-input">
-            <span class="form-hint">Laissez vide pour un nombre illimité</span>
+            <label>Utilisation maximale (optionnel)</label>
+            <input type="number" [(ngModel)]="newOffer.maxUsage" min="0" 
+                   placeholder="Laisser vide pour illimité">
+            <small>Nombre maximum de fois que cette offre peut être utilisée</small>
           </div>
-
+          
           <div class="form-group">
-            <label>Conditions particulières</label>
-            <textarea [value]="newOffer.conditions"
-                (input)="newOffer.conditions = $any($event.target).value" 
-                placeholder="Ex: Valable uniquement en semaine, sur réservation..."
-                class="form-textarea" rows="3"></textarea>
+            <label>Conditions (optionnel)</label>
+            <textarea [(ngModel)]="newOffer.conditions" rows="2" 
+                      placeholder="Ex: Valable uniquement le midi, sur réservation..."></textarea>
           </div>
+        </div>
 
+        <!-- Step 4: Aperçu -->
+        <div class="step-content" *ngIf="currentOfferStep === 4">
+          <h3>{{ getOfferStepTitle() }}</h3>
+          
           <div class="form-group">
-            <label>Image de l'offre</label>
-            <div class="image-selector">
-              <div class="image-option" *ngFor="let img of previewImages"
+            <label>Choisir une image</label>
+            <div class="image-grid">
+              <div class="image-item" *ngFor="let img of previewImages"
                    [class.selected]="newOffer.image === img"
                    [style.backgroundImage]="'url(' + img + ')'"
                    (click)="selectPreviewImage(img)">
@@ -366,54 +343,35 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <!-- Step 4: Preview -->
-        <div class="step-content" *ngIf="currentOfferStep === 4">
-          <div class="offer-preview">
-            <div class="preview-image" [style.backgroundImage]="newOffer.image ? 'url(' + newOffer.image + ')' : 'linear-gradient(135deg, #1a5f7a, #2d8bba)'">
-              <div class="preview-badge">
-                <span *ngIf="newOffer.discountType === 'percentage'">-{{ newOffer.discountValue }}%</span>
-                <span *ngIf="newOffer.discountType === 'fixed'">-{{ newOffer.discountValue }} MAD</span>
-              </div>
+          
+          <!-- Offer Preview Card -->
+          <div class="offer-preview-card">
+            <div class="preview-image" [style.backgroundImage]="'url(' + (newOffer.image || previewImages[0]) + ')'">
+              <span class="preview-badge">
+                -{{ newOffer.discountType === 'percentage' ? newOffer.discountValue + '%' : newOffer.discountValue + ' MAD' }}
+              </span>
             </div>
-            <div class="preview-body">
-              <div class="preview-category">
+            <div class="preview-content">
+              <span class="preview-category">
                 <i [class]="'bi ' + getCategoryIcon(newOffer.category)"></i>
                 {{ getCategoryName(newOffer.category) }}
-              </div>
-              <h3>{{ newOffer.title || 'Titre de l\'offre' }}</h3>
-              <p>{{ newOffer.description || 'Description de l\'offre...' }}</p>
-              
-              <div class="preview-pricing">
+              </span>
+              <h4>{{ newOffer.title || 'Titre de l\'offre' }}</h4>
+              <div class="preview-prices">
                 <span class="old-price">{{ newOffer.originalPrice }} MAD</span>
                 <span class="new-price">{{ calculateFinalPrice() | number:'1.0-0' }} MAD</span>
               </div>
-
-              <div class="preview-dates">
+              <p class="preview-dates">
                 <i class="bi bi-calendar3"></i>
-                Du {{ newOffer.startDate }} au {{ newOffer.endDate }}
-              </div>
-
-              <div class="preview-conditions" *ngIf="newOffer.conditions">
-                <i class="bi bi-info-circle"></i>
-                {{ newOffer.conditions }}
-              </div>
+                Du {{ newOffer.startDate | date:'dd/MM/yyyy' }} au {{ newOffer.endDate | date:'dd/MM/yyyy' }}
+              </p>
             </div>
-          </div>
-
-          <div class="confirmation-check">
-            <label class="checkbox-container">
-              <input type="checkbox" checked>
-              <span class="checkmark"></span>
-              Je confirme que les informations sont correctes
-            </label>
           </div>
         </div>
 
       </div>
 
-      <!-- Modal Footer -->
+      <!-- Footer -->
       <div class="modal-footer">
         <button class="btn-outline" *ngIf="currentOfferStep > 1" (click)="prevOfferStep()">
           <i class="bi bi-arrow-left"></i> Retour
@@ -422,22 +380,21 @@
           Annuler
         </button>
         
-        <button class="btn-primary" *ngIf="currentOfferStep < totalOfferSteps" type="button"
-                (click)="nextOfferStep()" [disabled]="!canProceedOffer()">
-          Continuer <i class="bi bi-arrow-right"></i>
+        <button class="btn-primary" *ngIf="currentOfferStep < 4" 
+                [disabled]="!canProceedOffer()" (click)="nextOfferStep()">
+          Suivant <i class="bi bi-arrow-right"></i>
         </button>
-        
-        <button class="btn-success" *ngIf="currentOfferStep === totalOfferSteps" 
-                (click)="submitOffer()" [disabled]="isSubmitting">
-          <ng-container *ngIf="!isSubmitting">
-            <i class="bi bi-check-lg"></i> Publier l'offre
-          </ng-container>
-          <ng-container *ngIf="isSubmitting">
-            <i class="bi bi-arrow-repeat spinning"></i> Publication...
-          </ng-container>
+        <button class="btn-primary" *ngIf="currentOfferStep === 4" 
+                [disabled]="isSubmitting" (click)="submitOffer()">
+          <span *ngIf="!isSubmitting">
+            <i class="bi bi-check-lg"></i> Créer l'offre
+          </span>
+          <span *ngIf="isSubmitting">
+            <i class="bi bi-arrow-repeat spin"></i> Création...
+          </span>
         </button>
       </div>
-
     </ng-container>
+    
   </div>
 </div>

@@ -1,0 +1,483 @@
+<div class="etablissements-page">
+
+  <!-- ============ HEADER ============ -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1><i class="bi bi-building"></i> Établissements</h1>
+        <p class="subtitle">Gérez et supervisez les établissements partenaires</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-outline" (click)="resetDemoData()">
+          <i class="bi bi-arrow-clockwise"></i> Réinitialiser
+        </button>
+        <button class="btn-primary" (click)="openCreateModal()">
+          <i class="bi bi-plus-lg"></i> Nouvel établissement
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ STATS CARDS ============ -->
+  <div class="stats-grid">
+    <div class="stat-card" (click)="selectedStatus = 'all'; onFilterChange()">
+      <div class="stat-icon total">
+        <i class="bi bi-building"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.total }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+    <div class="stat-card" (click)="selectedStatus = 'verified'; onFilterChange()">
+      <div class="stat-icon verified">
+        <i class="bi bi-patch-check"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.verified }}</span>
+        <span class="stat-label">Vérifiés</span>
+      </div>
+    </div>
+    <div class="stat-card" (click)="selectedStatus = 'unverified'; onFilterChange()">
+      <div class="stat-icon pending">
+        <i class="bi bi-clock-history"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.total - stats.verified }}</span>
+        <span class="stat-label">En attente</span>
+      </div>
+      <span class="stat-badge" *ngIf="stats.total - stats.verified > 0">À vérifier</span>
+    </div>
+    <div class="stat-card" (click)="selectedStatus = 'active'; onFilterChange()">
+      <div class="stat-icon active">
+        <i class="bi bi-check-circle"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.active }}</span>
+        <span class="stat-label">Actifs</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FILTERS BAR ============ -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input type="text" 
+             placeholder="Rechercher par nom, ville, propriétaire..." 
+             [(ngModel)]="searchQuery"
+             (input)="onFilterChange()">
+      <button class="btn-clear" *ngIf="searchQuery" (click)="searchQuery = ''; onFilterChange()">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+    
+    <div class="filter-group">
+      <select [(ngModel)]="selectedType" (change)="onFilterChange()">
+        <option value="all">Tous les types</option>
+        <option *ngFor="let type of types" [value]="type.id">{{ type.name }}</option>
+      </select>
+
+      <select [(ngModel)]="selectedCity" (change)="onFilterChange()">
+        <option value="all">Toutes les villes</option>
+        <option *ngFor="let city of getUniqueCities()" [value]="city">{{ city }}</option>
+      </select>
+
+      <select [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+        <option value="all">Tous statuts</option>
+        <option value="verified">Vérifiés</option>
+        <option value="unverified">Non vérifiés</option>
+        <option value="active">Actifs</option>
+        <option value="inactive">Inactifs</option>
+      </select>
+      
+      <select [(ngModel)]="sortBy" (change)="onFilterChange()">
+        <option value="recent">Plus récents</option>
+        <option value="oldest">Plus anciens</option>
+        <option value="name">Nom A-Z</option>
+        <option value="rating">Meilleures notes</option>
+        <option value="reviews">Plus d'avis</option>
+      </select>
+    </div>
+
+    <button class="btn-clear-filters" 
+            *ngIf="searchQuery || selectedType !== 'all' || selectedCity !== 'all' || selectedStatus !== 'all'" 
+            (click)="clearFilters()">
+      <i class="bi bi-x-circle"></i> Effacer
+    </button>
+  </div>
+
+  <!-- ============ RESULTS INFO ============ -->
+  <div class="results-info">
+    <span>{{ filteredEtablissements.length }} établissement(s) trouvé(s)</span>
+  </div>
+
+  <!-- ============ ETABLISSEMENTS GRID ============ -->
+  <div class="etablissements-container">
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredEtablissements.length === 0">
+      <div class="empty-icon">
+        <i class="bi bi-building-slash"></i>
+      </div>
+      <h3>Aucun établissement trouvé</h3>
+      <p>Modifiez vos filtres ou ajoutez un nouvel établissement</p>
+      <button class="btn-primary" (click)="openCreateModal()">
+        <i class="bi bi-plus-lg"></i> Ajouter un établissement
+      </button>
+    </div>
+
+    <!-- Etablissements Grid -->
+    <div class="etablissements-grid" *ngIf="filteredEtablissements.length > 0">
+      
+      <div class="etablissement-card" *ngFor="let etab of filteredEtablissements"
+           [class.is-verified]="etab.isVerified"
+           [class.is-inactive]="!etab.isActive">
+        
+        <!-- Cover Image -->
+        <div class="card-cover" [style.backgroundImage]="'url(' + etab.coverImageUrl + ')'">
+          <!-- Badges -->
+          <div class="card-badges">
+            <span class="badge type" [style.backgroundColor]="getTypeInfo(etab.type).color">
+              <i [class]="'bi ' + getTypeInfo(etab.type).icon"></i>
+              {{ getTypeInfo(etab.type).name }}
+            </span>
+            <span class="badge verified" *ngIf="etab.isVerified">
+              <i class="bi bi-patch-check-fill"></i> Vérifié
+            </span>
+            <span class="badge inactive" *ngIf="!etab.isActive">
+              <i class="bi bi-pause-circle"></i> Inactif
+            </span>
+          </div>
+          <!-- Quick Actions -->
+          <div class="card-quick-actions">
+            <button class="action-btn view" (click)="openDetailModal(etab)" title="Voir détails">
+              <i class="bi bi-eye"></i>
+            </button>
+            <button class="action-btn edit" (click)="openEditModal(etab)" title="Modifier">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="action-btn delete" (click)="openDeleteModal(etab)" title="Supprimer">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Card Body -->
+        <div class="card-body">
+          <h3 class="card-title">{{ etab.name }}</h3>
+          
+          <div class="card-location">
+            <i class="bi bi-geo-alt"></i>
+            <span>{{ etab.city }}</span>
+          </div>
+
+          <p class="card-description">{{ etab.description }}</p>
+
+          <div class="card-meta">
+            <div class="meta-item rating" *ngIf="etab.rating > 0">
+              <i class="bi bi-star-fill"></i>
+              <span>{{ etab.rating }}</span>
+              <small>({{ etab.reviewCount }} avis)</small>
+            </div>
+            <div class="meta-item owner">
+              <i class="bi bi-person"></i>
+              <span>{{ etab.ownerName }}</span>
+            </div>
+          </div>
+
+          <div class="card-footer">
+            <span class="created-date">
+              <i class="bi bi-calendar3"></i> {{ formatDate(etab.createdAt) }}
+            </span>
+            
+            <div class="card-actions">
+              <!-- Verify/Unverify -->
+              <button class="btn-action verify" 
+                      *ngIf="!etab.isVerified" 
+                      (click)="verifyEtablissement(etab)"
+                      title="Vérifier">
+                <i class="bi bi-patch-check"></i>
+              </button>
+              <button class="btn-action unverify" 
+                      *ngIf="etab.isVerified" 
+                      (click)="unverifyEtablissement(etab)"
+                      title="Retirer vérification">
+                <i class="bi bi-patch-minus"></i>
+              </button>
+              
+              <!-- Toggle Active -->
+              <button class="btn-action" 
+                      [class.activate]="!etab.isActive"
+                      [class.deactivate]="etab.isActive"
+                      (click)="toggleActive(etab)"
+                      [title]="etab.isActive ? 'Désactiver' : 'Activer'">
+                <i class="bi" [class.bi-toggle-on]="etab.isActive" [class.bi-toggle-off]="!etab.isActive"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== MODAL FORM ==================== -->
+<div class="modal-overlay" *ngIf="showFormModal" (click)="closeFormModal()">
+  <div class="modal-container modal-lg" (click)="$event.stopPropagation()">
+    <button class="btn-close-modal" (click)="closeFormModal()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    
+    <div class="modal-header">
+      <h2>
+        <i class="bi" [class.bi-plus-circle]="!isEditMode" [class.bi-pencil]="isEditMode"></i>
+        {{ isEditMode ? 'Modifier l\'établissement' : 'Nouvel établissement' }}
+      </h2>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-grid">
+        <!-- Nom -->
+        <div class="form-group full-width">
+          <label>Nom de l'établissement <span class="required">*</span></label>
+          <input type="text" class="form-input" [(ngModel)]="formData.name" 
+                 placeholder="Ex: Riad Andalous" maxlength="100">
+        </div>
+
+        <!-- Type & Ville -->
+        <div class="form-group">
+          <label>Type <span class="required">*</span></label>
+          <select class="form-input" [(ngModel)]="formData.type">
+            <option *ngFor="let type of types" [value]="type.id">{{ type.name }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Ville <span class="required">*</span></label>
+          <select class="form-input" [(ngModel)]="formData.city">
+            <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+          </select>
+        </div>
+
+        <!-- Adresse -->
+        <div class="form-group full-width">
+          <label>Adresse <span class="required">*</span></label>
+          <input type="text" class="form-input" [(ngModel)]="formData.address" 
+                 placeholder="Ex: 23 Derb El Ferrane, Médina">
+        </div>
+
+        <!-- Code postal -->
+        <div class="form-group">
+          <label>Code postal</label>
+          <input type="text" class="form-input" [(ngModel)]="formData.postalCode" 
+                 placeholder="Ex: 40000">
+        </div>
+
+        <!-- Téléphone -->
+        <div class="form-group">
+          <label>Téléphone <span class="required">*</span></label>
+          <input type="tel" class="form-input" [(ngModel)]="formData.phone" 
+                 placeholder="Ex: +212 5 24 38 42 00">
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label>Email <span class="required">*</span></label>
+          <input type="email" class="form-input" [(ngModel)]="formData.email" 
+                 placeholder="Ex: contact@etablissement.ma">
+        </div>
+
+        <!-- Site web -->
+        <div class="form-group">
+          <label>Site web</label>
+          <input type="url" class="form-input" [(ngModel)]="formData.website" 
+                 placeholder="Ex: www.etablissement.ma">
+        </div>
+
+        <!-- Description -->
+        <div class="form-group full-width">
+          <label>Description</label>
+          <textarea class="form-textarea" [(ngModel)]="formData.description" rows="3"
+                    placeholder="Description de l'établissement..." maxlength="500"></textarea>
+          <span class="char-count">{{ (formData.description || '').length }}/500</span>
+        </div>
+
+        <!-- Propriétaire -->
+        <div class="form-divider">
+          <span>Informations du propriétaire</span>
+        </div>
+
+        <div class="form-group">
+          <label>Nom du propriétaire</label>
+          <input type="text" class="form-input" [(ngModel)]="formData.ownerName" 
+                 placeholder="Ex: Ahmed Benjelloun">
+        </div>
+
+        <div class="form-group">
+          <label>Email du propriétaire</label>
+          <input type="email" class="form-input" [(ngModel)]="formData.ownerEmail" 
+                 placeholder="Ex: proprietaire@email.com">
+        </div>
+
+        <!-- Statut -->
+        <div class="form-group full-width">
+          <label class="checkbox-container">
+            <input type="checkbox" [(ngModel)]="formData.isActive">
+            <span class="checkmark"></span>
+            Établissement actif (visible par les touristes)
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-outline" (click)="closeFormModal()">Annuler</button>
+      <button class="btn-primary" (click)="submitForm()" [disabled]="!validateForm()">
+        <i class="bi" [class.bi-plus-lg]="!isEditMode" [class.bi-check-lg]="isEditMode"></i>
+        {{ isEditMode ? 'Enregistrer' : 'Créer' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL DELETE ==================== -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="closeDeleteModal()">
+  <div class="modal-container modal-sm" (click)="$event.stopPropagation()">
+    <div class="confirm-modal">
+      <div class="confirm-icon delete">
+        <i class="bi bi-trash"></i>
+      </div>
+      <h2>Supprimer l'établissement</h2>
+      <p>Êtes-vous sûr de vouloir supprimer <strong>{{ selectedEtablissement?.name }}</strong> ?</p>
+      <p class="warning-text">
+        <i class="bi bi-exclamation-triangle"></i>
+        Cette action est irréversible.
+      </p>
+      <div class="confirm-actions">
+        <button class="btn-outline" (click)="closeDeleteModal()">Annuler</button>
+        <button class="btn-danger" (click)="confirmDelete()">
+          <i class="bi bi-trash"></i> Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL DETAIL ==================== -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
+  <div class="modal-container modal-lg" (click)="$event.stopPropagation()">
+    <button class="btn-close-modal" (click)="closeDetailModal()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+
+    <div class="detail-modal" *ngIf="selectedEtablissement">
+      <!-- Cover -->
+      <div class="detail-cover" [style.backgroundImage]="'url(' + selectedEtablissement.coverImageUrl + ')'">
+        <div class="detail-badges">
+          <span class="badge type" [style.backgroundColor]="getTypeInfo(selectedEtablissement.type).color">
+            <i [class]="'bi ' + getTypeInfo(selectedEtablissement.type).icon"></i>
+            {{ getTypeInfo(selectedEtablissement.type).name }}
+          </span>
+          <span class="badge verified" *ngIf="selectedEtablissement.isVerified">
+            <i class="bi bi-patch-check-fill"></i> Vérifié
+          </span>
+          <span class="badge inactive" *ngIf="!selectedEtablissement.isActive">
+            <i class="bi bi-pause-circle"></i> Inactif
+          </span>
+        </div>
+      </div>
+
+      <!-- Info -->
+      <div class="detail-content">
+        <h2>{{ selectedEtablissement.name }}</h2>
+        
+        <div class="detail-rating" *ngIf="selectedEtablissement.rating > 0">
+          <i class="bi bi-star-fill"></i>
+          <span class="rating-value">{{ selectedEtablissement.rating }}</span>
+          <span class="rating-count">({{ selectedEtablissement.reviewCount }} avis)</span>
+        </div>
+
+        <p class="detail-description">{{ selectedEtablissement.description }}</p>
+
+        <div class="detail-grid">
+          <div class="detail-item">
+            <i class="bi bi-geo-alt"></i>
+            <div>
+              <span class="label">Adresse</span>
+              <span class="value">{{ selectedEtablissement.address }}, {{ selectedEtablissement.city }} {{ selectedEtablissement.postalCode }}</span>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <i class="bi bi-telephone"></i>
+            <div>
+              <span class="label">Téléphone</span>
+              <span class="value">{{ selectedEtablissement.phone }}</span>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <i class="bi bi-envelope"></i>
+            <div>
+              <span class="label">Email</span>
+              <span class="value">{{ selectedEtablissement.email }}</span>
+            </div>
+          </div>
+
+          <div class="detail-item" *ngIf="selectedEtablissement.website">
+            <i class="bi bi-globe"></i>
+            <div>
+              <span class="label">Site web</span>
+              <span class="value">{{ selectedEtablissement.website }}</span>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <i class="bi bi-person"></i>
+            <div>
+              <span class="label">Propriétaire</span>
+              <span class="value">{{ selectedEtablissement.ownerName }}</span>
+              <span class="sub-value">{{ selectedEtablissement.ownerEmail }}</span>
+            </div>
+          </div>
+
+          <div class="detail-item">
+            <i class="bi bi-calendar3"></i>
+            <div>
+              <span class="label">Créé le</span>
+              <span class="value">{{ formatDateTime(selectedEtablissement.createdAt) }}</span>
+            </div>
+          </div>
+
+          <div class="detail-item" *ngIf="selectedEtablissement.isVerified">
+            <i class="bi bi-patch-check"></i>
+            <div>
+              <span class="label">Vérifié le</span>
+              <span class="value">{{ formatDateTime(selectedEtablissement.verifiedAt!) }}</span>
+              <span class="sub-value">par {{ selectedEtablissement.verifiedBy }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-actions">
+          <button class="btn-outline" (click)="openEditModal(selectedEtablissement); closeDetailModal()">
+            <i class="bi bi-pencil"></i> Modifier
+          </button>
+          <button class="btn-success" *ngIf="!selectedEtablissement.isVerified" 
+                  (click)="verifyEtablissement(selectedEtablissement)">
+            <i class="bi bi-patch-check"></i> Vérifier
+          </button>
+          <button class="btn-outline" *ngIf="selectedEtablissement.isVerified"
+                  (click)="unverifyEtablissement(selectedEtablissement)">
+            <i class="bi bi-patch-minus"></i> Retirer vérification
+          </button>
+          <button class="btn-danger" (click)="openDeleteModal(selectedEtablissement); closeDetailModal()">
+            <i class="bi bi-trash"></i> Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

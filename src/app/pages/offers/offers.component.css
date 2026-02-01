@@ -1444,3 +1444,68 @@
     grid-column: span 1;
   }
 }
+/* ==================== OFFER BADGES ==================== */
+
+/* Badge de réduction */
+.offer-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  z-index: 2;
+}
+
+/* Badge de statut */
+.offer-status {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  z-index: 2;
+}
+
+/* Statut: Active */
+.status-active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.928), rgba(16, 185, 129, 0.837)) !important;
+  color: #ffffff;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+/* Statut: scheduled */
+.status-scheduled {
+  background: linear-gradient(135deg, rgba(16, 89, 185, 0.759), rgba(16, 106, 185, 0.833)) !important;
+  color: #ffffff;
+  border: 1px solid rgba(16, 126, 185, 0.4);
+}
+
+/* Statut: En pause */
+.status-paused {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.3)) !important;
+  color: #ffffff;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+/* Statut: Expirée */
+.status-expired {
+  background: linear-gradient(135deg, rgba(107, 114, 128, 0.2), rgba(107, 114, 128, 0.3))  !important;
+  color: #ffffff;
+  border: 1px solid rgba(107, 114, 128, 0.4);
+}
+
+/* Statut: Brouillon */
+.status-draft {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.3)) !important;
+  color: #ffffff;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
