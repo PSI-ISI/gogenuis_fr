@@ -9,7 +9,7 @@ interface MenuItem {
   icon: string;
   route: string;
   exact: boolean;
-  badge?: number;
+  badge?: any;
 }
 type UserProfile = 'tourist' | 'company' | 'collaborator';
 
@@ -40,14 +40,14 @@ export class MainLayoutComponent implements OnInit {
     { label: 'Événements', icon: 'bi bi-calendar-event', route: '/events', exact: false },
     // { label: 'Bons Plans', icon: 'bi bi-percent', route: '/deals', exact: false },
     { label: 'Réservations', icon: 'bi bi-bookmark-check', route: '/reservations', exact: false },
-    { label: 'Planificateur', icon: 'bi bi-calendar-range', route: '/planner', exact: false },
+    { label: 'Planificateur', icon: 'bi bi-calendar-range', route: '/planner', exact: false, badge:"Premium" },
     // { label: 'Explorer', icon: 'bi bi-compass', route: '/explore', exact: false }
   ];
 
   private companyMenu: MenuItem[] = [
     { label: 'Dashboard', icon: 'bi bi-grid-1x2-fill', route: '/dashboard-etablissement', exact: true },
-    { label: 'Réservations', icon: 'bi bi-calendar-check', route: '/reservations', exact: false, badge: 12 },
-    // { label: 'Offres', icon: 'bi bi-tag', route: '/offers', exact: false },
+    { label: 'Réservations', icon: 'bi bi-calendar-check', route: '/reservations-etablissement', exact: false },
+    { label: 'Offres', icon: 'bi bi-tag', route: '/offers', exact: false },
     // { label: 'Avis', icon: 'bi bi-chat-quote', route: '/reviews', exact: false },
     // { label: 'Statistiques', icon: 'bi bi-graph-up', route: '/stats', exact: false },
     // { label: 'Paramètres', icon: 'bi bi-gear', route: '/settings', exact: false }

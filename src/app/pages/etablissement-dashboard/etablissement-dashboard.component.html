@@ -1,202 +1,181 @@
 <!-- Établissement Dashboard -->
 <div class="dashboard-container">
 
-  <!-- Header -->
-  <div class="dashboard-header">
-    <div class="header-left">
-      <div class="etablissement-badge">
-        <i class="bi bi-building"></i>
-      </div>
-      <div class="header-info">
-        <h1>{{ etablissementName }}</h1>
-        <div class="header-meta">
-          <span class="type">{{ etablissementType }}</span>
-          <span class="rating">
-            <i class="bi bi-star-fill"></i>
-            {{ etablissementRating }} ({{ etablissementReviews }} avis)
-          </span>
-        </div>
-      </div>
-    </div>
-    <div class="header-actions">
-      <button class="btn-outline">
-        <i class="bi bi-pencil"></i> Modifier profil
-      </button>
-      <button class="btn-primary" (click)="openOfferModal()">
-        <i class="bi bi-plus-lg"></i> Nouvelle offre
-      </button>
-    </div>
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Chargement du tableau de bord...</p>
   </div>
 
-  <!-- Stats Cards -->
-  <div class="stats-grid">
-    <div class="stat-card" *ngFor="let stat of stats" [style.--accent]="stat.color">
-      <div class="stat-icon">
-        <i [class]="'bi ' + stat.icon"></i>
-      </div>
-      <div class="stat-content">
-        <span class="stat-value">{{ stat.value }}<small *ngIf="stat.title === 'Revenus du mois'"> MAD</small></span>
-        <span class="stat-title">{{ stat.title }}</span>
-      </div>
-      <div class="stat-change" [class.positive]="stat.change >= 0" [class.negative]="stat.change < 0">
-        <i class="bi" [class.bi-arrow-up]="stat.change >= 0" [class.bi-arrow-down]="stat.change < 0"></i>
-        {{ stat.change > 0 ? '+' : '' }}{{ stat.change }}%
-      </div>
-    </div>
-  </div>
-
-  <!-- Main Content Grid -->
-  <div class="content-grid">
-
-    <!-- Left Column -->
-    <div class="content-left">
-
-      <!-- Reservations Section -->
-      <div class="card">
-        <div class="card-header">
-          <h3><i class="bi bi-calendar-check"></i> Réservations récentes</h3>
-          <a routerLink="/reservations" class="link">Voir tout</a>
+  <ng-container *ngIf="!isLoading">
+    
+    <!-- Header -->
+    <div class="dashboard-header">
+      <div class="header-left">
+        <div class="etablissement-badge">
+          <i class="bi bi-building"></i>
         </div>
-        <div class="reservations-list">
-          <div class="reservation-item" *ngFor="let res of reservations">
-            <div class="res-avatar">{{ res.clientAvatar }}</div>
-            <div class="res-info">
-              <span class="res-name">{{ res.clientName }}</span>
-              <span class="res-details">
-                <i class="bi bi-calendar3"></i> {{ res.date }}
-                <i class="bi bi-clock"></i> {{ res.time }}
-                <i class="bi bi-people"></i> {{ res.guests }}
-              </span>
-            </div>
-            <div class="res-right">
-              <span class="res-amount">{{ res.amount }} MAD</span>
-              <span class="res-status" [class]="getStatusClass(res.status)">
-                {{ getStatusLabel(res.status) }}
-              </span>
-            </div>
+        <div class="header-info">
+          <h1>{{ etablissementName }}</h1>
+          <div class="header-meta">
+            <span class="type">{{ etablissementType }}</span>
+            <span class="rating" *ngIf="etablissementRating > 0">
+              <i class="bi bi-star-fill"></i>
+              {{ etablissementRating }} ({{ etablissementReviews }} avis)
+            </span>
           </div>
         </div>
       </div>
+      <div class="header-actions">
+        <!-- <button class="btn-outline">
+          <i class="bi bi-pencil"></i> Modifier profil
+        </button> -->
+        <button class="btn-primary" (click)="openOfferModal()">
+          <i class="bi bi-plus-lg"></i> Nouvelle offre
+        </button>
+      </div>
+    </div>
 
-      <!-- Revenue Chart -->
-      <!-- <div class="card">
-        <div class="card-header">
-          <h3><i class="bi bi-graph-up"></i> Revenus mensuels</h3>
-          <select class="period-select">
-            <option>6 derniers mois</option>
-            <option>Cette année</option>
-            <option>Année dernière</option>
-          </select>
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+      <div class="stat-card" *ngFor="let stat of stats" [style.--accent]="stat.color">
+        <div class="stat-icon" [style.background]="'linear-gradient(135deg, ' + stat.color + ', ' + stat.color + '99)'">
+          <i [class]="'bi ' + stat.icon"></i>
         </div>
-        <div class="chart-container">
-          <div class="bar-chart">
-            <div class="bar-item" *ngFor="let data of monthlyData">
-              <div class="bar" [style.height.%]="getBarHeight(data.value)">
-                <span class="bar-value">{{ data.value / 1000 }}k</span>
+        <div class="stat-content">
+          <span class="stat-value">{{ stat.value }}<small *ngIf="stat.title === 'Revenus du mois'"> MAD</small></span>
+          <span class="stat-title">{{ stat.title }}</span>
+        </div>
+        <div class="stat-change" [class.positive]="stat.change > 0" [class.negative]="stat.change < 0" *ngIf="stat.change !== 0">
+          <i class="bi" [class.bi-arrow-up]="stat.change > 0" [class.bi-arrow-down]="stat.change < 0"></i>
+          {{ stat.change > 0 ? '+' : '' }}{{ stat.change }}%
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+
+      <!-- Left Column - Reservations -->
+      <div class="content-left">
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="bi bi-calendar-check"></i> Réservations récentes</h3>
+            <a routerLink="/reservations" class="link">Voir tout</a>
+          </div>
+          
+          <!-- Empty State -->
+          <div class="empty-state" *ngIf="reservations.length === 0">
+            <i class="bi bi-calendar-x"></i>
+            <p>Aucune réservation récente</p>
+          </div>
+          
+          <!-- Reservations List -->
+          <div class="reservations-list" *ngIf="reservations.length > 0">
+            <div class="reservation-item" *ngFor="let res of reservations">
+              <div class="res-avatar">{{ res.clientAvatar }}</div>
+              <div class="res-info">
+                <span class="res-name">{{ res.clientName }}</span>
+                <span class="res-details">
+                  <i class="bi bi-calendar3"></i> {{ res.date }}
+                  <i class="bi bi-clock"></i> {{ res.time }}
+                  <i class="bi bi-people"></i> {{ res.guests }} pers.
+                </span>
               </div>
-              <span class="bar-label">{{ data.month }}</span>
-            </div>
-          </div>
-        </div>
-      </div> -->
-
-    </div>
-
-    <!-- Right Column -->
-    <div class="content-right">
-
-      <!-- Quick Actions -->
-      <div class="card quick-actions-card">
-        <div class="card-header">
-          <h3><i class="bi bi-lightning"></i> Actions rapides</h3>
-        </div>
-        <div class="quick-actions">
-          <button class="action-btn" *ngFor="let action of quickActions" [style.--btn-color]="action.color">
-            <i [class]="'bi ' + action.icon"></i>
-            <span>{{ action.label }}</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Reviews Section -->
-      <!-- <div class="card">
-        <div class="card-header">
-          <h3><i class="bi bi-chat-quote"></i> Derniers avis</h3>
-          <a routerLink="/reviews" class="link">Voir tout</a>
-        </div>
-        <div class="reviews-list">
-          <div class="review-item" *ngFor="let review of reviews">
-            <div class="review-header">
-              <div class="review-avatar">{{ review.clientAvatar }}</div>
-              <div class="review-meta">
-                <span class="review-name">{{ review.clientName }}</span>
-                <div class="review-stars">
-                  <i *ngFor="let star of getRatingStars(review.rating)"
-                     class="bi"
-                     [class.bi-star-fill]="star === 1"
-                     [class.bi-star]="star === 0"></i>
+              <div class="res-right">
+                <span class="res-amount">{{ res.amount }} MAD</span>
+                <span class="res-status" [class]="res.status">
+                  {{ res.statusLabel }}
+                </span>
+                <!-- Actions pour réservations en attente -->
+                <div class="res-actions" *ngIf="res.status === 'pending'">
+                  <button class="btn-action confirm" (click)="confirmReservation(res)" title="Confirmer">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                  <button class="btn-action cancel" (click)="cancelReservation(res)" title="Refuser">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </div>
+                <!-- Action pour réservations confirmées -->
+                <div class="res-actions" *ngIf="res.status === 'confirmed'">
+                  <button class="btn-action complete" (click)="completeReservation(res)" title="Marquer terminée">
+                    <i class="bi bi-check-circle"></i>
+                  </button>
                 </div>
               </div>
-              <span class="review-date">{{ review.date }}</span>
-            </div>
-            <p class="review-comment">{{ review.comment }}</p>
-            <div class="review-actions">
-              <button class="btn-reply" *ngIf="!review.replied">
-                <i class="bi bi-reply"></i> Répondre
-              </button>
-              <span class="replied-badge" *ngIf="review.replied">
-                <i class="bi bi-check-circle"></i> Répondu
-              </span>
             </div>
           </div>
         </div>
-      </div> -->
 
-      <!-- Occupancy Widget -->
-      <div class="card occupancy-card">
-        <div class="card-header">
-          <h3><i class="bi bi-pie-chart"></i> Occupation aujourd'hui</h3>
-        </div>
-        <div class="occupancy-content">
-          <div class="occupancy-chart">
-            <svg viewBox="0 0 36 36" class="circular-chart">
-              <path class="circle-bg" d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831"/>
-              <path class="circle" stroke-dasharray="78, 100" d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831"/>
-              <text x="18" y="20.35" class="percentage">78%</text>
-            </svg>
-          </div>
-          <div class="occupancy-details">
-            <div class="occ-item">
-              <span class="occ-dot occupied"></span>
-              <span>Occupées: 14</span>
-            </div>
-            <div class="occ-item">
-              <span class="occ-dot available"></span>
-              <span>Disponibles: 4</span>
-            </div>
-            <div class="occ-item">
-              <span class="occ-dot maintenance"></span>
-              <span>Maintenance: 2</span>
-            </div>
-          </div>
-        </div>
       </div>
 
-    </div>
-  </div>
+      <!-- Right Column -->
+      <div class="content-right">
 
+        <!-- Quick Actions -->
+        <div class="card quick-actions-card">
+          <div class="card-header">
+            <h3><i class="bi bi-lightning"></i> Actions rapides</h3>
+          </div>
+          <div class="quick-actions">
+            <button class="action-btn" [style.--btn-color]="'#1a5f7a'" (click)="openOfferModal()">
+              <i class="bi bi-plus-circle"></i>
+              <span>Nouvelle offre</span>
+            </button>
+            <!-- <button class="action-btn" [style.--btn-color]="'#06d6a0'" routerLink="/offers">
+              <i class="bi bi-tag"></i>
+              <span>Mes offres</span>
+            </button>
+            <button class="action-btn" [style.--btn-color]="'#7209b7'">
+              <i class="bi bi-file-earmark-bar-graph"></i>
+              <span>Voir rapport</span>
+            </button> -->
+          </div>
+        </div>
+
+        <!-- Occupancy Widget -->
+        <div class="card occupancy-card">
+          <div class="card-header">
+            <h3><i class="bi bi-pie-chart"></i> Occupation aujourd'hui</h3>
+          </div>
+          <div class="occupancy-content">
+            <div class="occupancy-chart">
+              <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg" d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="circle" [attr.stroke-dasharray]="occupancy.value + ', 100'" d="M18 2.0845
+                  a 15.9155 15.9155 0 0 1 0 31.831
+                  a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <text x="18" y="20.35" class="percentage">{{ occupancy.value }}%</text>
+              </svg>
+            </div>
+            <div class="occupancy-details">
+              <div class="occ-item">
+                <span class="occ-dot occupied"></span>
+                <span>Occupées: {{ occupancy.occupied }}</span>
+              </div>
+              <div class="occ-item">
+                <span class="occ-dot available"></span>
+                <span>Disponibles: {{ occupancy.available }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </ng-container>
 </div>
 
 <!-- ==================== MODAL NOUVELLE OFFRE ==================== -->
-<div class="modal-overlay" *ngIf="showOfferModal"  (click)="closeOfferModal()">
+<div class="modal-overlay" *ngIf="showOfferModal" (click)="closeOfferModal()">
   <div class="modal-container" (click)="$event.stopPropagation()">
     
     <!-- Success State -->
-    <div class="success-state" *ngIf="offerCreated" >
+    <div class="success-state" *ngIf="offerCreated">
       <div class="success-icon">
         <i class="bi bi-check-circle-fill"></i>
       </div>
@@ -204,7 +183,9 @@
       <p>Votre offre "{{ newOffer.title }}" est maintenant en ligne.</p>
       <div class="success-actions">
         <button class="btn-outline" (click)="closeOfferModal()">Fermer</button>
-        <button class="btn-primary">Voir l'offre</button>
+        <button class="btn-primary" (click)="viewCreatedOffer()">
+          <i class="bi bi-eye"></i> Voir mes offres
+        </button>
       </div>
     </div>
 
@@ -249,12 +230,13 @@
       <div class="modal-body">
         
         <!-- Step 1: Basic Info -->
-        <div class="step-content" *ngIf="currentOfferStep === 1" >
+        <div class="step-content" *ngIf="currentOfferStep === 1">
           <div class="form-group">
             <label>Titre de l'offre <span class="required">*</span></label>
             <input type="text" [value]="newOffer.title"
-                (input)="newOffer.title = $any($event.target).value" placeholder="Ex: Week-end romantique -30%"
-                   class="form-input" maxlength="60">
+                (input)="newOffer.title = $any($event.target).value" 
+                placeholder="Ex: Week-end romantique -30%"
+                class="form-input" maxlength="60">
             <span class="char-count">{{ newOffer.title?.length || 0 }}/60</span>
           </div>
 
@@ -274,20 +256,21 @@
             <label>Description</label>
             <textarea [value]="newOffer.description"
                 (input)="newOffer.description = $any($event.target).value"
-                      placeholder="Décrivez votre offre en quelques mots..."
-                      class="form-textarea" rows="3" maxlength="200"></textarea>
-            <span class="char-count">{{newOffer.description?.length || 0}}/200</span>
+                placeholder="Décrivez votre offre en quelques mots..."
+                class="form-textarea" rows="3" maxlength="200"></textarea>
+            <span class="char-count">{{ newOffer.description?.length || 0 }}/200</span>
           </div>
         </div>
 
         <!-- Step 2: Pricing -->
-        <div class="step-content" *ngIf="currentOfferStep === 2" >
+        <div class="step-content" *ngIf="currentOfferStep === 2">
           <div class="form-row">
             <div class="form-group">
               <label>Prix original <span class="required">*</span></label>
               <div class="input-with-suffix">
                 <input type="number" [value]="newOffer.originalPrice"
-                    (input)="newOffer.originalPrice = $any($event.target).value"placeholder="0" class="form-input">
+                    (input)="newOffer.originalPrice = +$any($event.target).value" 
+                    placeholder="0" class="form-input">
                 <span class="suffix">MAD</span>
               </div>
             </div>
@@ -311,7 +294,8 @@
             <label>Valeur de la réduction <span class="required">*</span></label>
             <div class="input-with-suffix">
               <input type="number" [value]="newOffer.discountValue"
-                (input)="newOffer.discountValue = $any($event.target).value" placeholder="0" class="form-input">
+                (input)="newOffer.discountValue = +$any($event.target).value" 
+                placeholder="0" class="form-input">
               <span class="suffix">{{ newOffer.discountType === 'percentage' ? '%' : 'MAD' }}</span>
             </div>
           </div>
@@ -341,7 +325,7 @@
         </div>
 
         <!-- Step 3: Dates -->
-        <div class="step-content" *ngIf="currentOfferStep === 3" >
+        <div class="step-content" *ngIf="currentOfferStep === 3">
           <div class="form-row">
             <div class="form-group">
               <label>Date de début <span class="required">*</span></label>
@@ -358,7 +342,8 @@
           <div class="form-group">
             <label>Nombre maximum d'utilisations</label>
             <input type="number" [value]="newOffer.maxUsage"
-                (input)="newOffer.maxUsage = $any($event.target).value" placeholder="Illimité si vide" class="form-input">
+                (input)="newOffer.maxUsage = +$any($event.target).value" 
+                placeholder="Illimité si vide" class="form-input">
             <span class="form-hint">Laissez vide pour un nombre illimité</span>
           </div>
 
@@ -379,16 +364,12 @@
                    (click)="selectPreviewImage(img)">
                 <i class="bi bi-check-circle-fill" *ngIf="newOffer.image === img"></i>
               </div>
-              <div class="image-option upload">
-                <i class="bi bi-cloud-upload"></i>
-                <span>Upload</span>
-              </div>
             </div>
           </div>
         </div>
 
         <!-- Step 4: Preview -->
-        <div class="step-content" *ngIf="currentOfferStep === 4" >
+        <div class="step-content" *ngIf="currentOfferStep === 4">
           <div class="offer-preview">
             <div class="preview-image" [style.backgroundImage]="newOffer.image ? 'url(' + newOffer.image + ')' : 'linear-gradient(135deg, #1a5f7a, #2d8bba)'">
               <div class="preview-badge">

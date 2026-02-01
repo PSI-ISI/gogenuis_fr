@@ -1,0 +1,368 @@
+<div class="offers-page">
+  
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <h1><i class="bi bi-tag-fill"></i> Mes Offres</h1>
+      <p>Gérez vos offres promotionnelles</p>
+    </div>
+    <button class="btn-primary" (click)="openOfferModal()">
+      <i class="bi bi-plus-lg"></i> Nouvelle offre
+    </button>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon total"><i class="bi bi-collection"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.total }}</span>
+        <span class="stat-label">Total offres</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon active"><i class="bi bi-check-circle"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.active }}</span>
+        <span class="stat-label">Actives</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon scheduled"><i class="bi bi-clock-history"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.scheduled }}</span>
+        <span class="stat-label">Programmées</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon expired"><i class="bi bi-x-circle"></i></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.expired }}</span>
+        <span class="stat-label">Expirées</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input type="text" placeholder="Rechercher une offre..." 
+             [(ngModel)]="searchQuery" (input)="onSearchChange()">
+    </div>
+    <div class="filter-group">
+      <select [(ngModel)]="statusFilter" (change)="onFilterChange()">
+        <option value="all">Tous les statuts</option>
+        <option value="active">Actives</option>
+        <option value="scheduled">Programmées</option>
+        <option value="expired">Expirées</option>
+        <option value="paused">En pause</option>
+      </select>
+      <select [(ngModel)]="categoryFilter" (change)="onFilterChange()">
+        <option value="all">Toutes catégories</option>
+        <option *ngFor="let cat of offerCategories" [value]="cat.id">{{ cat.name }}</option>
+      </select>
+      <select [(ngModel)]="sortBy" (change)="onFilterChange()">
+        <option value="newest">Plus récentes</option>
+        <option value="oldest">Plus anciennes</option>
+        <option value="price-asc">Prix croissant</option>
+        <option value="price-desc">Prix décroissant</option>
+        <option value="discount">Réduction</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Offers Grid -->
+  <div class="offers-grid" *ngIf="filteredOffers.length > 0">
+    <div class="offer-card" *ngFor="let offer of filteredOffers" (click)="viewOffer(offer)">
+      <div class="offer-image" [style.backgroundImage]="offer.image ? 'url(' + offer.image + ')' : 'linear-gradient(135deg, #1a5f7a, #2d8bba)'">
+        <div class="offer-badge">
+          <span *ngIf="offer.discountType === 'percentage'">-{{ offer.discountValue }}%</span>
+          <span *ngIf="offer.discountType === 'fixed'">-{{ offer.discountValue }} MAD</span>
+        </div>
+        <span class="offer-status" [class]="getStatusClass(offer.status)">
+          {{ getStatusLabel(offer.status) }}
+        </span>
+      </div>
+      <div class="offer-content">
+        <div class="offer-category">
+          <i [class]="'bi ' + getCategoryIcon(offer.category)"></i>
+          {{ getCategoryName(offer.category) }}
+        </div>
+        <h3>{{ offer.title }}</h3>
+        <p class="offer-description">{{ offer.description }}</p>
+        
+        <div class="offer-pricing">
+          <span class="old-price">{{ offer.originalPrice | number }} MAD</span>
+          <span class="new-price">{{ offer.finalPrice | number }} MAD</span>
+        </div>
+
+        <div class="offer-meta">
+          <span class="meta-item">
+            <i class="bi bi-calendar3"></i>
+            {{ formatDate(offer.startDate) }} - {{ formatDate(offer.endDate) }}
+          </span>
+        </div>
+
+        <div class="usage-progress" *ngIf="offer.maxUsage">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getUsagePercentage(offer)"></div>
+          </div>
+          <span class="usage-text">{{ offer.currentUsage }}/{{ offer.maxUsage }} utilisations</span>
+        </div>
+
+        <div class="offer-actions" (click)="$event.stopPropagation()">
+          <button class="btn-action" (click)="editOffer(offer)" title="Modifier">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn-action" (click)="duplicateOffer(offer)" title="Dupliquer">
+            <i class="bi bi-copy"></i>
+          </button>
+          <button class="btn-action" (click)="toggleOfferStatus(offer)" 
+                  [title]="offer.status === 'paused' ? 'Activer' : 'Mettre en pause'">
+            <i class="bi" [class.bi-play-fill]="offer.status === 'paused'" 
+               [class.bi-pause-fill]="offer.status !== 'paused'"></i>
+          </button>
+          <button class="btn-action btn-delete" (click)="confirmDelete(offer)" title="Supprimer">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredOffers.length === 0">
+    <div class="empty-icon"><i class="bi bi-tag"></i></div>
+    <h3>Aucune offre trouvée</h3>
+    <p *ngIf="offers.length === 0">Créez votre première offre pour attirer plus de clients.</p>
+    <p *ngIf="offers.length > 0">Aucune offre ne correspond à vos critères.</p>
+    <button class="btn-primary" (click)="openOfferModal()" *ngIf="offers.length === 0">
+      <i class="bi bi-plus-lg"></i> Créer une offre
+    </button>
+  </div>
+</div>
+
+<!-- MODAL NOUVELLE OFFRE -->
+<div class="modal-overlay" *ngIf="showOfferModal" (click)="closeOfferModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    
+    <div class="success-state" *ngIf="offerCreated">
+      <div class="success-icon"><i class="bi bi-check-circle-fill"></i></div>
+      <h2>{{ isEditMode ? 'Offre modifiée' : 'Offre créée' }} ! 🎉</h2>
+      <p>"{{ newOffer.title }}" est maintenant {{ isEditMode ? 'mise à jour' : 'en ligne' }}.</p>
+      <div class="success-actions">
+        <button class="btn-primary" (click)="closeOfferModal()">Fermer</button>
+      </div>
+    </div>
+
+    <ng-container *ngIf="!offerCreated">
+      <div class="modal-header">
+        <div class="modal-title">
+          <div class="title-icon">
+            <i class="bi" [class.bi-plus-circle]="!isEditMode" [class.bi-pencil]="isEditMode"></i>
+          </div>
+          <div>
+            <h2>{{ isEditMode ? 'Modifier l\'offre' : 'Nouvelle Offre' }}</h2>
+            <p>{{ getOfferStepTitle() }}</p>
+          </div>
+        </div>
+        <button class="btn-close-modal" (click)="closeOfferModal()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+
+      <div class="modal-progress">
+        <div class="progress-track">
+          <div class="progress-fill" [style.width.%]="(currentOfferStep / totalOfferSteps) * 100"></div>
+        </div>
+        <div class="progress-steps">
+          <div class="step" *ngFor="let step of [1,2,3,4]"
+               [class.active]="currentOfferStep >= step"
+               [class.current]="currentOfferStep === step">
+            <span class="step-number">{{ step }}</span>
+            <span class="step-label">{{ step === 1 ? 'Infos' : step === 2 ? 'Prix' : step === 3 ? 'Dates' : 'Aperçu' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-body">
+        <!-- Step 1 -->
+        <div class="step-content" *ngIf="currentOfferStep === 1">
+          <div class="form-group">
+            <label>Titre <span class="required">*</span></label>
+            <input type="text" [(ngModel)]="newOffer.title" placeholder="Ex: Week-end -30%" class="form-input" maxlength="60">
+            <span class="char-count">{{ newOffer.title?.length || 0 }}/60</span>
+          </div>
+          <div class="form-group">
+            <label>Catégorie <span class="required">*</span></label>
+            <div class="category-grid">
+              <div class="category-item" *ngFor="let cat of offerCategories"
+                   [class.selected]="newOffer.category === cat.id" (click)="selectCategory(cat.id)">
+                <i [class]="'bi ' + cat.icon"></i>
+                <span>{{ cat.name }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea [(ngModel)]="newOffer.description" placeholder="Décrivez votre offre..." class="form-textarea" rows="3" maxlength="200"></textarea>
+            <span class="char-count">{{ newOffer.description?.length || 0 }}/200</span>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-content" *ngIf="currentOfferStep === 2">
+          <div class="form-group">
+            <label>Prix original <span class="required">*</span></label>
+            <div class="input-with-suffix">
+              <input type="number" [(ngModel)]="newOffer.originalPrice" placeholder="0" class="form-input">
+              <span class="suffix">MAD</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Type de réduction</label>
+            <div class="discount-type-toggle">
+              <button [class.active]="newOffer.discountType === 'percentage'" (click)="newOffer.discountType = 'percentage'">
+                <i class="bi bi-percent"></i> Pourcentage
+              </button>
+              <button [class.active]="newOffer.discountType === 'fixed'" (click)="newOffer.discountType = 'fixed'">
+                <i class="bi bi-cash"></i> Montant fixe
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Valeur <span class="required">*</span></label>
+            <div class="input-with-suffix">
+              <input type="number" [(ngModel)]="newOffer.discountValue" placeholder="0" class="form-input">
+              <span class="suffix">{{ newOffer.discountType === 'percentage' ? '%' : 'MAD' }}</span>
+            </div>
+          </div>
+          <div class="price-preview" *ngIf="newOffer.originalPrice && newOffer.discountValue">
+            <div class="preview-card">
+              <div class="preview-row"><span>Prix original</span><span>{{ newOffer.originalPrice }} MAD</span></div>
+              <div class="preview-row discount"><span>Réduction</span><span>-{{ newOffer.discountType === 'percentage' ? newOffer.discountValue + '%' : newOffer.discountValue + ' MAD' }}</span></div>
+              <div class="preview-divider"></div>
+              <div class="preview-row final"><span>Prix final</span><span class="final-price">{{ calculateFinalPrice() | number:'1.0-0' }} MAD</span></div>
+              <div class="savings-badge"><i class="bi bi-piggy-bank"></i> Économie de {{ calculateSavings() | number:'1.0-0' }} MAD</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step-content" *ngIf="currentOfferStep === 3">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date début <span class="required">*</span></label>
+              <input type="date" [(ngModel)]="newOffer.startDate" class="form-input">
+            </div>
+            <div class="form-group">
+              <label>Date fin <span class="required">*</span></label>
+              <input type="date" [(ngModel)]="newOffer.endDate" class="form-input">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Max. utilisations</label>
+            <input type="number" [(ngModel)]="newOffer.maxUsage" placeholder="Illimité" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Conditions</label>
+            <textarea [(ngModel)]="newOffer.conditions" placeholder="Ex: Valable en semaine..." class="form-textarea" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Image</label>
+            <div class="image-selector">
+              <div class="image-option" *ngFor="let img of previewImages"
+                   [class.selected]="newOffer.image === img"
+                   [style.backgroundImage]="'url(' + img + ')'"
+                   (click)="selectPreviewImage(img)">
+                <i class="bi bi-check-circle-fill" *ngIf="newOffer.image === img"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="step-content" *ngIf="currentOfferStep === 4">
+          <div class="offer-preview">
+            <div class="preview-image" [style.backgroundImage]="newOffer.image ? 'url(' + newOffer.image + ')' : 'linear-gradient(135deg, #1a5f7a, #2d8bba)'">
+              <div class="preview-badge">-{{ newOffer.discountValue }}{{ newOffer.discountType === 'percentage' ? '%' : ' MAD' }}</div>
+            </div>
+            <div class="preview-body">
+              <div class="preview-category"><i [class]="'bi ' + getCategoryIcon(newOffer.category || '')"></i> {{ getCategoryName(newOffer.category || '') }}</div>
+              <h3>{{ newOffer.title || 'Titre' }}</h3>
+              <p>{{ newOffer.description || 'Description...' }}</p>
+              <div class="preview-pricing">
+                <span class="old-price">{{ newOffer.originalPrice }} MAD</span>
+                <span class="new-price">{{ calculateFinalPrice() | number:'1.0-0' }} MAD</span>
+              </div>
+              <div class="preview-dates"><i class="bi bi-calendar3"></i> {{ newOffer.startDate }} - {{ newOffer.endDate }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-outline" *ngIf="currentOfferStep > 1" (click)="prevOfferStep()"><i class="bi bi-arrow-left"></i> Retour</button>
+        <button class="btn-outline" *ngIf="currentOfferStep === 1" (click)="closeOfferModal()">Annuler</button>
+        <button class="btn-primary" *ngIf="currentOfferStep < totalOfferSteps" (click)="nextOfferStep()" [disabled]="!canProceedOffer()">Continuer <i class="bi bi-arrow-right"></i></button>
+        <button class="btn-success" *ngIf="currentOfferStep === totalOfferSteps" (click)="submitOffer()" [disabled]="isSubmitting">
+          <span *ngIf="!isSubmitting"><i class="bi bi-check-lg"></i> {{ isEditMode ? 'Enregistrer' : 'Publier' }}</span>
+          <span *ngIf="isSubmitting"><i class="bi bi-arrow-repeat spinning"></i> En cours...</span>
+        </button>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<!-- MODAL DETAIL -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
+  <div class="modal-container detail-modal" (click)="$event.stopPropagation()">
+    <button class="btn-close-float" (click)="closeDetailModal()"><i class="bi bi-x-lg"></i></button>
+    
+    <div class="detail-image" *ngIf="selectedOffer" [style.backgroundImage]="selectedOffer.image ? 'url(' + selectedOffer.image + ')' : 'linear-gradient(135deg, #1a5f7a, #2d8bba)'">
+      <div class="detail-badge">-{{ selectedOffer.discountValue }}{{ selectedOffer.discountType === 'percentage' ? '%' : ' MAD' }}</div>
+      <span class="detail-status" [class]="getStatusClass(selectedOffer.status)">{{ getStatusLabel(selectedOffer.status) }}</span>
+    </div>
+    
+    <div class="detail-body" *ngIf="selectedOffer">
+      <div class="detail-category"><i [class]="'bi ' + getCategoryIcon(selectedOffer.category)"></i> {{ getCategoryName(selectedOffer.category) }}</div>
+      <h2>{{ selectedOffer.title }}</h2>
+      <p>{{ selectedOffer.description }}</p>
+      
+      <div class="detail-pricing">
+        <div class="price-block"><span class="label">Original</span><span class="old-price">{{ selectedOffer.originalPrice | number }} MAD</span></div>
+        <div class="price-block"><span class="label">Promo</span><span class="new-price">{{ selectedOffer.finalPrice | number }} MAD</span></div>
+        <div class="price-block savings"><span class="label">Économie</span><span>{{ selectedOffer.originalPrice - selectedOffer.finalPrice | number }} MAD</span></div>
+      </div>
+
+      <div class="detail-info-grid">
+        <div class="info-item"><i class="bi bi-calendar3"></i><div><span class="label">Période</span><span>{{ formatDate(selectedOffer.startDate) }} - {{ formatDate(selectedOffer.endDate) }}</span></div></div>
+        <div class="info-item"><i class="bi bi-people"></i><div><span class="label">Utilisations</span><span>{{ selectedOffer.currentUsage }} {{ selectedOffer.maxUsage ? '/ ' + selectedOffer.maxUsage : '(illimité)' }}</span></div></div>
+      </div>
+
+      <div class="detail-usage" *ngIf="selectedOffer.maxUsage">
+        <div class="usage-header"><span>Progression</span><span>{{ getUsagePercentage(selectedOffer) }}%</span></div>
+        <div class="usage-bar"><div class="usage-fill" [style.width.%]="getUsagePercentage(selectedOffer)"></div></div>
+      </div>
+    </div>
+
+    <div class="detail-footer" *ngIf="selectedOffer">
+      <button class="btn-outline btn-danger" (click)="confirmDelete(selectedOffer)"><i class="bi bi-trash"></i> Supprimer</button>
+      <button class="btn-primary" (click)="editOffer(selectedOffer)"><i class="bi bi-pencil"></i> Modifier</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DELETE -->
+<div class="modal-overlay" *ngIf="showDeleteModal" (click)="cancelDelete()">
+  <div class="modal-container delete-modal" (click)="$event.stopPropagation()">
+    <div class="delete-icon"><i class="bi bi-exclamation-triangle"></i></div>
+    <h2>Supprimer cette offre ?</h2>
+    <p *ngIf="offerToDelete">"{{ offerToDelete.title }}" sera supprimée définitivement.</p>
+    <div class="delete-actions">
+      <button class="btn-outline" (click)="cancelDelete()">Annuler</button>
+      <button class="btn-danger" (click)="deleteOffer()"><i class="bi bi-trash"></i> Supprimer</button>
+    </div>
+  </div>
+</div>

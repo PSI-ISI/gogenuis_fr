@@ -14,16 +14,20 @@ import {
   getTypeOption,
   getStatusOption
 } from '../../models/reservation.model';
-import { EventFavorite, EventFavoritesService } from 'src/app/sevices/eventFavoritesService';
-import { ReservationsService } from 'src/app/sevices/reservations.service';
 
 // Import du service de favoris événements
 
+// Import du service profil utilisateur
+import { ReservationsService } from 'src/app/sevices/reservations.service';
+import { EventFavorite, EventFavoritesService } from 'src/app/sevices/eventFavoritesService';
+import { UserProfileService } from 'src/app/sevices/user-profile.service';
+
 // ============ INTERFACES ============
-interface UserProfile {
+interface LocalUserProfile {
   fullName: string;
   email: string;
   phone: string;
+  city: string;
   preferences: {
     categories: string[];
     budgetMax: number;
@@ -133,19 +137,21 @@ export class DashboardComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   // ============ USER PROFILE (Module 1) ============
-  userProfile: UserProfile = {
-    fullName: 'Jean Dupont',
-    email: 'jean.dupont@email.com',
-    phone: '+212 6 12 34 56 78',
+  userProfile: LocalUserProfile = {
+    fullName: '',
+    email: '',
+    phone: '',
+    city: '',
     preferences: {
       categories: ['Restaurants', 'Hôtels', 'Culture'],
-      budgetMax: 500,
+      budgetMax: 5000,
       notifications: true
     }
   };
-  userInitials = 'JD';
+  userInitials = 'U';
   showProfileModal = false;
-  editingProfile: UserProfile | null = null;
+  editingProfile: LocalUserProfile | null = null;
+  isLoadingProfile = false;
 
   availableCategories = [
     { id: 'restaurants', name: 'Restaurants', icon: 'bi-cup-hot' },
@@ -200,7 +206,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   deals = [
     { id: 1, name: 'Spa Détente', discount: 30, originalPrice: 800, image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=200', validUntil: '15 Fév' },
     { id: 2, name: 'Brunch Gourmet', discount: 20, originalPrice: 350, image: 'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=200', validUntil: '10 Fév' },
-    { id: 3, name: 'Circuit Guidé', discount: 15, originalPrice: 500, image: 'https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=200', validUntil: '20 Fév' }
+    { id: 3, name: 'Circuit Guidé', discount: 15, originalPrice: 500, image: 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?w=200', validUntil: '20 Fév' }
   ];
 
   // ============ RESERVATIONS (Module 4) - BRANCHEMENT API ============
@@ -265,14 +271,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
   notificationCount = 2;
 
   private favoritesSubscription?: Subscription;
+  private profileSubscription?: Subscription;
 
   constructor(
     private http: HttpClient,
     private reservationService: ReservationsService,
-    private eventFavoritesService: EventFavoritesService
+    private eventFavoritesService: EventFavoritesService,
+    private userProfileService: UserProfileService
   ) {}
 
-  fullname:any="";
   ngOnInit(): void {
     this.loadUserProfile();
     this.calculateBudget();
@@ -282,58 +289,94 @@ export class DashboardComponent implements OnInit, OnDestroy {
     
     // S'abonner aux changements de favoris
     this.favoritesSubscription = this.eventFavoritesService.favorites$.subscribe(favorites => {
-      console.log(favorites);
-      
       this.favorites = favorites;
     });
     
-    // Use prefix as initials if available, otherwise generate
-    const storedPrefix = localStorage.getItem('gogenius.prefix');
-    const storedFullname = localStorage.getItem('gogenius.fname');
-    this.fullname = storedFullname || 'Utilisateur';
-    this.userInitials = storedPrefix || this.generateInitials(this.fullname);
-  }
-
-  private generateInitials(name: string): string {
-    if (!name) return 'U';
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase();
+    // S'abonner aux changements du profil
+    this.profileSubscription = this.userProfileService.profile$.subscribe(profile => {
+      if (profile) {
+        this.userProfile.fullName = profile.fullName;
+        this.userProfile.email = profile.email;
+        this.userProfile.city = profile.city || '';
+        this.userProfile.preferences = profile.preferences;
+        this.userInitials = profile.initials || this.getInitials(profile.fullName);
+        this.userName = profile.fullName;
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.stopCamera();
     this.favoritesSubscription?.unsubscribe();
+    this.profileSubscription?.unsubscribe();
   }
 
   loadEventFavorites(): void {
     this.favorites = this.eventFavoritesService.getFavorites();
   }
-  userName:any="";
+  
+  userName: string = '';
+
   // ============ MODULE 1: PROFILE ============
   loadUserProfile(): void {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        this.userProfile.fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.login || 'Utilisateur';
-        this.userProfile.email = user.email || '';
-        this.userInitials = this.getInitials(this.userProfile.fullName);
-      } catch (e) {
-        const storedName = localStorage.getItem('gogenius.fname');
-        if (storedName) {
-          this.userProfile.fullName = storedName;
-          this.userInitials = this.getInitials(storedName);
-        }
+    this.isLoadingProfile = true;
+    
+    // Charger depuis le service (qui gère localStorage et API)
+    this.userProfileService.getProfile().subscribe({
+      next: (profile) => {
+        this.userProfile = {
+          fullName: profile.fullName,
+          email: profile.email,
+          phone: '', // Non stocké pour l'instant
+          city: profile.city || '',
+          preferences: profile.preferences
+        };
+        this.userInitials = profile.initials || this.getInitials(profile.fullName);
+        this.userName = profile.fullName;
+        this.isLoadingProfile = false;
+      },
+      error: (err) => {
+        console.error('Erreur chargement profil:', err);
+        // Fallback sur localStorage
+        this.loadProfileFromLocalStorage();
+        this.isLoadingProfile = false;
       }
+    });
+  }
+  
+  private loadProfileFromLocalStorage(): void {
+    const fullname = localStorage.getItem('fullname') || localStorage.getItem('gogenius.fname');
+    const city = localStorage.getItem('user_city');
+    const email = localStorage.getItem('user_email');
+    const phone = localStorage.getItem('user_phone');
+    
+    if (fullname) {
+      this.userProfile.fullName = fullname;
+      this.userInitials = this.getInitials(fullname);
+      this.userName = fullname;
     }
-    this.userName = localStorage.getItem('username');
+    if (city) {
+      this.userProfile.city = city;
+    }
+    if (email) {
+      this.userProfile.email = email;
+    }
+    if (phone) {
+      this.userProfile.phone = phone;
+    }
+    
+    // Charger les préférences
+    const prefs = this.userProfileService.loadPreferences();
+    this.userProfile.preferences = prefs;
   }
 
   getInitials(name: string): string {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    if (!name) return 'U';
+    const parts = name.trim().split(' ').filter(p => p.length > 0);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, Math.min(2, name.length)).toUpperCase();
   }
 
   openProfileModal(): void {
@@ -348,9 +391,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   saveProfile(): void {
     if (this.editingProfile) {
+      // Mettre à jour le profil local
       this.userProfile = { ...this.editingProfile };
       this.userInitials = this.getInitials(this.userProfile.fullName);
-      localStorage.setItem('gogenius.fname', this.userProfile.fullName);
+      this.userName = this.userProfile.fullName;
+      
+      // Sauvegarder dans localStorage
+      localStorage.setItem('fullname', this.userProfile.fullName);
+      if (this.userProfile.city) {
+        localStorage.setItem('user_city', this.userProfile.city);
+      }
+      if (this.userProfile.email) {
+        localStorage.setItem('user_email', this.userProfile.email);
+      }
+      if (this.userProfile.phone) {
+        localStorage.setItem('user_phone', this.userProfile.phone);
+      }
+      
+      // Sauvegarder les préférences via le service
+      this.userProfileService.savePreferences(this.userProfile.preferences);
+      
+      // Mettre à jour le budget max si changé
+      this.budgetTotal = this.userProfile.preferences.budgetMax;
+      
       this.closeProfileModal();
     }
   }
@@ -697,7 +760,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       'HOTEL': 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=200',
       'RESTAURANT': 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200',
       'SPA': 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=200',
-      'ACTIVITY': 'https://images.unsplash.com/photo-1527224857830-43a7acc85260?w=200',
+      'ACTIVITY': 'https://images.unsplash.com/photo-1513593771513-7b58b6c4af38?w=200',
       'TRANSPORT': 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=200'
     };
     return images[type] || images['ACTIVITY'];
@@ -917,7 +980,5 @@ export class DashboardComponent implements OnInit, OnDestroy {
     if (tab === 'reservations') {
       this.loadReservations();
     }
-    console.log(this.activeTab);
-    
   }
 }

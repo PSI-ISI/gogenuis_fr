@@ -1,0 +1,387 @@
+<div class="reservations-page">
+
+  <!-- ============ HEADER ============ -->
+  <header class="page-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1><i class="bi bi-calendar-check"></i> Réservations</h1>
+        <p class="subtitle">Gérez les réservations de votre établissement</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn-outline" (click)="resetDemoData()">
+          <i class="bi bi-arrow-clockwise"></i> Réinitialiser
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ STATS CARDS ============ -->
+  <div class="stats-grid">
+    <div class="stat-card" (click)="selectedStatus = 'all'; onFilterChange()">
+      <div class="stat-icon total">
+        <i class="bi bi-collection"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.total }}</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+    <div class="stat-card" (click)="selectedStatus = 'pending'; onFilterChange()">
+      <div class="stat-icon pending">
+        <i class="bi bi-clock"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.pending }}</span>
+        <span class="stat-label">En attente</span>
+      </div>
+      <span class="stat-badge" *ngIf="stats.pending > 0">Action requise</span>
+    </div>
+    <div class="stat-card" (click)="selectedStatus = 'confirmed'; onFilterChange()">
+      <div class="stat-icon confirmed">
+        <i class="bi bi-check-circle"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.confirmed }}</span>
+        <span class="stat-label">Confirmées</span>
+      </div>
+    </div>
+    <div class="stat-card" (click)="selectedStatus = 'completed'; onFilterChange()">
+      <div class="stat-icon completed">
+        <i class="bi bi-check-all"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.completed }}</span>
+        <span class="stat-label">Terminées</span>
+      </div>
+    </div>
+    <div class="stat-card revenue">
+      <div class="stat-icon revenue-icon">
+        <i class="bi bi-cash-stack"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.totalRevenue | number }} <small>MAD</small></span>
+        <span class="stat-label">Revenus confirmés</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ FILTERS BAR ============ -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <i class="bi bi-search"></i>
+      <input type="text" 
+             placeholder="Rechercher par nom, email, téléphone..." 
+             [(ngModel)]="searchQuery"
+             (input)="onFilterChange()">
+      <button class="btn-clear" *ngIf="searchQuery" (click)="searchQuery = ''; onFilterChange()">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+    
+    <div class="filter-group">
+      <select [(ngModel)]="selectedPeriod" (change)="onFilterChange()">
+        <option value="all">Toutes les dates</option>
+        <option value="today">Aujourd'hui</option>
+        <option value="tomorrow">Demain</option>
+        <option value="week">Cette semaine</option>
+        <option value="month">Ce mois</option>
+        <option value="past">Passées</option>
+      </select>
+
+      <select [(ngModel)]="selectedStatus" (change)="onFilterChange()">
+        <option value="all">Tous statuts</option>
+        <option value="pending">En attente</option>
+        <option value="confirmed">Confirmées</option>
+        <option value="completed">Terminées</option>
+        <option value="cancelled">Annulées</option>
+      </select>
+      
+      <select [(ngModel)]="selectedType" (change)="onFilterChange()">
+        <option value="all">Tous types</option>
+        <option *ngFor="let type of reservationTypes" [value]="type.id">{{ type.name }}</option>
+      </select>
+      
+      <select [(ngModel)]="sortBy" (change)="onFilterChange()">
+        <option value="date-desc">Date (récent)</option>
+        <option value="date-asc">Date (ancien)</option>
+        <option value="amount-desc">Montant (↓)</option>
+        <option value="amount-asc">Montant (↑)</option>
+        <option value="name">Nom client</option>
+        <option value="created">Date création</option>
+      </select>
+    </div>
+
+    <button class="btn-clear-filters" 
+            *ngIf="searchQuery || selectedStatus !== 'all' || selectedType !== 'all' || selectedPeriod !== 'all'" 
+            (click)="clearFilters()">
+      <i class="bi bi-x-circle"></i> Effacer
+    </button>
+  </div>
+
+  <!-- ============ RESULTS INFO ============ -->
+  <div class="results-info">
+    <span>{{ filteredReservations.length }} réservation(s) trouvée(s)</span>
+  </div>
+
+  <!-- ============ RESERVATIONS LIST ============ -->
+  <div class="reservations-container">
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="filteredReservations.length === 0">
+      <div class="empty-icon">
+        <i class="bi bi-calendar-x"></i>
+      </div>
+      <h3>Aucune réservation trouvée</h3>
+      <p>Modifiez vos filtres ou attendez de nouvelles réservations</p>
+      <button class="btn-outline" (click)="clearFilters()">
+        <i class="bi bi-arrow-clockwise"></i> Réinitialiser les filtres
+      </button>
+    </div>
+
+    <!-- Reservations List -->
+    <div class="reservations-list" *ngIf="filteredReservations.length > 0">
+      
+      <div class="reservation-card" *ngFor="let res of filteredReservations" 
+           [class.is-today]="isToday(res.date)"
+           [class.is-past]="isPast(res.date) && res.status !== 'completed' && res.status !== 'cancelled'">
+        
+        <!-- Date Badge -->
+        <div class="date-badge" [class.today]="isToday(res.date)" [class.tomorrow]="isTomorrow(res.date)">
+          <span class="day">{{ res.date | date:'dd' }}</span>
+          <span class="month">{{ res.date | date:'MMM' }}</span>
+          <span class="label" *ngIf="isToday(res.date)">Aujourd'hui</span>
+          <span class="label" *ngIf="isTomorrow(res.date)">Demain</span>
+        </div>
+
+        <!-- Main Content -->
+        <div class="reservation-content">
+          <div class="reservation-header">
+            <div class="client-info">
+              <div class="client-avatar">{{ res.clientAvatar }}</div>
+              <div class="client-details">
+                <span class="client-name">{{ res.clientName }}</span>
+                <span class="reservation-id">#{{ res.id }}</span>
+              </div>
+            </div>
+            <div class="reservation-type" [attr.data-type]="res.type">
+              <i [class]="'bi ' + getTypeIcon(res.type)"></i>
+              {{ getTypeLabel(res.type) }}
+            </div>
+          </div>
+
+          <div class="reservation-details">
+            <div class="detail-item">
+              <i class="bi bi-clock"></i>
+              <span>{{ res.time }}</span>
+            </div>
+            <div class="detail-item">
+              <i class="bi bi-people"></i>
+              <span>{{ res.guests }} pers.</span>
+            </div>
+            <div class="detail-item" *ngIf="res.notes">
+              <i class="bi bi-chat-left-text"></i>
+              <span class="note-preview">{{ res.notes }}</span>
+            </div>
+          </div>
+
+          <div class="reservation-footer">
+            <div class="contact-info">
+              <a [href]="'mailto:' + res.clientEmail" class="contact-link" title="Envoyer un email">
+                <i class="bi bi-envelope"></i>
+              </a>
+              <a [href]="'tel:' + res.clientPhone" class="contact-link" title="Appeler">
+                <i class="bi bi-telephone"></i>
+              </a>
+              <button class="contact-link" (click)="openDetailModal(res)" title="Voir détails">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Section -->
+        <div class="reservation-right">
+          <div class="amount">{{ res.amount | number }} MAD</div>
+          <div class="status-badge" [class]="res.status">
+            <i [class]="'bi ' + getStatusIcon(res.status)"></i>
+            {{ getStatusLabel(res.status) }}
+          </div>
+          
+          <!-- Actions -->
+          <div class="actions">
+            <!-- Pending: Confirm or Cancel -->
+            <ng-container *ngIf="res.status === 'pending'">
+              <button class="btn-action confirm" (click)="confirmReservation(res)" title="Confirmer">
+                <i class="bi bi-check-lg"></i>
+              </button>
+              <button class="btn-action cancel" (click)="cancelReservation(res)" title="Refuser">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </ng-container>
+            
+            <!-- Confirmed: Complete -->
+            <ng-container *ngIf="res.status === 'confirmed'">
+              <button class="btn-action complete" (click)="completeReservation(res)" title="Marquer terminée">
+                <i class="bi bi-check-all"></i>
+              </button>
+            </ng-container>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ==================== MODAL DÉTAILS ==================== -->
+<div class="modal-overlay" *ngIf="showDetailModal" (click)="closeDetailModal()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <button class="btn-close-modal" (click)="closeDetailModal()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+    
+    <div class="detail-modal" *ngIf="selectedReservation">
+      <!-- Header -->
+      <div class="detail-header">
+        <div class="client-avatar large">{{ selectedReservation.clientAvatar }}</div>
+        <div class="client-info">
+          <h2>{{ selectedReservation.clientName }}</h2>
+          <span class="reservation-id">#{{ selectedReservation.id }}</span>
+        </div>
+        <div class="status-badge large" [class]="selectedReservation.status">
+          <i [class]="'bi ' + getStatusIcon(selectedReservation.status)"></i>
+          {{ getStatusLabel(selectedReservation.status) }}
+        </div>
+      </div>
+
+      <!-- Info Grid -->
+      <div class="detail-grid">
+        <div class="detail-card">
+          <div class="detail-icon">
+            <i class="bi bi-calendar3"></i>
+          </div>
+          <div class="detail-content">
+            <span class="label">Date</span>
+            <span class="value">{{ formatFullDate(selectedReservation.date) }}</span>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-icon">
+            <i class="bi bi-clock"></i>
+          </div>
+          <div class="detail-content">
+            <span class="label">Heure</span>
+            <span class="value">{{ selectedReservation.time }}</span>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-icon">
+            <i class="bi bi-people"></i>
+          </div>
+          <div class="detail-content">
+            <span class="label">Personnes</span>
+            <span class="value">{{ selectedReservation.guests }}</span>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-icon">
+            <i [class]="'bi ' + getTypeIcon(selectedReservation.type)"></i>
+          </div>
+          <div class="detail-content">
+            <span class="label">Type</span>
+            <span class="value">{{ getTypeLabel(selectedReservation.type) }}</span>
+          </div>
+        </div>
+
+        <div class="detail-card highlight">
+          <div class="detail-icon">
+            <i class="bi bi-cash-stack"></i>
+          </div>
+          <div class="detail-content">
+            <span class="label">Montant</span>
+            <span class="value large">{{ selectedReservation.amount | number }} MAD</span>
+          </div>
+        </div>
+
+        <div class="detail-card">
+          <div class="detail-icon">
+            <i class="bi bi-calendar-plus"></i>
+          </div>
+          <div class="detail-content">
+            <span class="label">Créée le</span>
+            <span class="value">{{ formatDateTime(selectedReservation.createdAt) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="detail-section">
+        <h3><i class="bi bi-person-lines-fill"></i> Contact</h3>
+        <div class="contact-grid">
+          <a [href]="'mailto:' + selectedReservation.clientEmail" class="contact-item">
+            <i class="bi bi-envelope"></i>
+            <span>{{ selectedReservation.clientEmail }}</span>
+          </a>
+          <a [href]="'tel:' + selectedReservation.clientPhone" class="contact-item">
+            <i class="bi bi-telephone"></i>
+            <span>{{ selectedReservation.clientPhone }}</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="detail-section" *ngIf="selectedReservation.notes">
+        <h3><i class="bi bi-chat-left-text"></i> Notes</h3>
+        <p class="notes-content">{{ selectedReservation.notes }}</p>
+      </div>
+
+      <!-- Actions -->
+      <div class="detail-actions">
+        <ng-container *ngIf="selectedReservation.status === 'pending'">
+          <button class="btn-success" (click)="confirmReservation(selectedReservation); closeDetailModal()">
+            <i class="bi bi-check-lg"></i> Confirmer
+          </button>
+          <button class="btn-danger" (click)="cancelReservation(selectedReservation); closeDetailModal()">
+            <i class="bi bi-x-lg"></i> Refuser
+          </button>
+        </ng-container>
+        <ng-container *ngIf="selectedReservation.status === 'confirmed'">
+          <button class="btn-primary" (click)="completeReservation(selectedReservation); closeDetailModal()">
+            <i class="bi bi-check-all"></i> Marquer terminée
+          </button>
+        </ng-container>
+        <button class="btn-outline" (click)="closeDetailModal()">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MODAL CONFIRMATION ==================== -->
+<div class="modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
+  <div class="modal-container modal-sm" (click)="$event.stopPropagation()">
+    <div class="confirm-modal">
+      <div class="confirm-icon" [class]="confirmAction">
+        <i class="bi" 
+           [class.bi-check-circle]="confirmAction === 'confirm'"
+           [class.bi-x-circle]="confirmAction === 'cancel'"
+           [class.bi-check-all]="confirmAction === 'complete'"></i>
+      </div>
+      <h2>Confirmer l'action</h2>
+      <p>Êtes-vous sûr de vouloir {{ getActionMessage() }} ?</p>
+      <p class="reservation-summary" *ngIf="selectedReservation">
+        <strong>{{ selectedReservation.clientName }}</strong> - 
+        {{ formatDate(selectedReservation.date) }} à {{ selectedReservation.time }}
+      </p>
+      <div class="confirm-actions">
+        <button class="btn-outline" (click)="closeConfirmModal()">Annuler</button>
+        <button [class]="getActionButtonClass()" (click)="executeAction()">
+          <i class="bi bi-check-lg"></i> Confirmer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

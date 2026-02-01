@@ -65,6 +65,14 @@ export const appRoutes: Routes = [
         path: 'settings', 
         loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
+      { 
+        path: 'offers', 
+        loadComponent: () => import('./pages/offers/offers.component').then(m => m.OffersComponent)
+      },
+      { 
+        path: 'reservations-etablissement', 
+        loadComponent: () => import('./pages/reservations-etablissement/reservations-etablissement.component').then(m => m.ReservationsEtablissementComponent)
+      },
     ]
   },
   

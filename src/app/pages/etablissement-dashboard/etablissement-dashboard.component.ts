@@ -1,27 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-
-interface Reservation {
-  id: number;
-  clientName: string;
-  clientAvatar: string;
-  date: string;
-  time: string;
-  guests: number;
-  status: 'confirmed' | 'pending' | 'cancelled';
-  amount: number;
-}
-
-interface Review {
-  id: number;
-  clientName: string;
-  clientAvatar: string;
-  rating: number;
-  comment: string;
-  date: string;
-  replied: boolean;
-}
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { 
+  EtablissementDashboardService, 
+  EtablissementInfo, 
+  Reservation, 
+  DashboardStats,
+  MonthlyRevenue 
+} from '../../sevices/etablissement-dashboard.service';
+import { OffersService } from '../../sevices/offers.service';
 
 interface StatCard {
   title: string;
@@ -52,58 +40,193 @@ interface NewOffer {
   templateUrl: './etablissement-dashboard.component.html',
   styleUrl: './etablissement-dashboard.component.css'
 })
-export class EtablissementDashboardComponent {
-  // Establishment Info
-  etablissementName = 'Riad Andalous';
-  etablissementType = 'Hôtel & Spa';
-  etablissementRating = 4.7;
-  etablissementReviews = 342;
+export class EtablissementDashboardComponent implements OnInit, OnDestroy {
+  
+  // État de chargement
+  isLoading = true;
+  
+  // Infos établissement
+  etablissementId = '';
+  etablissementName = 'Mon Établissement';
+  etablissementType = 'Hôtel';
+  etablissementRating = 0;
+  etablissementReviews = 0;
 
   // Stats
-  stats: StatCard[] = [
-    { title: 'Réservations', value: '156', change: 12, icon: 'bi-calendar-check', color: '#1a5f7a' },
-    // { title: 'Revenus du mois', value: '45,800', change: 8, icon: 'bi-cash-stack', color: '#06d6a0' },
-    { title: 'Taux occupation', value: '78%', change: 5, icon: 'bi-pie-chart', color: '#f4a261' },
-    // { title: 'Avis reçus', value: '28', change: -3, icon: 'bi-star', color: '#e76f51' }
-  ];
-
-  // Recent Reservations
-  reservations: Reservation[] = [
-    { id: 1, clientName: 'Ahmed Benali', clientAvatar: 'AB', date: '2026-01-30', time: '14:00', guests: 2, status: 'confirmed', amount: 1200 },
-    { id: 2, clientName: 'Sarah Martin', clientAvatar: 'SM', date: '2026-01-30', time: '16:00', guests: 4, status: 'pending', amount: 2400 },
-    { id: 3, clientName: 'Karim Idrissi', clientAvatar: 'KI', date: '2026-01-31', time: '10:00', guests: 1, status: 'confirmed', amount: 800 },
-    { id: 4, clientName: 'Marie Dubois', clientAvatar: 'MD', date: '2026-01-31', time: '12:00', guests: 3, status: 'cancelled', amount: 1800 },
-    { id: 5, clientName: 'Youssef Alami', clientAvatar: 'YA', date: '2026-02-01', time: '09:00', guests: 2, status: 'pending', amount: 1500 }
-  ];
-
-  // Recent Reviews
-  reviews: Review[] = [
-    { id: 1, clientName: 'Sophie Laurent', clientAvatar: 'SL', rating: 5, comment: 'Séjour exceptionnel ! Le personnel est aux petits soins.', date: '2026-01-29', replied: true },
-    { id: 2, clientName: 'Omar Tazi', clientAvatar: 'OT', rating: 4, comment: 'Très bon rapport qualité-prix. Je recommande.', date: '2026-01-28', replied: false },
-    { id: 3, clientName: 'Claire Petit', clientAvatar: 'CP', rating: 5, comment: 'Le spa est incroyable, moment de détente parfait.', date: '2026-01-27', replied: true }
-  ];
-
-  // Chart data (monthly revenue)
-  monthlyData = [
-    { month: 'Août', value: 38000 },
-    { month: 'Sep', value: 42000 },
-    { month: 'Oct', value: 35000 },
-    { month: 'Nov', value: 48000 },
-    { month: 'Déc', value: 52000 },
-    { month: 'Jan', value: 45800 }
-  ];
-
+  stats: StatCard[] = [];
+  
+  // Réservations
+  reservations: Reservation[] = [];
+  
+  // Revenus mensuels
+  monthlyData: MonthlyRevenue[] = [];
+  
   // Quick Actions
   quickActions = [
     { label: 'Nouvelle offre', icon: 'bi-plus-circle', color: '#1a5f7a' },
-    // { label: 'Gérer chambres', icon: 'bi-door-open', color: '#06d6a0' },
-    // { label: 'Répondre avis', icon: 'bi-chat-dots', color: '#f4a261' },
-    // { label: 'Voir rapport', icon: 'bi-file-earmark-bar-graph', color: '#7209b7' }
+    { label: 'Gérer services', icon: 'bi-gear', color: '#06d6a0' },
+    { label: 'Voir rapport', icon: 'bi-file-earmark-bar-graph', color: '#7209b7' }
   ];
+  
+  // Occupation
+  occupancy = { value: 0, occupied: 0, available: 0, total: 0 };
 
-  constructor() {}
+  // Subscriptions
+  private subscriptions: Subscription[] = [];
 
-  ngOnInit(): void {}
+  constructor(
+    private dashboardService: EtablissementDashboardService,
+    private offersService: OffersService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    this.loadDashboardData();
+  }
+
+  ngOnDestroy(): void {
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  /**
+   * Charger les données du dashboard depuis l'API
+   */
+  loadDashboardData(): void {
+    this.isLoading = true;
+    
+    const sub = this.dashboardService.getDashboardData().subscribe({
+      next: (data) => {
+        // Infos établissement
+        this.etablissementId = data.etablissement.id;
+        this.etablissementName = data.etablissement.name;
+        this.etablissementType = data.etablissement.type;
+        this.etablissementRating = data.etablissement.rating;
+        this.etablissementReviews = data.etablissement.reviewCount;
+        
+        // Stocker l'ID pour les appels API
+        localStorage.setItem('etablissement_id', this.etablissementId);
+        
+        // Stats
+        this.buildStats(data.stats);
+        
+        // Occupation
+        this.occupancy = data.stats.occupancy;
+        
+        // Réservations récentes
+        this.reservations = data.recentReservations;
+        
+        // Revenus mensuels
+        this.monthlyData = data.monthlyRevenue;
+        
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Erreur chargement dashboard:', error);
+        this.isLoading = false;
+      }
+    });
+    
+    this.subscriptions.push(sub);
+  }
+
+  /**
+   * Construire les cartes de statistiques
+   */
+  private buildStats(stats: DashboardStats): void {
+    this.stats = [
+      { 
+        title: 'Réservations', 
+        value: stats.reservations.value.toString(), 
+        change: stats.reservations.change, 
+        icon: 'bi-calendar-check', 
+        color: '#1a5f7a' 
+      },
+      // { 
+      //   title: 'Revenus du mois', 
+      //   value: this.formatNumber(stats.revenue.value), 
+      //   change: stats.revenue.change, 
+      //   icon: 'bi-cash-stack', 
+      //   color: '#06d6a0' 
+      // },
+      // { 
+      //   title: 'Taux occupation', 
+      //   value: stats.occupancy.value + '%', 
+      //   change: 5, 
+      //   icon: 'bi-pie-chart', 
+      //   color: '#f4a261' 
+      // },
+      { 
+        title: 'En attente', 
+        value: stats.pending.toString(), 
+        change: 0, 
+        icon: 'bi-hourglass-split', 
+        color: '#e76f51' 
+      }
+    ];
+  }
+
+  /**
+   * Confirmer une réservation
+   */
+  confirmReservation(reservation: Reservation): void {
+    const sub = this.dashboardService.confirmReservation(this.etablissementId, reservation.id).subscribe({
+      next: (success) => {
+        if (success) {
+          reservation.status = 'confirmed';
+          reservation.statusLabel = 'Confirmée';
+          // Rafraîchir les stats
+          this.refreshStats();
+        }
+      },
+      error: (err) => console.error('Erreur confirmation:', err)
+    });
+    this.subscriptions.push(sub);
+  }
+
+  /**
+   * Annuler une réservation
+   */
+  cancelReservation(reservation: Reservation): void {
+    if (confirm('Êtes-vous sûr de vouloir annuler cette réservation ?')) {
+      const sub = this.dashboardService.cancelReservation(this.etablissementId, reservation.id).subscribe({
+        next: (success) => {
+          if (success) {
+            reservation.status = 'cancelled';
+            reservation.statusLabel = 'Annulée';
+            // Rafraîchir les stats
+            this.refreshStats();
+          }
+        },
+        error: (err) => console.error('Erreur annulation:', err)
+      });
+      this.subscriptions.push(sub);
+    }
+  }
+
+  /**
+   * Marquer comme terminée
+   */
+  completeReservation(reservation: Reservation): void {
+    const sub = this.dashboardService.updateReservationStatus(this.etablissementId, reservation.id, 'COMPLETED').subscribe({
+      next: (success) => {
+        if (success) {
+          reservation.status = 'completed';
+          reservation.statusLabel = 'Terminée';
+        }
+      }
+    });
+    this.subscriptions.push(sub);
+  }
+
+  /**
+   * Rafraîchir les statistiques
+   */
+  private refreshStats(): void {
+    const sub = this.dashboardService.getStats(this.etablissementId).subscribe({
+      next: (stats) => this.buildStats(stats)
+    });
+    this.subscriptions.push(sub);
+  }
 
   // ==================== MODAL NOUVELLE OFFRE ====================
   
@@ -128,18 +251,20 @@ export class EtablissementDashboardComponent {
   };
 
   offerCategories = [
-    { id: 'hebergement', name: 'Hébergement', icon: 'bi-house-door' },
+    { id: 'sejour', name: 'Séjour', icon: 'bi-house-heart' },
     { id: 'restaurant', name: 'Restaurant', icon: 'bi-cup-hot' },
     { id: 'spa', name: 'Spa & Bien-être', icon: 'bi-droplet' },
     { id: 'activite', name: 'Activité', icon: 'bi-bicycle' },
-    { id: 'package', name: 'Package', icon: 'bi-gift' },
+    { id: 'transport', name: 'Transport', icon: 'bi-car-front' },
     { id: 'evenement', name: 'Événement', icon: 'bi-calendar-event' }
   ];
 
   previewImages = [
     'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400',
-    'https://images.unsplash.com/photo-1582719508461-905c673771fd?w=400',
-    'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400',
+    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400',
+    'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400',
+    'https://images.unsplash.com/photo-1509023464722-18d996393ca8?w=400',
+    'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400',
     'https://images.unsplash.com/photo-1571896349842-33c89424de2d?w=400'
   ];
 
@@ -191,8 +316,6 @@ export class EtablissementDashboardComponent {
   }
 
   canProceedOffer(): boolean {
-    console.log(this.currentOfferStep);
-    
     switch (this.currentOfferStep) {
       case 1:
         return (this.newOffer.title?.length || 0) >= 3 && this.newOffer?.category !== '';
@@ -230,16 +353,30 @@ export class EtablissementDashboardComponent {
   submitOffer(): void {
     this.isSubmitting = true;
     
-    // Simulate API call
+    // Créer l'offre via le service
     setTimeout(() => {
+      this.offersService.createOffer({
+        title: this.newOffer.title,
+        description: this.newOffer.description,
+        category: this.newOffer.category,
+        originalPrice: this.newOffer.originalPrice,
+        discountType: this.newOffer.discountType,
+        discountValue: this.newOffer.discountValue,
+        startDate: this.newOffer.startDate,
+        endDate: this.newOffer.endDate,
+        maxUsage: this.newOffer.maxUsage || null,
+        conditions: this.newOffer.conditions,
+        image: this.newOffer.image || ''
+      });
+      
       this.isSubmitting = false;
       this.offerCreated = true;
-      
-      // Auto close after success
-      setTimeout(() => {
-        this.closeOfferModal();
-      }, 3000);
-    }, 2000);
+    }, 1000);
+  }
+
+  viewCreatedOffer(): void {
+    this.closeOfferModal();
+    this.router.navigate(['/offers']);
   }
 
   getCategoryName(categoryId: string): string {
@@ -262,6 +399,8 @@ export class EtablissementDashboardComponent {
     return titles[this.currentOfferStep - 1];
   }
 
+  // ==================== HELPERS ====================
+
   getStatusClass(status: string): string {
     return status;
   }
@@ -270,20 +409,30 @@ export class EtablissementDashboardComponent {
     const labels: { [key: string]: string } = {
       'confirmed': 'Confirmée',
       'pending': 'En attente',
-      'cancelled': 'Annulée'
+      'cancelled': 'Annulée',
+      'completed': 'Terminée'
     };
     return labels[status] || status;
   }
 
   getMaxValue(): number {
+    if (!this.monthlyData || this.monthlyData.length === 0) return 1;
     return Math.max(...this.monthlyData.map(d => d.value));
   }
 
   getBarHeight(value: number): number {
-    return (value / this.getMaxValue()) * 100;
+    const max = this.getMaxValue();
+    return max > 0 ? (value / max) * 100 : 0;
   }
 
   getRatingStars(rating: number): number[] {
     return Array(5).fill(0).map((_, i) => i < rating ? 1 : 0);
+  }
+
+  formatNumber(num: number): string {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1).replace('.0', '') + 'k';
+    }
+    return num.toString();
   }
 }

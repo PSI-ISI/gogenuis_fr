@@ -1449,3 +1449,64 @@
     justify-content: center;
   }
 }
+/* Reservation Actions */
+.res-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.btn-action {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  font-size: 1rem;
+}
+
+.btn-action.confirm {
+  background: linear-gradient(135deg, rgba(42, 157, 143, 0.15), rgba(42, 157, 143, 0.25));
+  color: #2a9d8f;
+  border: 2px solid rgba(42, 157, 143, 0.3);
+}
+
+.btn-action.confirm:hover {
+  background: linear-gradient(135deg, #2a9d8f, #52b788);
+  color: white;
+  border-color: #2a9d8f;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(42, 157, 143, 0.4);
+}
+
+.btn-action.cancel {
+  background: linear-gradient(135deg, rgba(239, 71, 111, 0.1), rgba(239, 71, 111, 0.2));
+  color: #ef476f;
+  border: 2px solid rgba(239, 71, 111, 0.3);
+}
+
+.btn-action.cancel:hover {
+  background: linear-gradient(135deg, #ef476f, #ff6b6b);
+  color: white;
+  border-color: #ef476f;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(239, 71, 111, 0.4);
+}
+
+.btn-action.complete {
+  background: linear-gradient(135deg, rgba(26, 95, 122, 0.1), rgba(26, 95, 122, 0.2));
+  color: #1a5f7a;
+  border: 2px solid rgba(26, 95, 122, 0.3);
+}
+
+.btn-action.complete:hover {
+  background: linear-gradient(135deg, #1a5f7a, #2d8bba);
+  color: white;
+  border-color: #1a5f7a;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(26, 95, 122, 0.4);
+}
