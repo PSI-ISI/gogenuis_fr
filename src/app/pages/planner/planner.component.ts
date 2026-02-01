@@ -1,3 +1,4 @@
+import { REAL_SUGGESTIONS, Suggestion } from '../../dataset/planner-suggestions.data';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -27,23 +28,6 @@ interface City {
   selected: boolean;
 }
 
-interface Suggestion {
-  id: number;
-  name: string;
-  type: string;
-  typeIcon: string;
-  image: string;
-  address: string;
-  city: string;
-  priceRange: string;
-  priceLevel: number;
-  rating: number;
-  reviewsCount: number;
-  openingHours: string;
-  description: string;
-  tags: string[];
-  isFavorite: boolean;
-}
 
 interface DayPlan {
   timeSlot: string;
@@ -365,123 +349,36 @@ export class PlannerComponent implements OnInit {
     });
   }
 
-  getMockSuggestions(city: string, planType: string): Suggestion[] {
-    const baseSuggestions: Suggestion[] = [
-      {
-        id: 1,
-        name: 'Café Maure',
-        type: 'Café',
-        typeIcon: 'bi-cup-hot-fill',
-        image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400',
-        address: 'Ancienne Médina',
-        city: city,
-        priceRange: '15-30 MAD',
-        priceLevel: 1,
-        rating: 4.5,
-        reviewsCount: 234,
-        openingHours: '06:00 - 22:00',
-        description: 'Café traditionnel marocain avec thé à la menthe et msemen frais.',
-        tags: ['Traditionnel', 'Économique', 'Authentique'],
-        isFavorite: false
-      },
-      {
-        id: 2,
-        name: 'Snack Populaire',
-        type: 'Restaurant',
-        typeIcon: 'bi-shop',
-        image: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400',
-        address: 'Quartier Maarif',
-        city: city,
-        priceRange: '25-50 MAD',
-        priceLevel: 1,
-        rating: 4.3,
-        reviewsCount: 567,
-        openingHours: '11:00 - 23:00',
-        description: 'Sandwichs, tajines express et plats du jour à petits prix.',
-        tags: ['Rapide', 'Économique', 'Local'],
-        isFavorite: false
-      },
-      {
-        id: 3,
-        name: 'Jardin Public',
-        type: 'Espace Vert',
-        typeIcon: 'bi-tree-fill',
-        image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=400',
-        address: 'Centre Ville',
-        city: city,
-        priceRange: 'Gratuit',
-        priceLevel: 0,
-        rating: 4.2,
-        reviewsCount: 890,
-        openingHours: '06:00 - 20:00',
-        description: 'Espace vert idéal pour se détendre et profiter du soleil.',
-        tags: ['Gratuit', 'Nature', 'Famille'],
-        isFavorite: false
-      },
-      {
-        id: 4,
-        name: 'Gargote du Coin',
-        type: 'Restaurant',
-        typeIcon: 'bi-egg-fried',
-        image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400',
-        address: 'Derb Sultan',
-        city: city,
-        priceRange: '30-60 MAD',
-        priceLevel: 2,
-        rating: 4.6,
-        reviewsCount: 345,
-        openingHours: '12:00 - 16:00',
-        description: 'Tajines maison, couscous du vendredi et plats mijotés.',
-        tags: ['Traditionnel', 'Fait maison', 'Copieux'],
-        isFavorite: false
-      },
-      {
-        id: 5,
-        name: 'Salon de Thé Moderne',
-        type: 'Café',
-        typeIcon: 'bi-cup-straw',
-        image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400',
-        address: 'Anfa',
-        city: city,
-        priceRange: '35-70 MAD',
-        priceLevel: 2,
-        rating: 4.4,
-        reviewsCount: 421,
-        openingHours: '08:00 - 23:00',
-        description: 'Café branché avec pâtisseries maison et smoothies frais.',
-        tags: ['Moderne', 'Wifi', 'Coworking'],
-        isFavorite: false
-      },
-      {
-        id: 6,
-        name: 'Food Court Économique',
-        type: 'Food Court',
-        typeIcon: 'bi-grid-3x3-gap-fill',
-        image: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=400',
-        address: 'Centre Commercial',
-        city: city,
-        priceRange: '40-80 MAD',
-        priceLevel: 2,
-        rating: 4.1,
-        reviewsCount: 678,
-        openingHours: '10:00 - 22:00',
-        description: 'Plusieurs options de restauration à prix abordables.',
-        tags: ['Varié', 'Climatisé', 'Familial'],
-        isFavorite: false
-      }
-    ];
+getMockSuggestions(city: string, planType: string): Suggestion[] {
+    console.log('🔍 Recherche de données pour :', city);
 
-    // Adjust based on plan type
-    if (planType === 'economique') {
-      return baseSuggestions.filter(s => s.priceLevel <= 1);
-    } else if (planType === 'confort') {
-      return baseSuggestions.map(s => ({
-        ...s,
-        priceLevel: s.priceLevel + 1,
-        priceRange: s.priceRange.replace(/\d+/g, (match) => String(parseInt(match) * 1.5))
-      }));
+    // 1. Filtrer par ville (insensible à la casse)
+    // On normalise les noms (ex: "Fès" vs "Fes")
+    let filtered = REAL_SUGGESTIONS.filter(s =>
+      s.city.toLowerCase().includes(city.toLowerCase()) || 
+      city.toLowerCase().includes(s.city.toLowerCase())
+    );
+
+    // Fallback : Si aucune donnée trouvée pour cette ville (ex: Agadir non présent dans le set),
+    // on renvoie tout pour ne pas avoir un écran vide lors de la démo
+    if (filtered.length === 0) {
+      console.warn('⚠️ Pas de données pour cette ville, affichage global.');
+      filtered = REAL_SUGGESTIONS;
     }
-    return baseSuggestions;
+
+    // 2. Filtrer par budget / type de plan
+    if (planType === 'economique') {
+      // On garde les lieux pas chers (Niveau 0, 1) et parfois 2
+      return filtered.filter(s => s.priceLevel <= 1);
+    } 
+    else if (planType === 'confort') {
+      // On privilégie le confort et le luxe (Niveau 2 et 3)
+      const luxe = filtered.filter(s => s.priceLevel >= 2);
+      return luxe.length > 0 ? luxe : filtered;
+    }
+
+    // Par défaut (Equilibré) : on renvoie une sélection mixte
+    return filtered;
   }
 
   // ==================== RESULTS ACTIONS ====================
